@@ -1,0 +1,112 @@
+{# templates/sections/todays-games.html.j2 #}
+<section id="todays-games" class="todays-games section" aria-labelledby="todays-games-heading">
+  <h2 id="todays-games-heading" class="section-heading">Today's Games</h2>
+
+  {% set todays = edition.games | selectattr('game_date', 'equalto', edition.edition.date) | list %}
+  {% if todays %}
+  <div class="games-list">
+    {% for game in todays %}
+    <article class="game-preview" aria-labelledby="preview-{{ game.game_id }}">
+      <header class="game-preview-header">
+        <h3 id="preview-{{ game.game_id }}" class="game-preview-matchup">
+          {{ game.away.team_name }} <span class="at-symbol">@</span> {{ game.home.team_name }}
+        </h3>
+        <div class="game-preview-meta">
+          <span class="game-time">{{ game.game_time_et or 'Time TBD' }}</span>
+          {% if game.venue_name %}
+          <span class="game-sep">&bull;</span>
+          <span class="game-venue">{{ game.venue_name }}{% if game.venue_city %}, {{ game.venue_city }}{% endif %}</span>
+          {% endif %}
+          {% if game.status.value in ['postponed', 'delayed', 'suspended'] %}
+          <span class="game-sep">&bull;</span>
+          <span class="game-status game-status-{{ game.status.value }}">
+            {{ game.status.value | title }}
+            {% if game.postponement_reason %} &mdash; {{ game.postponement_reason }}{% endif %}
+          </span>
+          {% endif %}
+        </div>
+      </header>
+
+      <div class="game-preview-pitchers">
+        <div class="pitcher-matchup">
+          {% if game.away_probable_pitcher %}
+          <div class="pitcher pitcher-away">
+            <span class="pitcher-label">{{ game.away.team_abbr }}</span>
+            <span class="pitcher-name">{{ game.away_probable_pitcher.name }}</span>
+            {% if game.away_probable_pitcher.handedness %}
+            <span class="pitcher-hand">({{ game.away_probable_pitcher.handedness }})</span>
+            {% endif %}
+            <span class="pitcher-record">
+              {% if game.away_probable_pitcher.wins is not none and game.away_probable_pitcher.losses is not none %}
+                {{ game.away_probable_pitcher.wins }}-{{ game.away_probable_pitcher.losses }}
+              {% endif %}
+              {% if game.away_probable_pitcher.era is not none %}
+                {{ "%.2f"|format(game.away_probable_pitcher.era) }} ERA
+              {% endif %}
+            </span>
+            <span class="pitcher-status pitcher-status-{{ game.away_probable_pitcher.status }}">
+              {{ game.away_probable_pitcher.status | title }}
+            </span>
+          </div>
+          {% else %}
+          <div class="pitcher pitcher-away">
+            <span class="pitcher-label">{{ game.away.team_abbr }}</span>
+            <span class="pitcher-name pitcher-tbd">TBD</span>
+          </div>
+          {% endif %}
+
+          <span class="vs-divider">vs.</span>
+
+          {% if game.home_probable_pitcher %}
+          <div class="pitcher pitcher-home">
+            <span class="pitcher-label">{{ game.home.team_abbr }}</span>
+            <span class="pitcher-name">{{ game.home_probable_pitcher.name }}</span>
+            {% if game.home_probable_pitcher.handedness %}
+            <span class="pitcher-hand">({{ game.home_probable_pitcher.handedness }})</span>
+            {% endif %}
+            <span class="pitcher-record">
+              {% if game.home_probable_pitcher.wins is not none and game.home_probable_pitcher.losses is not none %}
+                {{ game.home_probable_pitcher.wins }}-{{ game.home_probable_pitcher.losses }}
+              {% endif %}
+              {% if game.home_probable_pitcher.era is not none %}
+                {{ "%.2f"|format(game.home_probable_pitcher.era) }} ERA
+              {% endif %}
+            </span>
+            <span class="pitcher-status pitcher-status-{{ game.home_probable_pitcher.status }}">
+              {{ game.home_probable_pitcher.status | title }}
+            </span>
+          </div>
+          {% else %}
+          <div class="pitcher pitcher-home">
+            <span class="pitcher-label">{{ game.home.team_abbr }}</span>
+            <span class="pitcher-name pitcher-tbd">TBD</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if game.tv_broadcasts or game.weather_description %}
+      <div class="game-preview-extras">
+        {% if game.tv_broadcasts %}
+        <span class="tv-broadcasts">TV: {{ game.tv_broadcasts | join(', ') }}</span>
+        {% endif %}
+        {% if game.weather_description %}
+        <span class="game-sep">&bull;</span>
+        <span class="weather">{{ game.weather_description }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if game.is_doubleheader and game.doubleheader_game_num %}
+      <div class="doubleheader-label">Doubleheader &mdash; Game {{ game.doubleheader_game_num }}</div>
+      {% endif %}
+      {% if game.series_description %}
+      <div class="series-label">{{ game.series_description }}</div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="no-content">No games scheduled for {{ edition.edition.date }}.</p>
+  {% endif %}
+</section>

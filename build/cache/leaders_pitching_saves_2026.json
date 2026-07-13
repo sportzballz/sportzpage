@@ -1,0 +1,325 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "leagueLeaders": [
+    {
+      "leaderCategory": "saves",
+      "season": "2026",
+      "gameType": {
+        "id": "R",
+        "description": "Regular Season"
+      },
+      "leaders": [
+        {
+          "rank": 1,
+          "value": "28",
+          "team": {
+            "id": 114,
+            "name": "Cleveland Guardians",
+            "link": "/api/v1/teams/114"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 671922,
+            "fullName": "Cade Smith",
+            "link": "/api/v1/people/671922",
+            "firstName": "Cade",
+            "lastName": "Smith"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 2,
+          "value": "25",
+          "team": {
+            "id": 139,
+            "name": "Tampa Bay Rays",
+            "link": "/api/v1/teams/139"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 641329,
+            "fullName": "Bryan Baker",
+            "link": "/api/v1/people/641329",
+            "firstName": "Bryan",
+            "lastName": "Baker"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 2,
+          "value": "25",
+          "team": {
+            "id": 135,
+            "name": "San Diego Padres",
+            "link": "/api/v1/teams/135"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 695243,
+            "fullName": "Mason Miller",
+            "link": "/api/v1/people/695243",
+            "firstName": "Mason",
+            "lastName": "Miller"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "24",
+          "team": {
+            "id": 143,
+            "name": "Philadelphia Phillies",
+            "link": "/api/v1/teams/143"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 661395,
+            "fullName": "Jhoan Duran",
+            "link": "/api/v1/people/661395",
+            "firstName": "Jhoan",
+            "lastName": "Duran"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "24",
+          "team": {
+            "id": 138,
+            "name": "St. Louis Cardinals",
+            "link": "/api/v1/teams/138"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 676617,
+            "fullName": "Riley O'Brien",
+            "link": "/api/v1/people/676617",
+            "firstName": "Riley",
+            "lastName": "O'Brien"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 6,
+          "value": "22",
+          "team": {
+            "id": 109,
+            "name": "Arizona Diamondbacks",
+            "link": "/api/v1/teams/109"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 623149,
+            "fullName": "Paul Sewald",
+            "link": "/api/v1/people/623149",
+            "firstName": "Paul",
+            "lastName": "Sewald"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 7,
+          "value": "19",
+          "team": {
+            "id": 111,
+            "name": "Boston Red Sox",
+            "link": "/api/v1/teams/111"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 547973,
+            "fullName": "Aroldis Chapman",
+            "link": "/api/v1/people/547973",
+            "firstName": "Aroldis",
+            "lastName": "Chapman"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 7,
+          "value": "19",
+          "team": {
+            "id": 144,
+            "name": "Atlanta Braves",
+            "link": "/api/v1/teams/144"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 628452,
+            "fullName": "Raisel Iglesias",
+            "link": "/api/v1/people/628452",
+            "firstName": "Raisel",
+            "lastName": "Iglesias"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 7,
+          "value": "19",
+          "team": {
+            "id": 141,
+            "name": "Toronto Blue Jays",
+            "link": "/api/v1/teams/141"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 686973,
+            "fullName": "Louis Varland",
+            "link": "/api/v1/people/686973",
+            "firstName": "Louis",
+            "lastName": "Varland"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 10,
+          "value": "18",
+          "team": {
+            "id": 147,
+            "name": "New York Yankees",
+            "link": "/api/v1/teams/147"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 670280,
+            "fullName": "David Bednar",
+            "link": "/api/v1/people/670280",
+            "firstName": "David",
+            "lastName": "Bednar"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 10,
+          "value": "18",
+          "team": {
+            "id": 140,
+            "name": "Texas Rangers",
+            "link": "/api/v1/teams/140"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 656641,
+            "fullName": "Jacob Latz",
+            "link": "/api/v1/people/656641",
+            "firstName": "Jacob",
+            "lastName": "Latz"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        }
+      ],
+      "statGroup": "pitching",
+      "totalSplits": 195
+    }
+  ]
+}

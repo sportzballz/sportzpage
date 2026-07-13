@@ -1,0 +1,547 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sportzballs.example/schemas/edition.schema.json",
+  "title": "Edition",
+  "description": "Root Edition JSON document for the SportzBallz Daily Sports Page.",
+  "type": "object",
+  "required": ["edition"],
+  "properties": {
+    "edition": { "$ref": "#/definitions/EditionMetadata" },
+    "lead_story": {
+      "oneOf": [{ "$ref": "#/definitions/Story" }, { "type": "null" }]
+    },
+    "secondary_stories": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Story" },
+      "default": []
+    },
+    "games": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Game" },
+      "default": []
+    },
+    "standings": {
+      "oneOf": [{ "$ref": "#/definitions/Standings" }, { "type": "null" }]
+    },
+    "league_leaders": {
+      "oneOf": [{ "$ref": "#/definitions/LeagueLeaders" }, { "type": "null" }]
+    },
+    "game_recaps": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/GameRecap" },
+      "default": []
+    },
+    "around_the_league": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Story" },
+      "default": []
+    },
+    "transactions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Transaction" },
+      "default": []
+    },
+    "injuries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Injury" },
+      "default": []
+    },
+    "historical_items": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/HistoricalItem" },
+      "default": []
+    },
+    "generation_metadata": { "$ref": "#/definitions/GenerationMetadata" }
+  },
+  "definitions": {
+    "EditionMetadata": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "date",
+        "generated_at",
+        "data_current_through",
+        "timezone",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Edition ID in the form YYYY-MM-DD-HHMM, e.g. 2026-07-13-0600.",
+          "examples": ["2026-07-13-0600"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["morning", "midday", "evening", "late", "final", "special"],
+          "description": "Edition type controlling content emphasis."
+        },
+        "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Publication date in YYYY-MM-DD format."
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp when generation completed."
+        },
+        "data_current_through": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Latest data timestamp included in this edition."
+        },
+        "timezone": {
+          "type": "string",
+          "default": "America/New_York"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "generating",
+            "validating",
+            "published",
+            "failed",
+            "published_degraded"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "GenerationMetadata": {
+      "type": "object",
+      "required": ["pipeline_version"],
+      "properties": {
+        "pipeline_version": { "type": "string" },
+        "python_version": { "type": "string", "default": "" },
+        "ai_provider": { "type": ["string", "null"] },
+        "ai_model": { "type": ["string", "null"] },
+        "ai_fallbacks": { "type": "integer", "default": 0 },
+        "total_duration_seconds": { "type": ["number", "null"] },
+        "data_freshness": { "$ref": "#/definitions/DataFreshness" }
+      }
+    },
+    "DataFreshness": {
+      "type": "object",
+      "properties": {
+        "live_scores_as_of": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "standings_as_of": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "schedule_as_of": { "type": ["string", "null"], "format": "date-time" },
+        "league_leaders_as_of": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "transactions_as_of": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "injuries_as_of": { "type": ["string", "null"], "format": "date-time" },
+        "historical_as_of": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "max_age_warnings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        }
+      }
+    },
+    "Game": {
+      "type": "object",
+      "required": ["game_id", "game_date", "status", "home", "away"],
+      "properties": {
+        "game_id": { "type": "integer", "description": "MLB game PK." },
+        "game_date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "game_time_et": { "type": ["string", "null"] },
+        "status": {
+          "type": "string",
+          "enum": [
+            "final",
+            "in_progress",
+            "scheduled",
+            "postponed",
+            "delayed",
+            "suspended"
+          ]
+        },
+        "inning": { "type": ["integer", "null"] },
+        "inning_state": { "type": ["string", "null"] },
+        "home": { "$ref": "#/definitions/TeamGameLine" },
+        "away": { "$ref": "#/definitions/TeamGameLine" },
+        "linescore": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/LinescoreInning" },
+          "default": []
+        },
+        "home_probable_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "away_probable_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "winning_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "losing_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "save_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "venue_name": { "type": ["string", "null"] },
+        "venue_city": { "type": ["string", "null"] },
+        "tv_broadcasts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "weather_description": { "type": ["string", "null"] },
+        "postponement_reason": { "type": ["string", "null"] },
+        "attendance": { "type": ["integer", "null"] },
+        "time_of_game": { "type": ["string", "null"] },
+        "is_doubleheader": { "type": "boolean", "default": false },
+        "doubleheader_game_num": { "type": ["integer", "null"] },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "series_description": { "type": ["string", "null"] },
+        "recap_anchor": { "type": ["string", "null"] }
+      }
+    },
+    "TeamGameLine": {
+      "type": "object",
+      "required": ["team_id", "team_abbr", "team_name"],
+      "properties": {
+        "team_id": { "type": "integer" },
+        "team_abbr": { "type": "string" },
+        "team_name": { "type": "string" },
+        "runs": { "type": ["integer", "null"] },
+        "hits": { "type": ["integer", "null"] },
+        "errors": { "type": ["integer", "null"] }
+      }
+    },
+    "LinescoreInning": {
+      "type": "object",
+      "required": ["inning"],
+      "properties": {
+        "inning": { "type": "integer", "minimum": 1 },
+        "away_runs": { "type": ["integer", "null"] },
+        "home_runs": { "type": ["integer", "null"] }
+      }
+    },
+    "Pitcher": {
+      "type": "object",
+      "required": ["player_id", "name"],
+      "properties": {
+        "player_id": { "type": "integer" },
+        "name": { "type": "string" },
+        "handedness": { "type": ["string", "null"], "enum": ["L", "R", null] },
+        "status": {
+          "type": "string",
+          "enum": ["probable", "confirmed"],
+          "default": "probable"
+        },
+        "wins": { "type": ["integer", "null"] },
+        "losses": { "type": ["integer", "null"] },
+        "era": { "type": ["number", "null"] }
+      }
+    },
+    "Standings": {
+      "type": "object",
+      "required": ["divisions", "wild_cards"],
+      "properties": {
+        "divisions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DivisionStandings" },
+          "minItems": 1
+        },
+        "wild_cards": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/WildCardStandings" },
+          "minItems": 1
+        }
+      }
+    },
+    "DivisionStandings": {
+      "type": "object",
+      "required": ["division_id", "division_name", "rows"],
+      "properties": {
+        "division_id": { "type": "integer" },
+        "division_name": { "type": "string" },
+        "rows": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/StandingsRow" },
+          "minItems": 1
+        }
+      }
+    },
+    "WildCardStandings": {
+      "type": "object",
+      "required": ["league", "rows"],
+      "properties": {
+        "league": { "type": "string", "enum": ["AL", "NL"] },
+        "rows": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/StandingsRow" },
+          "minItems": 1
+        }
+      }
+    },
+    "StandingsRow": {
+      "type": "object",
+      "required": [
+        "team_id",
+        "team_abbr",
+        "team_name",
+        "wins",
+        "losses",
+        "pct",
+        "games_back",
+        "last_10",
+        "streak",
+        "home_record",
+        "away_record",
+        "run_differential"
+      ],
+      "properties": {
+        "team_id": { "type": "integer" },
+        "team_abbr": { "type": "string" },
+        "team_name": { "type": "string" },
+        "wins": { "type": "integer" },
+        "losses": { "type": "integer" },
+        "pct": { "type": "number", "minimum": 0, "maximum": 1 },
+        "games_back": { "type": ["number", "string"] },
+        "last_10": { "type": "string" },
+        "streak": { "type": "string" },
+        "home_record": { "type": "string" },
+        "away_record": { "type": "string" },
+        "run_differential": { "type": "integer" },
+        "wild_card_gb": { "type": ["number", "string", "null"] },
+        "eliminated": { "type": "boolean", "default": false },
+        "magic_number": { "type": ["integer", "null"] }
+      }
+    },
+    "LeagueLeaders": {
+      "type": "object",
+      "required": ["batting", "pitching"],
+      "properties": {
+        "batting": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/LeaderEntry" }
+          }
+        },
+        "pitching": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/LeaderEntry" }
+          }
+        }
+      }
+    },
+    "LeaderEntry": {
+      "type": "object",
+      "required": [
+        "rank",
+        "player_id",
+        "player_name",
+        "team_abbr",
+        "position",
+        "value",
+        "games_played",
+        "league",
+        "qualified"
+      ],
+      "properties": {
+        "rank": { "type": "integer", "minimum": 1 },
+        "player_id": { "type": "integer" },
+        "player_name": { "type": "string" },
+        "team_abbr": { "type": "string" },
+        "position": { "type": "string" },
+        "value": { "type": "string" },
+        "games_played": { "type": "integer" },
+        "league": { "type": "string", "enum": ["AL", "NL"] },
+        "qualified": { "type": "boolean" }
+      }
+    },
+    "Story": {
+      "type": "object",
+      "required": ["headline", "deck", "paragraphs", "story_type"],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1 },
+        "deck": { "type": "string", "minLength": 1 },
+        "byline": { "type": "string", "default": "SportzBallz Staff" },
+        "paragraphs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "source_data_references": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "story_type": {
+          "type": "string",
+          "enum": [
+            "lead",
+            "secondary",
+            "game_recap",
+            "division_snapshot",
+            "wild_card_watch",
+            "rookie_watch",
+            "editorial",
+            "transaction_summary"
+          ]
+        },
+        "teams": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "players": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "facts_used": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "ai_generated": { "type": "boolean", "default": true }
+      }
+    },
+    "GameRecap": {
+      "allOf": [
+        { "$ref": "#/definitions/Story" },
+        {
+          "type": "object",
+          "required": ["game_id", "final_score"],
+          "properties": {
+            "game_id": { "type": "integer" },
+            "final_score": { "type": "string", "minLength": 1 },
+            "winning_pitcher": {
+              "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+            },
+            "losing_pitcher": {
+              "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+            },
+            "save_pitcher": {
+              "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+            },
+            "tags": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": []
+            }
+          }
+        }
+      ]
+    },
+    "Transaction": {
+      "type": "object",
+      "required": [
+        "transaction_id",
+        "team_abbr",
+        "team_name",
+        "player_name",
+        "transaction_type",
+        "effective_date",
+        "explanation",
+        "source_timestamp"
+      ],
+      "properties": {
+        "transaction_id": { "type": "string" },
+        "team_abbr": { "type": "string" },
+        "team_name": { "type": "string" },
+        "player_name": { "type": "string" },
+        "player_id": { "type": ["integer", "null"] },
+        "transaction_type": {
+          "type": "string",
+          "enum": [
+            "trade",
+            "dfa",
+            "released",
+            "signed",
+            "optioned",
+            "recalled",
+            "placed_on_il",
+            "activated",
+            "claimed",
+            "retired",
+            "other"
+          ]
+        },
+        "effective_date": { "type": "string", "format": "date" },
+        "explanation": { "type": "string" },
+        "source_timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Injury": {
+      "type": "object",
+      "required": [
+        "player_id",
+        "player_name",
+        "team_abbr",
+        "injury_description",
+        "roster_status",
+        "confidence_level"
+      ],
+      "properties": {
+        "player_id": { "type": "integer" },
+        "player_name": { "type": "string" },
+        "team_abbr": { "type": "string" },
+        "injury_description": { "type": "string" },
+        "roster_status": {
+          "type": "string",
+          "enum": ["10-day-il", "15-day-il", "60-day-il", "day-to-day", "out"]
+        },
+        "date_of_injury": { "type": ["string", "null"], "format": "date" },
+        "expected_return": { "type": ["string", "null"] },
+        "confidence_level": {
+          "type": "string",
+          "enum": ["confirmed", "reported", "speculative"]
+        },
+        "latest_update": { "type": ["string", "null"] },
+        "update_timestamp": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      }
+    },
+    "HistoricalItem": {
+      "type": "object",
+      "required": ["year", "headline", "description", "source"],
+      "properties": {
+        "year": { "type": "integer", "minimum": 1839 },
+        "headline": { "type": "string" },
+        "description": { "type": "string" },
+        "teams": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "players": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "source": { "type": "string" },
+        "verified": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

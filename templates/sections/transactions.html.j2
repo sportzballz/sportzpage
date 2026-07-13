@@ -1,0 +1,38 @@
+{# templates/sections/transactions.html.j2 #}
+<section id="transactions" class="transactions section" aria-labelledby="transactions-heading">
+  <h2 id="transactions-heading" class="section-heading">Transactions</h2>
+
+  {% if edition.transactions %}
+  <div class="table-responsive">
+    <table class="transactions-table data-table">
+      <caption>Recent MLB Transactions</caption>
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">Team</th>
+          <th scope="col">Player</th>
+          <th scope="col">Type</th>
+          <th scope="col">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in edition.transactions %}
+        <tr>
+          <td class="date-col">{{ txn.effective_date.strftime('%b %-d') if txn.effective_date.strftime is defined else txn.effective_date }}</td>
+          <td class="team-col">{{ txn.team_abbr }}</td>
+          <td class="player-col">{{ txn.player_name }}</td>
+          <td class="type-col">
+            <span class="txn-type txn-type-{{ txn.transaction_type.value }}">
+              {{ txn.transaction_type.value | replace('_', ' ') | title }}
+            </span>
+          </td>
+          <td class="desc-col">{{ txn.explanation }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="no-content">No transactions available for this edition.</p>
+  {% endif %}
+</section>

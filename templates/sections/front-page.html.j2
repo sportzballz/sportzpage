@@ -1,0 +1,44 @@
+{# templates/sections/front-page.html.j2 #}
+<section id="front-page" class="front-page section" aria-labelledby="front-page-heading">
+  <h2 id="front-page-heading" class="section-heading">Front Page</h2>
+  {% if edition.lead_story %}
+  <article class="lead-story" aria-labelledby="lead-headline">
+    <header class="story-header">
+      <h2 id="lead-headline" class="lead-headline">{{ edition.lead_story.headline }}</h2>
+      <p class="story-deck">{{ edition.lead_story.deck }}</p>
+      <p class="story-byline">By {{ edition.lead_story.byline }}</p>
+    </header>
+    <div class="story-body">
+      {% for para in edition.lead_story.paragraphs %}
+      <p{% if loop.first %} class="story-first-para"{% endif %}>{{ para }}</p>
+      {% endfor %}
+    </div>
+    {% if edition.lead_story.teams or edition.lead_story.players %}
+    <footer class="story-tags">
+      {% for team in edition.lead_story.teams %}
+      <span class="tag tag-team">{{ team }}</span>
+      {% endfor %}
+      {% for player in edition.lead_story.players %}
+      <span class="tag tag-player">{{ player }}</span>
+      {% endfor %}
+    </footer>
+    {% endif %}
+  </article>
+  {% else %}
+  <p class="no-content">No lead story available for this edition.</p>
+  {% endif %}
+
+  {% if edition.secondary_stories %}
+  <div class="secondary-stories" aria-label="Secondary stories">
+    {% for story in edition.secondary_stories %}
+    <article class="secondary-story" aria-labelledby="sec-headline-{{ loop.index }}">
+      <h3 id="sec-headline-{{ loop.index }}" class="secondary-headline">{{ story.headline }}</h3>
+      <p class="story-deck">{{ story.deck }}</p>
+      {% if story.paragraphs %}
+      <p class="story-summary">{{ story.paragraphs[0] }}</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>

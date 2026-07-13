@@ -1,0 +1,297 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "leagueLeaders": [
+    {
+      "leaderCategory": "onBasePlusSlugging",
+      "season": "2026",
+      "gameType": {
+        "id": "R",
+        "description": "Regular Season"
+      },
+      "leaders": [
+        {
+          "rank": 1,
+          "value": "1.059",
+          "team": {
+            "id": 117,
+            "name": "Houston Astros",
+            "link": "/api/v1/teams/117"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 670541,
+            "fullName": "Yordan Alvarez",
+            "link": "/api/v1/people/670541",
+            "firstName": "Yordan",
+            "lastName": "Alvarez"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 2,
+          "value": ".985",
+          "team": {
+            "id": 120,
+            "name": "Washington Nationals",
+            "link": "/api/v1/teams/120"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 695578,
+            "fullName": "James Wood",
+            "link": "/api/v1/people/695578",
+            "firstName": "James",
+            "lastName": "Wood"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 3,
+          "value": ".971",
+          "team": {
+            "id": 147,
+            "name": "New York Yankees",
+            "link": "/api/v1/teams/147"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 700250,
+            "fullName": "Ben Rice",
+            "link": "/api/v1/people/700250",
+            "firstName": "Ben",
+            "lastName": "Rice"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": ".967",
+          "team": {
+            "id": 121,
+            "name": "New York Mets",
+            "link": "/api/v1/teams/121"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 665742,
+            "fullName": "Juan Soto",
+            "link": "/api/v1/people/665742",
+            "firstName": "Juan",
+            "lastName": "Soto"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 5,
+          "value": ".952",
+          "team": {
+            "id": 119,
+            "name": "Los Angeles Dodgers",
+            "link": "/api/v1/teams/119"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 660271,
+            "fullName": "Shohei Ohtani",
+            "link": "/api/v1/people/660271",
+            "firstName": "Shohei",
+            "lastName": "Ohtani"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 6,
+          "value": ".927",
+          "team": {
+            "id": 139,
+            "name": "Tampa Bay Rays",
+            "link": "/api/v1/teams/139"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 691406,
+            "fullName": "Junior Caminero",
+            "link": "/api/v1/people/691406",
+            "firstName": "Junior",
+            "lastName": "Caminero"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 6,
+          "value": ".927",
+          "team": {
+            "id": 143,
+            "name": "Philadelphia Phillies",
+            "link": "/api/v1/teams/143"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 656941,
+            "fullName": "Kyle Schwarber",
+            "link": "/api/v1/people/656941",
+            "firstName": "Kyle",
+            "lastName": "Schwarber"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 8,
+          "value": ".921",
+          "team": {
+            "id": 111,
+            "name": "Boston Red Sox",
+            "link": "/api/v1/teams/111"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 575929,
+            "fullName": "Willson Contreras",
+            "link": "/api/v1/people/575929",
+            "firstName": "Willson",
+            "lastName": "Contreras"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 9,
+          "value": ".917",
+          "team": {
+            "id": 112,
+            "name": "Chicago Cubs",
+            "link": "/api/v1/teams/112"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 691718,
+            "fullName": "Pete Crow-Armstrong",
+            "link": "/api/v1/people/691718",
+            "firstName": "Pete",
+            "lastName": "Crow-Armstrong"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 10,
+          "value": ".903",
+          "team": {
+            "id": 142,
+            "name": "Minnesota Twins",
+            "link": "/api/v1/teams/142"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 621439,
+            "fullName": "Byron Buxton",
+            "link": "/api/v1/people/621439",
+            "firstName": "Byron",
+            "lastName": "Buxton"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        }
+      ],
+      "statGroup": "hitting",
+      "totalSplits": 149
+    }
+  ]
+}

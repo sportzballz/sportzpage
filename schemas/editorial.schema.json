@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://sportzballs.example/schemas/editorial.schema.json",
+  "title": "Editorial",
+  "description": "Validates a single Story or GameRecap editorial content object.",
+  "oneOf": [
+    { "$ref": "#/definitions/Story" },
+    { "$ref": "#/definitions/GameRecap" }
+  ],
+  "definitions": {
+    "Pitcher": {
+      "type": "object",
+      "required": ["player_id", "name"],
+      "properties": {
+        "player_id": { "type": "integer" },
+        "name": { "type": "string" },
+        "handedness": { "type": ["string", "null"] },
+        "status": {
+          "type": "string",
+          "enum": ["probable", "confirmed"],
+          "default": "probable"
+        },
+        "wins": { "type": ["integer", "null"] },
+        "losses": { "type": ["integer", "null"] },
+        "era": { "type": ["number", "null"] }
+      }
+    },
+    "Story": {
+      "type": "object",
+      "required": ["headline", "deck", "paragraphs", "story_type"],
+      "properties": {
+        "headline": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Story headline. Must not be invented — grounded in structured data."
+        },
+        "deck": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Subheadline / summary sentence."
+        },
+        "byline": {
+          "type": "string",
+          "default": "SportzBallz Staff"
+        },
+        "paragraphs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "description": "Body paragraphs."
+        },
+        "source_data_references": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Keys from Edition JSON that ground this story, e.g. game:748293."
+        },
+        "story_type": {
+          "type": "string",
+          "enum": [
+            "lead",
+            "secondary",
+            "game_recap",
+            "division_snapshot",
+            "wild_card_watch",
+            "rookie_watch",
+            "editorial",
+            "transaction_summary"
+          ]
+        },
+        "teams": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Team abbreviations mentioned."
+        },
+        "players": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Player names mentioned."
+        },
+        "facts_used": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Enumeration of facts from structured data used in this story."
+        },
+        "ai_generated": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "GameRecap": {
+      "type": "object",
+      "required": [
+        "headline",
+        "deck",
+        "paragraphs",
+        "story_type",
+        "game_id",
+        "final_score"
+      ],
+      "properties": {
+        "headline": { "type": "string", "minLength": 1 },
+        "deck": { "type": "string", "minLength": 1 },
+        "byline": { "type": "string", "default": "SportzBallz Staff" },
+        "paragraphs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "source_data_references": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "story_type": {
+          "type": "string",
+          "enum": [
+            "lead",
+            "secondary",
+            "game_recap",
+            "division_snapshot",
+            "wild_card_watch",
+            "rookie_watch",
+            "editorial",
+            "transaction_summary"
+          ]
+        },
+        "teams": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "players": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "facts_used": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Enumeration of facts from structured data used in this story."
+        },
+        "ai_generated": { "type": "boolean", "default": true },
+        "game_id": {
+          "type": "integer",
+          "description": "MLB game PK this recap covers."
+        },
+        "final_score": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Formatted final score, e.g. NYY 5, BOS 3."
+        },
+        "winning_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "losing_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "save_pitcher": {
+          "oneOf": [{ "$ref": "#/definitions/Pitcher" }, { "type": "null" }]
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "walk-off, extra-inning, no-hitter, perfect-game, shutout, doubleheader, etc."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

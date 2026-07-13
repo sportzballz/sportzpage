@@ -1,0 +1,74 @@
+# ---------------------------------------------------------------------------
+# SportzBallz Daily Sports Page — editorial.yaml
+# Controls lead-story scoring weights and manual editorial overrides.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Lead-story scoring weights
+# Higher values make that factor more influential in selecting the lead story.
+# ---------------------------------------------------------------------------
+scoring_weights:
+  # Games in the postseason receive this bonus
+  playoff_weight: 3.0
+  # No-hitters, perfect games, cycles, historical milestones
+  historic_weight: 2.5
+  # Individual performance quality (normalized 0-1 based on game metrics)
+  performance_weight: 2.0
+  # Walk-offs, extra innings, late-inning comebacks
+  game_drama_weight: 1.5
+  # Nationally televised or large-market teams involved
+  national_interest_weight: 1.0
+  # Games that ended within the past 2 hours get a recency bonus
+  recency_weight: 0.5
+
+# ---------------------------------------------------------------------------
+# Secondary story count
+# ---------------------------------------------------------------------------
+secondary_story_count:
+  min: 3
+  max: 6
+
+# ---------------------------------------------------------------------------
+# Manual editorial overrides
+# Set a specific game as lead story by assigning it a very high score.
+# Format: game_id (integer MLB game PK): score (float)
+# Example:
+#   748293: 10.0
+# ---------------------------------------------------------------------------
+manual_lead_overrides: {}
+
+# ---------------------------------------------------------------------------
+# Featured players — these players will appear in secondary stories
+# even if their team's game wouldn't otherwise qualify.
+# Format: list of MLB player IDs (integers)
+# ---------------------------------------------------------------------------
+featured_player_ids: []
+
+# ---------------------------------------------------------------------------
+# Suppress story IDs — these story identifiers will be omitted from the page.
+# Format: list of story ID strings
+# ---------------------------------------------------------------------------
+suppress_story_ids: []
+
+# ---------------------------------------------------------------------------
+# Large-market teams — games involving these teams get the national_interest bonus
+# ---------------------------------------------------------------------------
+large_market_teams:
+  - NYY
+  - NYM
+  - LAD
+  - CHC
+  - BOS
+  - SF
+  - PHI
+  - ATL
+  - HOU
+  - STL
+
+# ---------------------------------------------------------------------------
+# Editorial neutrality
+# The front page must not be tailored to any single team.
+# Maximum percentage of front-page stories that may reference the same team.
+# ---------------------------------------------------------------------------
+neutrality:
+  max_single_team_fraction: 0.4

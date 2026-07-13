@@ -1,0 +1,32 @@
+{# templates/sections/masthead.html.j2 #}
+<header class="masthead" role="banner">
+  <div class="masthead-inner">
+    <p class="masthead-label">Major League Baseball Edition</p>
+    <h1 class="masthead-title">The Daily Sporting Press</h1>
+    <div class="masthead-meta">
+      <span class="masthead-date">
+        {{ edition.edition.generated_at.strftime('%A, %B %-d, %Y') if edition.edition.generated_at else edition.edition.date }}
+      </span>
+      <span class="masthead-sep">&bull;</span>
+      <span class="masthead-edition-type">{{ edition.edition.type | title }} Edition</span>
+      <span class="masthead-sep">&bull;</span>
+      <span class="masthead-generated">
+        Generated at
+        {% if edition.edition.generated_at %}
+          {{ edition.edition.generated_at.strftime('%I:%M %p %Z') }}
+        {% else %}
+          &mdash;
+        {% endif %}
+      </span>
+      <span class="masthead-sep">&bull;</span>
+      <span class="masthead-freshness">
+        Data current through
+        {% if edition.edition.data_current_through %}
+          {{ edition.edition.data_current_through.strftime('%I:%M %p %Z') }}
+        {% else %}
+          &mdash;
+        {% endif %}
+      </span>
+    </div>
+  </div>
+</header>

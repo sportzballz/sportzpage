@@ -1,0 +1,325 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "leagueLeaders": [
+    {
+      "leaderCategory": "doubles",
+      "season": "2026",
+      "gameType": {
+        "id": "R",
+        "description": "Regular Season"
+      },
+      "leaders": [
+        {
+          "rank": 1,
+          "value": "26",
+          "team": {
+            "id": 146,
+            "name": "Miami Marlins",
+            "link": "/api/v1/teams/146"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 672640,
+            "fullName": "Otto Lopez",
+            "link": "/api/v1/people/672640",
+            "firstName": "Otto",
+            "lastName": "Lopez"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 2,
+          "value": "25",
+          "team": {
+            "id": 137,
+            "name": "San Francisco Giants",
+            "link": "/api/v1/teams/137"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 646240,
+            "fullName": "Rafael Devers",
+            "link": "/api/v1/people/646240",
+            "firstName": "Rafael",
+            "lastName": "Devers"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 3,
+          "value": "24",
+          "team": {
+            "id": 144,
+            "name": "Atlanta Braves",
+            "link": "/api/v1/teams/144"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 621566,
+            "fullName": "Matt Olson",
+            "link": "/api/v1/people/621566",
+            "firstName": "Matt",
+            "lastName": "Olson"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 138,
+            "name": "St. Louis Cardinals",
+            "link": "/api/v1/teams/138"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 676475,
+            "fullName": "Alec Burleson",
+            "link": "/api/v1/people/676475",
+            "firstName": "Alec",
+            "lastName": "Burleson"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 141,
+            "name": "Toronto Blue Jays",
+            "link": "/api/v1/teams/141"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 676391,
+            "fullName": "Ernie Clement",
+            "link": "/api/v1/people/676391",
+            "firstName": "Ernie",
+            "lastName": "Clement"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 119,
+            "name": "Los Angeles Dodgers",
+            "link": "/api/v1/teams/119"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 518692,
+            "fullName": "Freddie Freeman",
+            "link": "/api/v1/people/518692",
+            "firstName": "Freddie",
+            "lastName": "Freeman"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 112,
+            "name": "Chicago Cubs",
+            "link": "/api/v1/teams/112"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 663538,
+            "fullName": "Nico Hoerner",
+            "link": "/api/v1/people/663538",
+            "firstName": "Nico",
+            "lastName": "Hoerner"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 115,
+            "name": "Colorado Rockies",
+            "link": "/api/v1/teams/115"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 687859,
+            "fullName": "Troy Johnston",
+            "link": "/api/v1/people/687859",
+            "firstName": "Troy",
+            "lastName": "Johnston"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 140,
+            "name": "Texas Rangers",
+            "link": "/api/v1/teams/140"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 673962,
+            "fullName": "Josh Jung",
+            "link": "/api/v1/people/673962",
+            "firstName": "Josh",
+            "lastName": "Jung"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 158,
+            "name": "Milwaukee Brewers",
+            "link": "/api/v1/teams/158"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 668930,
+            "fullName": "Brice Turang",
+            "link": "/api/v1/people/668930",
+            "firstName": "Brice",
+            "lastName": "Turang"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "23",
+          "team": {
+            "id": 120,
+            "name": "Washington Nationals",
+            "link": "/api/v1/teams/120"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 695578,
+            "fullName": "James Wood",
+            "link": "/api/v1/people/695578",
+            "firstName": "James",
+            "lastName": "Wood"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        }
+      ],
+      "statGroup": "hitting",
+      "totalSplits": 518
+    }
+  ]
+}

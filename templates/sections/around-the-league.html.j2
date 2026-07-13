@@ -1,0 +1,30 @@
+{# templates/sections/around-the-league.html.j2 #}
+<section id="around-the-league" class="around-the-league section" aria-labelledby="atl-heading">
+  <h2 id="atl-heading" class="section-heading">Around the League</h2>
+
+  {% if edition.around_the_league %}
+  <div class="atl-grid">
+    {% for item in edition.around_the_league %}
+    <article class="atl-item" aria-labelledby="atl-headline-{{ loop.index }}">
+      <h3 id="atl-headline-{{ loop.index }}" class="atl-headline">{{ item.headline }}</h3>
+      <p class="story-deck">{{ item.deck }}</p>
+      {% for para in item.paragraphs %}
+      <p>{{ para }}</p>
+      {% endfor %}
+      {% if item.teams or item.players %}
+      <footer class="story-tags">
+        {% for team in item.teams %}
+        <span class="tag tag-team">{{ team }}</span>
+        {% endfor %}
+        {% for player in item.players %}
+        <span class="tag tag-player">{{ player }}</span>
+        {% endfor %}
+      </footer>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="no-content">No around-the-league items available for this edition.</p>
+  {% endif %}
+</section>

@@ -1,0 +1,253 @@
+# ---------------------------------------------------------------------------
+# SportzBallz Daily Sports Page — teams.yaml
+# Canonical MLB team ID mappings (all 30 teams).
+# team_id: MLB Stats API team ID
+# abbr: 3-letter abbreviation used internally
+# ---------------------------------------------------------------------------
+
+teams:
+  # American League East
+  - team_id: 147
+    abbr: NYY
+    name: New York Yankees
+    league: AL
+    division: AL East
+    city: New York
+    market: large
+
+  - team_id: 111
+    abbr: BOS
+    name: Boston Red Sox
+    league: AL
+    division: AL East
+    city: Boston
+    market: large
+
+  - team_id: 141
+    abbr: TOR
+    name: Toronto Blue Jays
+    league: AL
+    division: AL East
+    city: Toronto
+    market: medium
+
+  - team_id: 139
+    abbr: TB
+    name: Tampa Bay Rays
+    league: AL
+    division: AL East
+    city: St. Petersburg
+    market: small
+
+  - team_id: 110
+    abbr: BAL
+    name: Baltimore Orioles
+    league: AL
+    division: AL East
+    city: Baltimore
+    market: small
+
+  # American League Central
+  - team_id: 116
+    abbr: DET
+    name: Detroit Tigers
+    league: AL
+    division: AL Central
+    city: Detroit
+    market: medium
+
+  - team_id: 118
+    abbr: KC
+    name: Kansas City Royals
+    league: AL
+    division: AL Central
+    city: Kansas City
+    market: small
+
+  - team_id: 142
+    abbr: MIN
+    name: Minnesota Twins
+    league: AL
+    division: AL Central
+    city: Minneapolis
+    market: medium
+
+  - team_id: 145
+    abbr: CWS
+    name: Chicago White Sox
+    league: AL
+    division: AL Central
+    city: Chicago
+    market: large
+
+  - team_id: 114
+    abbr: CLE
+    name: Cleveland Guardians
+    league: AL
+    division: AL Central
+    city: Cleveland
+    market: medium
+
+  # American League West
+  - team_id: 117
+    abbr: HOU
+    name: Houston Astros
+    league: AL
+    division: AL West
+    city: Houston
+    market: large
+
+  - team_id: 133
+    abbr: OAK
+    name: Oakland Athletics
+    league: AL
+    division: AL West
+    city: Oakland
+    market: small
+
+  - team_id: 140
+    abbr: TEX
+    name: Texas Rangers
+    league: AL
+    division: AL West
+    city: Arlington
+    market: medium
+
+  - team_id: 108
+    abbr: LAA
+    name: Los Angeles Angels
+    league: AL
+    division: AL West
+    city: Anaheim
+    market: large
+
+  - team_id: 136
+    abbr: SEA
+    name: Seattle Mariners
+    league: AL
+    division: AL West
+    city: Seattle
+    market: medium
+
+  # National League East
+  - team_id: 143
+    abbr: PHI
+    name: Philadelphia Phillies
+    league: NL
+    division: NL East
+    city: Philadelphia
+    market: large
+
+  - team_id: 144
+    abbr: ATL
+    name: Atlanta Braves
+    league: NL
+    division: NL East
+    city: Atlanta
+    market: large
+
+  - team_id: 121
+    abbr: NYM
+    name: New York Mets
+    league: NL
+    division: NL East
+    city: New York
+    market: large
+
+  - team_id: 120
+    abbr: WSH
+    name: Washington Nationals
+    league: NL
+    division: NL East
+    city: Washington
+    market: medium
+
+  - team_id: 146
+    abbr: MIA
+    name: Miami Marlins
+    league: NL
+    division: NL East
+    city: Miami
+    market: small
+
+  # National League Central
+  - team_id: 112
+    abbr: CHC
+    name: Chicago Cubs
+    league: NL
+    division: NL Central
+    city: Chicago
+    market: large
+
+  - team_id: 158
+    abbr: MIL
+    name: Milwaukee Brewers
+    league: NL
+    division: NL Central
+    city: Milwaukee
+    market: small
+
+  - team_id: 138
+    abbr: STL
+    name: St. Louis Cardinals
+    league: NL
+    division: NL Central
+    city: St. Louis
+    market: large
+
+  - team_id: 113
+    abbr: CIN
+    name: Cincinnati Reds
+    league: NL
+    division: NL Central
+    city: Cincinnati
+    market: small
+
+  - team_id: 134
+    abbr: PIT
+    name: Pittsburgh Pirates
+    league: NL
+    division: NL Central
+    city: Pittsburgh
+    market: small
+
+  # National League West
+  - team_id: 119
+    abbr: LAD
+    name: Los Angeles Dodgers
+    league: NL
+    division: NL West
+    city: Los Angeles
+    market: large
+
+  - team_id: 137
+    abbr: SF
+    name: San Francisco Giants
+    league: NL
+    division: NL West
+    city: San Francisco
+    market: large
+
+  - team_id: 135
+    abbr: SD
+    name: San Diego Padres
+    league: NL
+    division: NL West
+    city: San Diego
+    market: medium
+
+  - team_id: 109
+    abbr: ARI
+    name: Arizona Diamondbacks
+    league: NL
+    division: NL West
+    city: Phoenix
+    market: medium
+
+  - team_id: 115
+    abbr: COL
+    name: Colorado Rockies
+    league: NL
+    division: NL West
+    city: Denver
+    market: medium

@@ -1,0 +1,52 @@
+{
+  "run_id": "241e6019-17a7-41bb-a7a6-1ae333539948",
+  "edition_id": null,
+  "started_at": "2026-07-13T18:26:20.978327Z",
+  "completed_at": "2026-07-13T18:26:22.357549Z",
+  "phases": [
+    {
+      "name": "collecting",
+      "status": "completed",
+      "started_at": "2026-07-13T18:26:20.978857Z",
+      "completed_at": "2026-07-13T18:26:21.972591Z",
+      "note": null
+    },
+    {
+      "name": "normalizing",
+      "status": "completed",
+      "started_at": "2026-07-13T18:26:21.972636Z",
+      "completed_at": "2026-07-13T18:26:22.106513Z",
+      "note": null
+    },
+    {
+      "name": "generating",
+      "status": "completed",
+      "started_at": "2026-07-13T18:26:22.106707Z",
+      "completed_at": "2026-07-13T18:26:22.162661Z",
+      "note": null
+    },
+    {
+      "name": "validating",
+      "status": "completed",
+      "started_at": "2026-07-13T18:26:22.162847Z",
+      "completed_at": "2026-07-13T18:26:22.243384Z",
+      "note": null
+    },
+    {
+      "name": "rendering",
+      "status": "completed",
+      "started_at": "2026-07-13T18:26:22.243417Z",
+      "completed_at": "2026-07-13T18:26:22.357474Z",
+      "note": null
+    }
+  ],
+  "provider_statuses": [],
+  "final_status": "published",
+  "error": null,
+  "ai_used": false,
+  "ai_fallback_count": 0,
+  "game_count": 15,
+  "story_count": 21,
+  "leader_category_count": 23,
+  "published_url": null
+}

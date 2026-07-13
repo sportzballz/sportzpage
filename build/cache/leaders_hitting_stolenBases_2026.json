@@ -1,0 +1,325 @@
+{
+  "copyright": "Copyright 2026 MLB Advanced Media, L.P.  Use of any content on this page acknowledges agreement to the terms posted here http://gdx.mlb.com/components/copyright.txt",
+  "leagueLeaders": [
+    {
+      "leaderCategory": "stolenBases",
+      "season": "2026",
+      "gameType": {
+        "id": "R",
+        "description": "Regular Season"
+      },
+      "leaders": [
+        {
+          "rank": 1,
+          "value": "34",
+          "team": {
+            "id": 120,
+            "name": "Washington Nationals",
+            "link": "/api/v1/teams/120"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 683083,
+            "fullName": "Nasim Nu\u00f1ez",
+            "link": "/api/v1/people/683083",
+            "firstName": "Nasim",
+            "lastName": "Nu\u00f1ez"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 2,
+          "value": "30",
+          "team": {
+            "id": 118,
+            "name": "Kansas City Royals",
+            "link": "/api/v1/teams/118"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 677951,
+            "fullName": "Bobby Witt Jr.",
+            "link": "/api/v1/people/677951",
+            "firstName": "Bobby",
+            "lastName": "Witt"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 3,
+          "value": "26",
+          "team": {
+            "id": 147,
+            "name": "New York Yankees",
+            "link": "/api/v1/teams/147"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 665862,
+            "fullName": "Jazz Chisholm Jr.",
+            "link": "/api/v1/people/665862",
+            "firstName": "Jazz",
+            "lastName": "Chisholm"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "24",
+          "team": {
+            "id": 112,
+            "name": "Chicago Cubs",
+            "link": "/api/v1/teams/112"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 691718,
+            "fullName": "Pete Crow-Armstrong",
+            "link": "/api/v1/people/691718",
+            "firstName": "Pete",
+            "lastName": "Crow-Armstrong"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 4,
+          "value": "24",
+          "team": {
+            "id": 114,
+            "name": "Cleveland Guardians",
+            "link": "/api/v1/teams/114"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 608070,
+            "fullName": "Jos\u00e9 Ram\u00edrez",
+            "link": "/api/v1/people/608070",
+            "firstName": "Jos\u00e9",
+            "lastName": "Ram\u00edrez"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 6,
+          "value": "23",
+          "team": {
+            "id": 135,
+            "name": "San Diego Padres",
+            "link": "/api/v1/teams/135"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 665487,
+            "fullName": "Fernando Tatis Jr.",
+            "link": "/api/v1/people/665487",
+            "firstName": "Fernando",
+            "lastName": "Tatis"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 7,
+          "value": "22",
+          "team": {
+            "id": 147,
+            "name": "New York Yankees",
+            "link": "/api/v1/teams/147"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 676609,
+            "fullName": "Jos\u00e9 Caballero",
+            "link": "/api/v1/people/676609",
+            "firstName": "Jos\u00e9",
+            "lastName": "Caballero"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 7,
+          "value": "22",
+          "team": {
+            "id": 139,
+            "name": "Tampa Bay Rays",
+            "link": "/api/v1/teams/139"
+          },
+          "league": {
+            "id": 103,
+            "name": "AL",
+            "link": "/api/v1/league/103"
+          },
+          "person": {
+            "id": 802415,
+            "fullName": "Chandler Simpson",
+            "link": "/api/v1/people/802415",
+            "firstName": "Chandler",
+            "lastName": "Simpson"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 9,
+          "value": "21",
+          "team": {
+            "id": 134,
+            "name": "Pittsburgh Pirates",
+            "link": "/api/v1/teams/134"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 665833,
+            "fullName": "Oneil Cruz",
+            "link": "/api/v1/people/665833",
+            "firstName": "Oneil",
+            "lastName": "Cruz"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 10,
+          "value": "20",
+          "team": {
+            "id": 134,
+            "name": "Pittsburgh Pirates",
+            "link": "/api/v1/teams/134"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 804606,
+            "fullName": "Konnor Griffin",
+            "link": "/api/v1/people/804606",
+            "firstName": "Konnor",
+            "lastName": "Griffin"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        },
+        {
+          "rank": 10,
+          "value": "20",
+          "team": {
+            "id": 146,
+            "name": "Miami Marlins",
+            "link": "/api/v1/teams/146"
+          },
+          "league": {
+            "id": 104,
+            "name": "NL",
+            "link": "/api/v1/league/104"
+          },
+          "person": {
+            "id": 665923,
+            "fullName": "Esteury Ruiz",
+            "link": "/api/v1/people/665923",
+            "firstName": "Esteury",
+            "lastName": "Ruiz"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "season": "2026",
+          "numTeams": 1
+        }
+      ],
+      "statGroup": "hitting",
+      "totalSplits": 368
+    }
+  ]
+}

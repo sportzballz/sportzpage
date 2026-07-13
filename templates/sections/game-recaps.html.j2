@@ -1,0 +1,57 @@
+{# templates/sections/game-recaps.html.j2 #}
+<section id="game-recaps" class="game-recaps section" aria-labelledby="recaps-heading">
+  <h2 id="recaps-heading" class="section-heading">Game Recaps</h2>
+
+  {% if edition.game_recaps %}
+  {% for recap in edition.game_recaps %}
+  <article class="game-recap" id="recap-{{ recap.game_id }}" aria-labelledby="recap-headline-{{ recap.game_id }}">
+    <header class="recap-header">
+      <h3 id="recap-headline-{{ recap.game_id }}" class="recap-headline">{{ recap.headline }}</h3>
+      <p class="story-deck">{{ recap.deck }}</p>
+      <div class="recap-meta">
+        <span class="recap-score">{{ recap.final_score }}</span>
+        <span class="recap-sep">&bull;</span>
+        <span class="recap-byline">By {{ recap.byline }}</span>
+      </div>
+      {% if recap.tags %}
+      <div class="recap-tags">
+        {% for tag in recap.tags %}
+        <span class="tag tag-{{ tag }}">{{ tag | replace('-', ' ') | title }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </header>
+
+    {% if recap.winning_pitcher or recap.losing_pitcher or recap.save_pitcher %}
+    <div class="recap-decisions">
+      {% if recap.winning_pitcher %}
+      <span class="pitcher-decision pitcher-win">W: {{ recap.winning_pitcher.name }}
+        {% if recap.winning_pitcher.wins is not none and recap.winning_pitcher.losses is not none %}
+        ({{ recap.winning_pitcher.wins }}-{{ recap.winning_pitcher.losses }})
+        {% endif %}
+      </span>
+      {% endif %}
+      {% if recap.losing_pitcher %}
+      <span class="pitcher-decision pitcher-loss">L: {{ recap.losing_pitcher.name }}
+        {% if recap.losing_pitcher.wins is not none and recap.losing_pitcher.losses is not none %}
+        ({{ recap.losing_pitcher.wins }}-{{ recap.losing_pitcher.losses }})
+        {% endif %}
+      </span>
+      {% endif %}
+      {% if recap.save_pitcher %}
+      <span class="pitcher-decision pitcher-save">SV: {{ recap.save_pitcher.name }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="recap-body">
+      {% for para in recap.paragraphs %}
+      <p{% if loop.first %} class="story-first-para"{% endif %}>{{ para }}</p>
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+  {% else %}
+  <p class="no-content">No game recaps available for this edition.</p>
+  {% endif %}
+</section>

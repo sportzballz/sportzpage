@@ -1,0 +1,170 @@
+{# templates/sections/scoreboard.html.j2 #}
+<section id="scoreboard" class="scoreboard section" aria-labelledby="scoreboard-heading">
+  <h2 id="scoreboard-heading" class="section-heading">Scoreboard</h2>
+
+  {% set final_games = edition.games | selectattr('status', 'equalto', 'final') | list %}
+  {% set live_games = edition.games | selectattr('status', 'equalto', 'in_progress') | list %}
+  {% set sched_games = edition.games | selectattr('status', 'equalto', 'scheduled') | list %}
+  {% set postponed_games = edition.games | rejectattr('status', 'in', ['final', 'in_progress', 'scheduled']) | list %}
+
+  {% if live_games %}
+  <div class="scoreboard-group">
+    <h3 class="scoreboard-group-label">In Progress</h3>
+    <table class="scoreboard-table" aria-label="Games in progress">
+      <caption class="visually-hidden">Games currently in progress</caption>
+      <thead>
+        <tr>
+          <th scope="col">Matchup</th>
+          <th scope="col" class="score-col">Score</th>
+          <th scope="col">Inning</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for game in live_games %}
+        <tr>
+          <td class="matchup-cell">
+            <span class="team-name">{{ game.away.team_abbr }}</span>
+            <span class="at-symbol"> @ </span>
+            <span class="team-name">{{ game.home.team_abbr }}</span>
+          </td>
+          <td class="score-cell">
+            {{ game.away.runs if game.away.runs is not none else '-' }}
+            &ndash;
+            {{ game.home.runs if game.home.runs is not none else '-' }}
+          </td>
+          <td class="inning-cell">
+            {% if game.inning_state and game.inning %}
+              {{ game.inning_state }} {{ game.inning }}
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if final_games %}
+  <div class="scoreboard-group">
+    <h3 class="scoreboard-group-label">Final</h3>
+    <table class="scoreboard-table" aria-label="Final scores">
+      <caption class="visually-hidden">Final scores</caption>
+      <thead>
+        <tr>
+          <th scope="col">Matchup</th>
+          <th scope="col" class="score-col">Score</th>
+          <th scope="col">Pitching Decisions</th>
+          <th scope="col">Recap</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for game in final_games %}
+        <tr>
+          <td class="matchup-cell">
+            <span class="team-name {% if game.away.runs is not none and game.home.runs is not none and game.away.runs > game.home.runs %}winning-team{% endif %}">
+              {{ game.away.team_abbr }}
+            </span>
+            <span class="at-symbol"> @ </span>
+            <span class="team-name {% if game.away.runs is not none and game.home.runs is not none and game.home.runs > game.away.runs %}winning-team{% endif %}">
+              {{ game.home.team_abbr }}
+            </span>
+            {% if game.tags %}
+            <span class="game-tags">
+              {% for tag in game.tags %}
+              <span class="game-tag">{{ tag | replace('-', ' ') | title }}</span>
+              {% endfor %}
+            </span>
+            {% endif %}
+          </td>
+          <td class="score-cell">
+            <strong>{{ game.away.runs if game.away.runs is not none else '-' }}</strong>
+            &ndash;
+            <strong>{{ game.home.runs if game.home.runs is not none else '-' }}</strong>
+          </td>
+          <td class="pitchers-cell">
+            {% if game.winning_pitcher %}
+            <span class="pitcher-decision pitcher-win" title="Win">W: {{ game.winning_pitcher.name }}</span>
+            {% endif %}
+            {% if game.losing_pitcher %}
+            <span class="pitcher-decision pitcher-loss" title="Loss">L: {{ game.losing_pitcher.name }}</span>
+            {% endif %}
+            {% if game.save_pitcher %}
+            <span class="pitcher-decision pitcher-save" title="Save">SV: {{ game.save_pitcher.name }}</span>
+            {% endif %}
+          </td>
+          <td class="recap-cell">
+            {% if game.recap_anchor %}
+            <a href="#{{ game.recap_anchor }}">Recap</a>
+            {% else %}
+            &mdash;
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if sched_games %}
+  <div class="scoreboard-group">
+    <h3 class="scoreboard-group-label">Scheduled</h3>
+    <table class="scoreboard-table" aria-label="Scheduled games">
+      <caption class="visually-hidden">Scheduled games</caption>
+      <thead>
+        <tr>
+          <th scope="col">Matchup</th>
+          <th scope="col">Time (ET)</th>
+          <th scope="col">Venue</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for game in sched_games %}
+        <tr>
+          <td class="matchup-cell">
+            <span class="team-name">{{ game.away.team_abbr }}</span>
+            <span class="at-symbol"> @ </span>
+            <span class="team-name">{{ game.home.team_abbr }}</span>
+          </td>
+          <td>{{ game.game_time_et or 'TBD' }}</td>
+          <td>{{ game.venue_name or '&mdash;' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if postponed_games %}
+  <div class="scoreboard-group">
+    <h3 class="scoreboard-group-label">Postponed / Delayed / Suspended</h3>
+    <table class="scoreboard-table" aria-label="Postponed or delayed games">
+      <caption class="visually-hidden">Postponed, delayed, or suspended games</caption>
+      <thead>
+        <tr>
+          <th scope="col">Matchup</th>
+          <th scope="col">Status</th>
+          <th scope="col">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for game in postponed_games %}
+        <tr>
+          <td class="matchup-cell">
+            <span class="team-name">{{ game.away.team_abbr }}</span>
+            <span class="at-symbol"> @ </span>
+            <span class="team-name">{{ game.home.team_abbr }}</span>
+          </td>
+          <td>{{ game.status.value | replace('_', ' ') | title }}</td>
+          <td>{{ game.postponement_reason or '&mdash;' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if not edition.games %}
+  <p class="no-content">No games available for this edition.</p>
+  {% endif %}
+</section>

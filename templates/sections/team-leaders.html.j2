@@ -1,0 +1,39 @@
+{# templates/sections/team-leaders.html.j2 #}
+<section id="team-leaders" class="team-leaders section" aria-labelledby="team-leaders-heading">
+  <h2 id="team-leaders-heading" class="section-heading">Team Leaders</h2>
+  <p class="section-subhead">Key performers from today's games</p>
+
+  {% if edition.team_game_leaders %}
+  <div class="team-leaders-grid">
+    {% for tgl in edition.team_game_leaders %}
+    <div class="team-leaders-card">
+      <h3 class="team-leaders-matchup">{{ tgl.away_abbr }} at {{ tgl.home_abbr }}</h3>
+      {% if tgl.performers %}
+      <table class="team-leaders-table">
+        <thead>
+          <tr>
+            <th scope="col">Player</th>
+            <th scope="col">Team</th>
+            <th scope="col">Line</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in tgl.performers %}
+          <tr class="performer-{{ p.role }}">
+            <td class="performer-name">{{ p.player_name }}</td>
+            <td class="performer-team">{{ p.team_abbr }}</td>
+            <td class="performer-line">{{ p.stat_line }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="no-content">No performers listed.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="no-content">Team leaders are not available for this edition.</p>
+  {% endif %}
+</section>

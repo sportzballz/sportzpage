@@ -1,0 +1,140 @@
+# tests/unit/test_editorial.py
+from __future__ import annotations
+import pytest
+from src.models.game import Game, GameStatus, TeamGameLine, Pitcher
+from src.editorial.scoring import ScoringWeights, ScoringContext, score_game
+from src.editorial.fallback import generate_fallback_recap
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def _make_game(
+    game_id: int = 1,
+    home_runs: int = 5,
+    away_runs: int = 3,
+    tags: list[str] | None = None,
+    winning_pitcher: Pitcher | None = None,
+    losing_pitcher: Pitcher | None = None,
+    save_pitcher: Pitcher | None = None,
+) -> Game:
+    return Game(
+        game_id=game_id,
+        game_date="2026-07-13",
+        status=GameStatus.final,
+        home=TeamGameLine(
+            team_id=147,
+            team_abbr="NYY",
+            team_name="New York Yankees",
+            runs=home_runs,
+        ),
+        away=TeamGameLine(
+            team_id=111,
+            team_abbr="BOS",
+            team_name="Boston Red Sox",
+            runs=away_runs,
+        ),
+        tags=tags or [],
+        winning_pitcher=winning_pitcher,
+        losing_pitcher=losing_pitcher,
+        save_pitcher=save_pitcher,
+    )
+
+
+def _default_weights() -> ScoringWeights:
+    return ScoringWeights()
+
+
+def _zero_context(**overrides) -> ScoringContext:
+    return ScoringContext(**overrides)
+
+
+# ---------------------------------------------------------------------------
+# score_game tests
+# ---------------------------------------------------------------------------
+
+
+def test_score_game_playoff_weight():
+    """is_postseason=True, all else 0 → score equals playoff_weight."""
+    weights = _default_weights()
+    context = _zero_context(is_postseason=True)
+    game = _make_game()
+    result = score_game(game, context, weights, {})
+    assert result == weights.playoff_weight
+
+
+def test_score_game_historic_weight():
+    """has_historic_performance=True, all else 0 → score equals historic_weight."""
+    weights = _default_weights()
+    context = _zero_context(has_historic_performance=True)
+    game = _make_game()
+    result = score_game(game, context, weights, {})
+    assert result == weights.historic_weight
+
+
+def test_score_game_manual_override():
+    """Manual override for game_id=999 returns 10.0 regardless of context."""
+    weights = _default_weights()
+    context = _zero_context(
+        is_postseason=True, has_historic_performance=True, performance_score=5.0
+    )
+    game = _make_game(game_id=999)
+    result = score_game(game, context, weights, {999: 10.0})
+    assert result == 10.0
+
+
+def test_score_game_manual_override_zero():
+    """Manual override of 0.0 takes precedence even when postseason=True."""
+    weights = _default_weights()
+    context = _zero_context(is_postseason=True)
+    game = _make_game(game_id=999)
+    result = score_game(game, context, weights, {999: 0.0})
+    assert result == 0.0
+
+
+def test_score_game_zero_context():
+    """All context flags False/0 → score = 0.0."""
+    weights = _default_weights()
+    context = _zero_context()
+    game = _make_game()
+    result = score_game(game, context, weights, {})
+    assert result == 0.0
+
+
+# ---------------------------------------------------------------------------
+# generate_fallback_recap tests
+# ---------------------------------------------------------------------------
+
+
+def test_generate_fallback_recap_walk_off():
+    """Walk-off tag: headline contains winner name and score, body contains 'walk-off'."""
+    game = _make_game(home_runs=4, away_runs=3, tags=["walk-off"])
+    recap = generate_fallback_recap(game)
+    assert "New York Yankees" in recap.headline
+    assert "4" in recap.headline
+    body = " ".join(recap.paragraphs)
+    assert "walk-off" in body.lower()
+
+
+def test_generate_fallback_recap_extra_innings():
+    """Extra-inning tag: body contains 'extra innings'."""
+    game = _make_game(home_runs=6, away_runs=5, tags=["extra-inning"])
+    recap = generate_fallback_recap(game)
+    body = " ".join(recap.paragraphs)
+    assert "extra innings" in body.lower()
+
+
+def test_generate_fallback_recap_no_ai_flag():
+    """Returned recap has ai_generated=False."""
+    game = _make_game()
+    recap = generate_fallback_recap(game)
+    assert recap.ai_generated is False
+
+
+def test_generate_fallback_recap_facts_used_populated():
+    """Returned recap has non-empty facts_used."""
+    game = _make_game()
+    recap = generate_fallback_recap(game)
+    assert len(recap.facts_used) > 0

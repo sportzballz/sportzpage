@@ -1,0 +1,149 @@
+{# templates/sections/box-scores.html.j2 #}
+<section id="box-scores" class="box-scores section" aria-labelledby="boxscores-heading">
+  <h2 id="boxscores-heading" class="section-heading">Box Scores</h2>
+
+  {% set final_games = edition.games | selectattr("status", "equalto", "final") | list %}
+  {% if final_games %}
+  {% for game in final_games %}
+  {% if game.linescore %}
+  <div class="box-score" id="box-{{ game.game_id }}">
+    <h3 class="box-score-matchup">
+      {{ game.away.team_abbr }} {{ game.away.runs if game.away.runs is not none else '' }}
+      &nbsp;at&nbsp;
+      {{ game.home.team_abbr }} {{ game.home.runs if game.home.runs is not none else '' }}
+      <span class="box-score-venue">— {{ game.venue_name }}</span>
+    </h3>
+
+    {# Linescore #}
+    <div class="linescore-wrap">
+      <table class="linescore-table" aria-label="Linescore for {{ game.away.team_abbr }} at {{ game.home.team_abbr }}">
+        <thead>
+          <tr>
+            <th scope="col" class="linescore-team-col">Team</th>
+            {% for inn in game.linescore %}
+            <th scope="col" class="linescore-inn-col">{{ inn.inning }}</th>
+            {% endfor %}
+            <th scope="col" class="linescore-rhe r-col">R</th>
+            <th scope="col" class="linescore-rhe h-col">H</th>
+            <th scope="col" class="linescore-rhe e-col">E</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row" class="linescore-team-name">{{ game.away.team_abbr }}</th>
+            {% for inn in game.linescore %}
+            <td class="linescore-inn">{{ inn.away_runs if inn.away_runs is not none else 'x' }}</td>
+            {% endfor %}
+            <td class="linescore-rhe r-col">{{ game.away.runs }}</td>
+            <td class="linescore-rhe h-col">{{ game.away.hits }}</td>
+            <td class="linescore-rhe e-col">{{ game.away.errors }}</td>
+          </tr>
+          <tr>
+            <th scope="row" class="linescore-team-name">{{ game.home.team_abbr }}</th>
+            {% for inn in game.linescore %}
+            <td class="linescore-inn">{{ inn.home_runs if inn.home_runs is not none else 'x' }}</td>
+            {% endfor %}
+            <td class="linescore-rhe r-col">{{ game.home.runs }}</td>
+            <td class="linescore-rhe h-col">{{ game.home.hits }}</td>
+            <td class="linescore-rhe e-col">{{ game.home.errors }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {# Pitcher decisions #}
+    {% if game.winning_pitcher or game.losing_pitcher or game.save_pitcher %}
+    <div class="box-decisions">
+      {% if game.winning_pitcher %}<span class="pitcher-decision pitcher-win">W: {{ game.winning_pitcher.name }}{% if game.winning_pitcher.wins is not none and game.winning_pitcher.losses is not none %} ({{ game.winning_pitcher.wins }}-{{ game.winning_pitcher.losses }}){% endif %}</span>{% endif %}
+      {% if game.losing_pitcher %}<span class="pitcher-decision pitcher-loss">L: {{ game.losing_pitcher.name }}{% if game.losing_pitcher.wins is not none and game.losing_pitcher.losses is not none %} ({{ game.losing_pitcher.wins }}-{{ game.losing_pitcher.losses }}){% endif %}</span>{% endif %}
+      {% if game.save_pitcher %}<span class="pitcher-decision pitcher-save">SV: {{ game.save_pitcher.name }}</span>{% endif %}
+    </div>
+    {% endif %}
+
+    {# Batting lines #}
+    {% if game.batting_lines %}
+    <div class="box-batting">
+      {% for team_abbr, lines in game.batting_lines.items() %}
+      <div class="box-team-section">
+        <h4 class="box-team-label">{{ team_abbr }} Batting</h4>
+        <table class="box-batting-table">
+          <thead>
+            <tr>
+              <th scope="col" class="batter-name-col">Player</th>
+              <th scope="col">AB</th>
+              <th scope="col">R</th>
+              <th scope="col">H</th>
+              <th scope="col">RBI</th>
+              <th scope="col">BB</th>
+              <th scope="col">K</th>
+              <th scope="col">AVG</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in lines %}
+            <tr>
+              <td class="batter-name-col">{{ line.player_name }}</td>
+              <td>{{ line.ab if line.ab is not none else '—' }}</td>
+              <td>{{ line.r if line.r is not none else '—' }}</td>
+              <td>{{ line.h if line.h is not none else '—' }}</td>
+              <td>{{ line.rbi if line.rbi is not none else '—' }}</td>
+              <td>{{ line.bb if line.bb is not none else '—' }}</td>
+              <td>{{ line.k if line.k is not none else '—' }}</td>
+              <td>{{ line.avg if line.avg else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Pitching lines #}
+    {% if game.pitching_lines %}
+    <div class="box-pitching">
+      {% for team_abbr, lines in game.pitching_lines.items() %}
+      <div class="box-team-section">
+        <h4 class="box-team-label">{{ team_abbr }} Pitching</h4>
+        <table class="box-pitching-table">
+          <thead>
+            <tr>
+              <th scope="col" class="pitcher-name-col">Pitcher</th>
+              <th scope="col">IP</th>
+              <th scope="col">H</th>
+              <th scope="col">R</th>
+              <th scope="col">ER</th>
+              <th scope="col">BB</th>
+              <th scope="col">K</th>
+              <th scope="col">ERA</th>
+              <th scope="col"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in lines %}
+            <tr>
+              <td class="pitcher-name-col">{{ line.player_name }}</td>
+              <td>{{ line.ip if line.ip else '—' }}</td>
+              <td>{{ line.hits_allowed if line.hits_allowed is not none else '—' }}</td>
+              <td>{{ line.r if line.r is not none else '—' }}</td>
+              <td>{{ line.er if line.er is not none else '—' }}</td>
+              <td>{{ line.bb_allowed if line.bb_allowed is not none else '—' }}</td>
+              <td>{{ line.k_pitched if line.k_pitched is not none else '—' }}</td>
+              <td>{{ line.era if line.era else '—' }}</td>
+              <td class="decision-col">{% if line.decision %}<span class="pitcher-decision pitcher-{{ line.decision | lower }}">{{ line.decision }}</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+  {% endfor %}
+  {% else %}
+  <p class="no-content">No completed games available for box scores.</p>
+  {% endif %}
+</section>

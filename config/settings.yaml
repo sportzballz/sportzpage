@@ -1,0 +1,71 @@
+# ---------------------------------------------------------------------------
+# SportzBallz Daily Sports Page — settings.yaml
+# Copy this to config/settings.yaml and adjust for your environment.
+# Secrets (API keys) MUST come from environment variables, never this file.
+# ---------------------------------------------------------------------------
+
+# Build and publish paths
+build_dir: build
+publish_root: build/output
+archive_root: build/output/archive
+last_known_good_filename: index.html.lkg
+
+# Public URL base
+public_base_url: https://sportzballz.io/daily-sports-page
+publication_name: "The Daily Sporting Press"
+
+# CDN purge hook — path to a shell script that purges the CDN cache.
+# Set to null to disable. The script is called after successful publication.
+cdn_purge_hook: null
+
+# ---------------------------------------------------------------------------
+# MLB Stats API
+# ---------------------------------------------------------------------------
+mlb_api:
+  base_url: https://statsapi.mlb.com/api/v1
+  timeout_seconds: 10
+  max_attempts: 3
+  backoff_min_seconds: 1.0
+  backoff_max_seconds: 30.0
+
+# ---------------------------------------------------------------------------
+# AI provider
+# Credentials come from environment variables:
+#   OPENAI_API_KEY  — for provider: openai
+#   ANTHROPIC_API_KEY — for provider: anthropic
+# Set provider to "none" to disable AI generation (deterministic fallback only).
+# ---------------------------------------------------------------------------
+ai:
+  provider: openai # openai | anthropic | none
+  model: gpt-4o
+  timeout_seconds: 30
+  max_retries: 2
+
+# ---------------------------------------------------------------------------
+# Data freshness max ages (seconds)
+# Sections with data older than these limits are marked stale.
+# ---------------------------------------------------------------------------
+freshness_max_age_seconds:
+  live_scores: 300 # 5 minutes
+  scheduled_games: 1800 # 30 minutes
+  standings: 1800 # 30 minutes
+  league_leaders: 21600 # 6 hours
+  transactions: 1800 # 30 minutes
+  injuries: 7200 # 2 hours
+  historical_data: 2592000 # 30 days
+
+# ---------------------------------------------------------------------------
+# Performance budget
+# ---------------------------------------------------------------------------
+performance:
+  html_max_bytes: 512000 # 500 KB
+  total_page_max_bytes: 2097152 # 2 MB
+
+# ---------------------------------------------------------------------------
+# Feature flags
+# ---------------------------------------------------------------------------
+features:
+  archive_enabled: true
+  dark_mode_enabled: true
+  betting_content_enabled: false
+  image_generation_enabled: false

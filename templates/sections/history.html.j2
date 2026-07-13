@@ -1,0 +1,35 @@
+{# templates/sections/history.html.j2 #}
+<section id="history" class="history section" aria-labelledby="history-heading">
+  <h2 id="history-heading" class="section-heading">This Day in Baseball History</h2>
+
+  {% if edition.historical_items %}
+  <ol class="history-list">
+    {% for item in edition.historical_items | sort(attribute='year') %}
+    <li class="history-item">
+      <article aria-labelledby="history-headline-{{ loop.index }}">
+        <header class="history-header">
+          <span class="history-year">{{ item.year }}</span>
+          <h3 id="history-headline-{{ loop.index }}" class="history-headline">{{ item.headline }}</h3>
+        </header>
+        <p class="history-description">{{ item.description }}</p>
+        {% if item.teams or item.players %}
+        <footer class="story-tags">
+          {% for team in item.teams %}
+          <span class="tag tag-team">{{ team }}</span>
+          {% endfor %}
+          {% for player in item.players %}
+          <span class="tag tag-player">{{ player }}</span>
+          {% endfor %}
+        </footer>
+        {% endif %}
+        {% if not item.verified %}
+        <p class="history-unverified"><em>Note: This item could not be independently verified.</em></p>
+        {% endif %}
+      </article>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="no-content">No historical items available for this edition.</p>
+  {% endif %}
+</section>

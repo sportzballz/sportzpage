@@ -1,0 +1,57 @@
+{# templates/index.html.j2 #}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MLB Daily Sports Page &mdash; {{ edition.edition.date }} | SportzBallz</title>
+  <meta name="description" content="Today's MLB scores, standings, league leaders, game recaps, and analysis.">
+  <link rel="canonical" href="/daily-sports-page/index.html">
+  <meta property="og:title" content="MLB Daily Sports Page &mdash; {{ edition.edition.date }}">
+  <meta property="og:description" content="Today's MLB scores, standings, and analysis.">
+  <meta property="og:type" content="website">
+  <meta name="sportzballz-edition-id" content="{{ edition.edition.id }}">
+  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}">
+</head>
+<body>
+  <a href="#front-page" class="skip-link">Skip to content</a>
+  {% include "sections/masthead.html.j2" %}
+  <nav class="section-nav" aria-label="Page sections">
+    <ul>
+      <li><a href="#scoreboard">Scoreboard</a></li>
+      <li><a href="#todays-games">Today's Games</a></li>
+      <li><a href="#standings">Standings</a></li>
+      <li><a href="#league-leaders">League Leaders</a></li>
+      <li><a href="#team-leaders">Team Leaders</a></li>
+      <li><a href="#game-recaps">Game Recaps</a></li>
+      <li><a href="#box-scores">Box Scores</a></li>
+      <li><a href="#around-the-league">Around the League</a></li>
+      <li><a href="#transactions">Transactions</a></li>
+      <li><a href="#injuries">Injuries</a></li>
+    </ul>
+    <button class="print-btn" type="button" onclick="window.print()">Print</button>
+  </nav>
+  <main>
+    {% include "sections/front-page.html.j2" %}
+    {% include "sections/scoreboard.html.j2" %}
+    {% include "sections/todays-games.html.j2" %}
+    {% include "sections/standings.html.j2" %}
+    {% include "sections/league-leaders.html.j2" %}
+    {% include "sections/team-leaders.html.j2" %}
+    {% include "sections/game-recaps.html.j2" %}
+    {% include "sections/box-scores.html.j2" %}
+    {% include "sections/around-the-league.html.j2" %}
+    {% include "sections/transactions.html.j2" %}
+    {% include "sections/injuries.html.j2" %}
+    {% include "sections/history.html.j2" %}
+  </main>
+  <footer class="site-footer">
+    <p>SportzBallz &mdash; {{ edition.edition.date }} &mdash;
+    {% if edition.edition.generated_at %}
+      Generated at {{ edition.edition.generated_at.strftime('%I:%M %p %Z') }}
+    {% endif %}
+    </p>
+  </footer>
+  <script src="{{ asset('js/daily-sports-page.js') }}"></script>
+</body>
+</html>

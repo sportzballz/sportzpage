@@ -1,0 +1,353 @@
+# src/normalization/normalizer.py
+from __future__ import annotations
+import logging
+from datetime import date, datetime
+from typing import Any, List, Optional
+from pydantic import BaseModel, Field
+from src.models.game import Game, GameStatus, TeamGameLine, Pitcher, LinescoreInning
+from src.models.standings import StandingsRow, DivisionStandings, WildCardStandings, Standings
+from src.models.leaders import LeaderEntry, LeagueLeaders
+from src.models.transactions import Transaction, TransactionType
+from src.models.injuries import Injury, RosterStatus, InjuryConfidence
+
+logger = logging.getLogger(__name__)
+
+
+class NormalizedData(BaseModel):
+    """All provider data normalized to domain models, ready for editorial processing."""
+
+    games: List[Game] = Field(default_factory=list)
+    standings: Optional[Standings] = Field(default=None)
+    league_leaders: Optional[LeagueLeaders] = Field(default=None)
+    transactions: List[Transaction] = Field(default_factory=list)
+    injuries: List[Injury] = Field(default_factory=list)
+    collection_errors: List[str] = Field(default_factory=list)
+
+
+class Normalizer:
+    """Converts raw MLB Stats API responses to validated Pydantic domain models."""
+
+    _GAME_STATUS_MAP: dict[str, GameStatus] = {
+        "Final": GameStatus.final,
+        "Game Over": GameStatus.final,
+        "In Progress": GameStatus.in_progress,
+        "Scheduled": GameStatus.scheduled,
+        "Pre-Game": GameStatus.scheduled,
+        "Warmup": GameStatus.scheduled,
+        "Postponed": GameStatus.postponed,
+        "Delayed": GameStatus.delayed,
+        "Delayed: Rain": GameStatus.delayed,
+        "Suspended": GameStatus.suspended,
+    }
+
+    _TRANSACTION_TYPE_MAP: dict[str, TransactionType] = {
+        "Trade": TransactionType.trade,
+        "Designated for Assignment": TransactionType.dfa,
+        "Released": TransactionType.released,
+        "Signed": TransactionType.signed,
+        "Optioned to Minors": TransactionType.optioned,
+        "Recalled from Minors": TransactionType.recalled,
+        "Placed on 10-Day IL": TransactionType.placed_on_il,
+        "Placed on 15-Day IL": TransactionType.placed_on_il,
+        "Placed on 60-Day IL": TransactionType.placed_on_il,
+        "Activated from IL": TransactionType.activated,
+        "Claimed off Waivers": TransactionType.claimed,
+        "Retired": TransactionType.retired,
+    }
+
+    def normalize(self, raw: dict[str, Any]) -> NormalizedData:
+        # Build team abbreviation map: id (int) -> abbr string
+        # Prefer the dedicated teams map; fall back to scanning schedule games
+        teams_map: dict[int, str] = {}
+        if "teams" in raw and isinstance(raw["teams"], dict):
+            teams_map = {int(k): v for k, v in raw["teams"].items()}
+
+        result = NormalizedData()
+        if "schedule" in raw:
+            result.games = self._normalize_schedule(raw["schedule"], teams_map)
+        if "standings" in raw:
+            result.standings = self._normalize_standings(raw["standings"], teams_map)
+        if "transactions" in raw:
+            result.transactions = self._normalize_transactions(raw["transactions"])
+        if "injuries" in raw:
+            result.injuries = self._normalize_injuries(raw["injuries"])
+        if "leaders" in raw:
+            result.league_leaders = self._normalize_leaders(raw["leaders"])
+        return result
+
+    def _normalize_schedule(
+        self, raw: dict[str, Any], teams_map: dict[int, str] = {}
+    ) -> list[Game]:
+        games: list[Game] = []
+        for date_entry in raw.get("dates", []):
+            for g in date_entry.get("games", []):
+                try:
+                    games.append(self._parse_game(g, teams_map))
+                except Exception as exc:
+                    logger.warning("failed to parse game %s: %s", g.get("gamePk"), exc)
+        return games
+
+    def _parse_game(self, g: dict[str, Any], teams_map: dict[int, str] = {}) -> Game:
+        status_detail = g.get("status", {}).get("detailedState", "Scheduled")
+        status = self._GAME_STATUS_MAP.get(status_detail, GameStatus.scheduled)
+        teams = g.get("teams", {})
+        linescore = g.get("linescore", {})
+        innings_raw = linescore.get("innings", [])
+        innings = [
+            LinescoreInning(
+                inning=inn.get("num", i + 1),
+                away_runs=inn.get("away", {}).get("runs"),
+                home_runs=inn.get("home", {}).get("runs"),
+            )
+            for i, inn in enumerate(innings_raw)
+        ]
+        decisions = g.get("decisions", {})
+        broadcasts = [b.get("name", "") for b in g.get("broadcasts", []) if b.get("name")]
+
+        return Game(
+            game_id=g["gamePk"],
+            game_date=g.get("gameDate", "")[:10],
+            game_time_et=self._format_time(g.get("gameDate", "")),
+            status=status,
+            inning=linescore.get("currentInning"),
+            inning_state=linescore.get("inningState"),
+            home=self._parse_team_line(
+                teams.get("home", {}), linescore.get("teams", {}).get("home", {}), teams_map
+            ),
+            away=self._parse_team_line(
+                teams.get("away", {}), linescore.get("teams", {}).get("away", {}), teams_map
+            ),
+            linescore=innings,
+            home_probable_pitcher=self._parse_pitcher(teams.get("home", {}).get("probablePitcher")),
+            away_probable_pitcher=self._parse_pitcher(teams.get("away", {}).get("probablePitcher")),
+            winning_pitcher=self._parse_pitcher(decisions.get("winner")),
+            losing_pitcher=self._parse_pitcher(decisions.get("loser")),
+            save_pitcher=self._parse_pitcher(decisions.get("save")),
+            venue_name=g.get("venue", {}).get("name"),
+            venue_city=g.get("venue", {}).get("location", {}).get("city"),
+            tv_broadcasts=broadcasts,
+            weather_description=g.get("weather", {}).get("condition"),
+            is_doubleheader=g.get("doubleHeader", "N") != "N",
+            doubleheader_game_num=g.get("gameNumber"),
+            recap_anchor=f"recap-{g['gamePk']}",
+        )
+
+    def _parse_team_line(self, team: dict, line: dict, teams_map: dict = {}) -> TeamGameLine:
+        team_id = team.get("team", {}).get("id", 0)
+        # Prefer abbreviation from the teams_map (fetched from /teams endpoint)
+        # since schedule response doesn't include abbreviation
+        abbr = teams_map.get(team_id) or team.get("team", {}).get("abbreviation", "")
+        return TeamGameLine(
+            team_id=team_id,
+            team_abbr=abbr or "UNK",
+            team_name=team.get("team", {}).get("name", "Unknown"),
+            runs=line.get("runs"),
+            hits=line.get("hits"),
+            errors=line.get("errors"),
+        )
+
+    def _parse_pitcher(self, data: dict | None) -> Pitcher | None:
+        if not data:
+            return None
+        stats = data.get("stats", [{}])[0].get("stats", {}) if data.get("stats") else {}
+        return Pitcher(
+            player_id=data.get("id", 0),
+            name=data.get("fullName", data.get("name", "")),
+            handedness=data.get("pitchHand", {}).get("code") if data.get("pitchHand") else None,
+            wins=stats.get("wins"),
+            losses=stats.get("losses"),
+            era=float(stats["era"]) if stats.get("era") else None,
+        )
+
+    def _format_time(self, iso: str) -> str | None:
+        if not iso:
+            return None
+        try:
+            import pytz
+
+            dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+            et = dt.astimezone(pytz.timezone("America/New_York"))
+            return et.strftime("%-I:%M %p ET")
+        except Exception:
+            return None
+
+    def _normalize_standings(
+        self, raw: dict[str, Any], teams_map: dict[int, str] = {}
+    ) -> Standings:
+        divisions: list[DivisionStandings] = []
+        seen_division_ids: set[int] = set()
+
+        for record in raw.get("records", []):
+            div = record.get("division", {})
+            div_id = div.get("id", 0)
+            div_name = div.get("nameShort", div.get("name", ""))
+            rows = [
+                self._parse_standings_row(tr, teams_map) for tr in record.get("teamRecords", [])
+            ]
+            if rows and div_id not in seen_division_ids:
+                divisions.append(
+                    DivisionStandings(division_id=div_id, division_name=div_name, rows=rows)
+                )
+                seen_division_ids.add(div_id)
+
+        return Standings(divisions=divisions, wild_cards=[])
+
+    def _parse_standings_row(
+        self, tr: dict[str, Any], teams_map: dict[int, str] = {}
+    ) -> StandingsRow:
+        team = tr.get("team", {})
+        team_id = team.get("id", 0)
+        abbr = teams_map.get(team_id) or team.get("abbreviation", "")
+        split_records = {r.get("type"): r for r in tr.get("records", {}).get("splitRecords", [])}
+        home = split_records.get("home", {})
+        away = split_records.get("away", {})
+        last_10 = split_records.get("lastTen", {})
+        streak = tr.get("streak", {}).get("streakCode", "")
+        return StandingsRow(
+            team_id=team_id,
+            team_abbr=abbr or "UNK",
+            team_name=team.get("name", ""),
+            wins=tr.get("wins", 0),
+            losses=tr.get("losses", 0),
+            pct=float(tr.get("winningPercentage", "0.000")),
+            games_back=tr.get("gamesBack", "-"),
+            last_10=f"{last_10.get('wins', 0)}-{last_10.get('losses', 0)}",
+            streak=streak,
+            home_record=f"{home.get('wins', 0)}-{home.get('losses', 0)}",
+            away_record=f"{away.get('wins', 0)}-{away.get('losses', 0)}",
+            run_differential=tr.get("runDifferential", 0),
+        )
+
+    def _normalize_transactions(self, raw: dict[str, Any]) -> list[Transaction]:
+        seen: set[str] = set()
+        result: list[Transaction] = []
+        for t in raw.get("transactions", []):
+            tid = str(t.get("id", ""))
+            if tid in seen:
+                continue
+            seen.add(tid)
+            try:
+                result.append(
+                    Transaction(
+                        transaction_id=tid,
+                        team_abbr=t.get("fromTeam", {}).get(
+                            "abbreviation", t.get("toTeam", {}).get("abbreviation", "")
+                        ),
+                        team_name=t.get("fromTeam", {}).get(
+                            "name", t.get("toTeam", {}).get("name", "")
+                        ),
+                        player_name=t.get("person", {}).get("fullName", ""),
+                        player_id=t.get("person", {}).get("id"),
+                        transaction_type=self._TRANSACTION_TYPE_MAP.get(
+                            t.get("typeDesc", ""), TransactionType.other
+                        ),
+                        effective_date=date.fromisoformat(t["date"][:10]),
+                        explanation=t.get("description", t.get("typeDesc", "")),
+                        source_timestamp=datetime.fromisoformat(
+                            t.get("date", "2026-01-01T00:00:00").replace("Z", "+00:00")
+                        ),
+                    )
+                )
+            except Exception as exc:
+                logger.warning("skipping transaction %s: %s", tid, exc)
+        return result
+
+    def _normalize_injuries(self, raw: dict[str, Any]) -> list[Injury]:
+        result: list[Injury] = []
+        for item in raw.get("injuries", []):
+            try:
+                result.append(
+                    Injury(
+                        player_id=item.get("player", {}).get("id", 0),
+                        player_name=item.get("player", {}).get("fullName", ""),
+                        team_abbr=item.get("team", {}).get("abbreviation", ""),
+                        injury_description=item.get("notes", ""),
+                        roster_status=RosterStatus.ten_day_il,
+                        confidence_level=InjuryConfidence.reported,
+                    )
+                )
+            except Exception as exc:
+                logger.warning("skipping injury: %s", exc)
+        return result
+
+    # Mapping from MLB Stats API leaderCategory names to internal short keys
+    _BATTING_CATEGORY_MAP: dict[str, str] = {
+        "battingAverage": "avg",
+        "onBasePercentage": "obp",
+        "sluggingPercentage": "slg",
+        "onBasePlusSlugging": "ops",
+        "homeRuns": "hr",
+        "runsBattedIn": "rbi",
+        "runs": "r",
+        "hits": "h",
+        "doubles": "doubles",
+        "triples": "triples",
+        "stolenBases": "sb",
+        "baseOnBalls": "bb",
+        "strikeOuts": "so",
+        "totalBases": "tb",
+        "extraBaseHits": "xbh",
+    }
+    _PITCHING_CATEGORY_MAP: dict[str, str] = {
+        "earnedRunAverage": "era",
+        "wins": "wins",
+        "strikeOuts": "k",
+        "walksAndHitsPerInningPitched": "whip",
+        "saves": "saves",
+        "holds": "holds",
+        "inningsPitched": "ip",
+        "qualityStarts": "qs",
+        "completeGames": "cg",
+        "shutouts": "sho",
+        "opponentsBattingAverage": "opp_avg",
+        "strikeoutsPer9Inn": "k9",
+        "baseOnBallsPer9": "bb9",
+        "homeRunsPer9": "hr9",
+    }
+
+    def _normalize_leaders(self, raw: dict[str, Any]) -> LeagueLeaders:
+        """Convert raw leaders dict (category -> API response) to LeagueLeaders model."""
+        batting: dict[str, list[LeaderEntry]] = {}
+        pitching: dict[str, list[LeaderEntry]] = {}
+
+        for api_category, data in raw.items():
+            if data is None:
+                continue
+            short_key = (
+                self._BATTING_CATEGORY_MAP.get(api_category)
+                or self._PITCHING_CATEGORY_MAP.get(api_category)
+                or api_category
+            )
+            is_pitching = api_category in self._PITCHING_CATEGORY_MAP
+            entries: list[LeaderEntry] = []
+            for leader_block in data.get("leagueLeaders", []):
+                for rank_idx, leader in enumerate(leader_block.get("leaders", []), start=1):
+                    try:
+                        person = leader.get("person", {})
+                        team = leader.get("team", {})
+                        entries.append(
+                            LeaderEntry(
+                                rank=leader.get("rank", rank_idx),
+                                player_id=person.get("id", 0),
+                                player_name=person.get("fullName", ""),
+                                team_abbr=team.get(
+                                    "abbreviation", team.get("name", "")[:3].upper()
+                                ),
+                                position=leader.get("position", {}).get(
+                                    "abbreviation", "P" if is_pitching else ""
+                                ),
+                                value=str(leader.get("value", "")),
+                                games_played=leader.get("season", 0),
+                                league=leader.get("league", {}).get("abbreviation", "MLB"),
+                                qualified=True,
+                            )
+                        )
+                    except Exception as exc:
+                        logger.warning("skipping leader entry in %s: %s", api_category, exc)
+            if entries:
+                if is_pitching:
+                    pitching[short_key] = entries
+                else:
+                    batting[short_key] = entries
+
+        return LeagueLeaders(batting=batting, pitching=pitching)

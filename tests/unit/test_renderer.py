@@ -1,0 +1,237 @@
+# tests/unit/test_renderer.py
+"""Unit tests for HTMLRenderer and render_from_file."""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pytest
+
+from src.models.edition import Edition, EditionMetadata, GenerationMetadata
+from src.models.game import Game, GameStatus, TeamGameLine
+from src.models.story import Story, StoryType
+from src.rendering.html_renderer import HTMLRenderer
+from src.rendering.renderer import render_from_file
+
+
+# ---------------------------------------------------------------------------
+# Fixtures / helpers
+# ---------------------------------------------------------------------------
+
+TEMPLATES_DIR = Path(__file__).parents[2] / "templates"
+
+
+def make_renderer() -> HTMLRenderer:
+    return HTMLRenderer(templates_dir=TEMPLATES_DIR)
+
+
+def make_minimal_edition(**overrides) -> Edition:
+    """Return the smallest valid Edition that still renders successfully."""
+    metadata = EditionMetadata(
+        id="2026-07-13-0600",
+        type="morning",
+        date="2026-07-13",
+        generated_at=datetime(2026, 7, 13, 6, 0, 0, tzinfo=timezone.utc),
+        data_current_through=datetime(2026, 7, 13, 5, 55, 0, tzinfo=timezone.utc),
+        timezone="America/New_York",
+        status="published",
+    )
+    kwargs = dict(
+        edition=metadata,
+        lead_story=None,
+        secondary_stories=[],
+        games=[],
+        standings=None,
+        league_leaders=None,
+        game_recaps=[],
+        around_the_league=[],
+        transactions=[],
+        injuries=[],
+        historical_items=[],
+        generation_metadata=GenerationMetadata(pipeline_version="0.1.0"),
+    )
+    kwargs.update(overrides)
+    return Edition(**kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Test 1: Basic render
+# ---------------------------------------------------------------------------
+
+
+def test_basic_render_returns_html():
+    edition = make_minimal_edition()
+    renderer = make_renderer()
+    result = renderer.render(edition)
+    assert isinstance(result, str)
+    assert len(result) > 0
+    assert "<!doctype html>" in result.lower()
+
+
+# ---------------------------------------------------------------------------
+# Test 2: All section IDs present
+# ---------------------------------------------------------------------------
+
+EXPECTED_IDS = [
+    'id="front-page"',
+    'id="scoreboard"',
+    'id="todays-games"',
+    'id="standings"',
+    'id="league-leaders"',
+    'id="game-recaps"',
+    'id="around-the-league"',
+    'id="transactions"',
+    'id="injuries"',
+    'id="history"',
+]
+
+
+@pytest.mark.parametrize("section_id", EXPECTED_IDS)
+def test_all_section_ids_present(section_id: str):
+    edition = make_minimal_edition()
+    renderer = make_renderer()
+    html = renderer.render(edition)
+    assert section_id in html, f"Missing section anchor: {section_id}"
+
+
+# ---------------------------------------------------------------------------
+# Test 3: Edition ID meta tag
+# ---------------------------------------------------------------------------
+
+
+def test_edition_id_meta_tag():
+    edition = make_minimal_edition()
+    renderer = make_renderer()
+    html = renderer.render(edition)
+    assert 'name="sportzballz-edition-id"' in html
+    assert "2026-07-13-0600" in html
+
+
+# ---------------------------------------------------------------------------
+# Test 4: Masthead has generated_at and data_current_through separately
+# ---------------------------------------------------------------------------
+
+
+def test_masthead_timestamps():
+    edition = make_minimal_edition()
+    renderer = make_renderer()
+    html = renderer.render(edition)
+    # generated_at: 6:00 AM UTC
+    assert "Generated at" in html
+    # data_current_through: 5:55 AM UTC
+    assert "Data current through" in html
+    # The two times should appear in the masthead and be distinct
+    assert "06:00" in html or "06:00" in html or "AM" in html
+
+
+# ---------------------------------------------------------------------------
+# Test 5: HTML escaping — XSS injection in team name
+# ---------------------------------------------------------------------------
+
+
+def test_html_escaping_team_name():
+    xss_name = "<script>alert(1)</script>"
+    away = TeamGameLine(
+        team_id=1,
+        team_abbr="XSS",
+        team_name=xss_name,
+        runs=None,
+        hits=None,
+        errors=None,
+    )
+    home = TeamGameLine(
+        team_id=2,
+        team_abbr="HOM",
+        team_name="Home Team",
+        runs=None,
+        hits=None,
+        errors=None,
+    )
+    game = Game(
+        game_id=999,
+        game_date="2026-07-13",
+        status=GameStatus.scheduled,
+        home=home,
+        away=away,
+    )
+    edition = make_minimal_edition(games=[game])
+    renderer = make_renderer()
+    html = renderer.render(edition)
+    assert "<script>alert" not in html
+    assert "&lt;script&gt;" in html or "alert" not in html
+
+
+# ---------------------------------------------------------------------------
+# Test 6: Deterministic output
+# ---------------------------------------------------------------------------
+
+
+def test_render_is_deterministic():
+    edition = make_minimal_edition()
+    renderer = make_renderer()
+    html1 = renderer.render(edition)
+    html2 = renderer.render(edition)
+    assert html1 == html2
+
+
+# ---------------------------------------------------------------------------
+# Test 7: Null sections render without exception
+# ---------------------------------------------------------------------------
+
+
+def test_null_sections_render_ok():
+    edition = make_minimal_edition(
+        standings=None,
+        lead_story=None,
+        league_leaders=None,
+    )
+    renderer = make_renderer()
+    # Should not raise
+    html = renderer.render(edition)
+    assert "<!doctype html>" in html.lower()
+
+
+# ---------------------------------------------------------------------------
+# Test 8: render_from_file writes index.html and edition.json
+# ---------------------------------------------------------------------------
+
+
+def test_render_from_file(tmp_path: Path):
+    edition = make_minimal_edition()
+    edition_json = tmp_path / "edition.json"
+    edition_json.write_text(edition.model_dump_json(), encoding="utf-8")
+
+    output_dir = tmp_path / "output"
+    result = render_from_file(edition_json, output_dir)
+
+    assert result == output_dir / "index.html"
+    assert (output_dir / "index.html").exists()
+    assert (output_dir / "edition.json").exists()
+
+    html = (output_dir / "index.html").read_text(encoding="utf-8")
+    assert "<!doctype html>" in html.lower()
+
+    reloaded = json.loads((output_dir / "edition.json").read_text())
+    assert reloaded["edition"]["id"] == "2026-07-13-0600"
+
+
+# ---------------------------------------------------------------------------
+# Test: Lead story renders when present
+# ---------------------------------------------------------------------------
+
+
+def test_lead_story_renders():
+    story = Story(
+        headline="Yankees Win World Series",
+        deck="New York defeats the Dodgers in Game 7.",
+        byline="SportzBallz Staff",
+        paragraphs=["It was a tense night at Yankee Stadium."],
+        story_type=StoryType.lead,
+    )
+    edition = make_minimal_edition(lead_story=story)
+    renderer = make_renderer()
+    html = renderer.render(edition)
+    assert "Yankees Win World Series" in html
+    assert "SportzBallz Staff" in html

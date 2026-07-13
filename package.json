@@ -1,0 +1,20 @@
+{
+  "name": "daily-sports-page-assets",
+  "version": "0.1.0",
+  "description": "Frontend asset build for SportzBallz Daily Sports Page",
+  "private": true,
+  "scripts": {
+    "build": "npm run build:js && npm run build:css",
+    "build:js": "esbuild static/js/main.js --bundle --minify --outfile=static/js/main.min.js",
+    "build:css": "lightningcss --minify static/css/daily-sports-page.css -o static/css/main.min.css",
+    "lint:html": "htmlhint 'templates/**/*.j2'",
+    "format": "prettier --write 'static/css/**/*.css' 'static/js/**/*.js'",
+    "watch:js": "esbuild static/js/main.js --bundle --outfile=static/js/main.min.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.0",
+    "lightningcss-cli": "^1.24.0",
+    "prettier": "^3.2.0",
+    "htmlhint": "^1.1.4"
+  }
+}

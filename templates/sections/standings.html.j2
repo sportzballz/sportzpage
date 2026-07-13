@@ -1,0 +1,73 @@
+{# templates/sections/standings.html.j2 #}
+<section id="standings" class="standings section" aria-labelledby="standings-heading">
+  <h2 id="standings-heading" class="section-heading">Standings</h2>
+
+  {% if edition.standings %}
+
+  {% macro standings_table(rows, caption) %}
+  <div class="standings-table-wrapper">
+    <table class="standings-table">
+      <caption>{{ caption }}</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="team-col">Team</th>
+          <th scope="col" class="num-col">W</th>
+          <th scope="col" class="num-col">L</th>
+          <th scope="col" class="num-col">PCT</th>
+          <th scope="col" class="num-col">GB</th>
+          <th scope="col" class="num-col collapsible">L10</th>
+          <th scope="col" class="num-col collapsible">Streak</th>
+          <th scope="col" class="num-col collapsible">Home</th>
+          <th scope="col" class="num-col collapsible">Away</th>
+          <th scope="col" class="num-col collapsible">Diff</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr class="{% if row.eliminated %}eliminated-row{% endif %}">
+          <td class="team-col">
+            {{ row.team_name }}
+            {% if row.magic_number is not none %}
+            <span class="magic-number" title="Magic number">M{{ row.magic_number }}</span>
+            {% endif %}
+            {% if row.eliminated %}
+            <span class="eliminated-label" title="Eliminated">E</span>
+            {% endif %}
+          </td>
+          <td class="num-col">{{ row.wins }}</td>
+          <td class="num-col">{{ row.losses }}</td>
+          <td class="num-col">{{ "%.3f"|format(row.pct) | replace('0.', '.') }}</td>
+          <td class="num-col">{{ row.games_back if row.games_back != 0.0 else '&mdash;' }}</td>
+          <td class="num-col collapsible">{{ row.last_10 }}</td>
+          <td class="num-col collapsible">{{ row.streak }}</td>
+          <td class="num-col collapsible">{{ row.home_record }}</td>
+          <td class="num-col collapsible">{{ row.away_record }}</td>
+          <td class="num-col collapsible {% if row.run_differential > 0 %}positive-diff{% elif row.run_differential < 0 %}negative-diff{% endif %}">
+            {% if row.run_differential > 0 %}+{% endif %}{{ row.run_differential }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endmacro %}
+
+  <div class="standings-divisions">
+    {% for division in edition.standings.divisions %}
+    {{ standings_table(division.rows, division.division_name) }}
+    {% endfor %}
+  </div>
+
+  {% if edition.standings.wild_cards %}
+  <div class="standings-wildcards">
+    <h3 class="standings-wc-heading">Wild Card Races</h3>
+    {% for wc in edition.standings.wild_cards %}
+    {{ standings_table(wc.rows, wc.league ~ ' Wild Card') }}
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <p class="no-content">Standings are not available for this edition.</p>
+  {% endif %}
+</section>

@@ -1,0 +1,53 @@
+{# templates/sections/injuries.html.j2 #}
+<section id="injuries" class="injuries section" aria-labelledby="injuries-heading">
+  <h2 id="injuries-heading" class="section-heading">Injuries</h2>
+
+  {% if edition.injuries %}
+  <div class="table-responsive">
+    <table class="injuries-table data-table">
+      <caption>MLB Injury Report</caption>
+      <thead>
+        <tr>
+          <th scope="col">Player</th>
+          <th scope="col">Team</th>
+          <th scope="col">Injury</th>
+          <th scope="col">Status</th>
+          <th scope="col">Expected Return</th>
+          <th scope="col">Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for injury in edition.injuries %}
+        <tr>
+          <td class="player-col">{{ injury.player_name }}</td>
+          <td class="team-col">{{ injury.team_abbr }}</td>
+          <td class="injury-col">{{ injury.injury_description }}</td>
+          <td class="status-col">
+            <span class="roster-status roster-status-{{ injury.roster_status.value | replace('-', '') }}">
+              {{ injury.roster_status.value }}
+            </span>
+          </td>
+          <td class="return-col">
+            {% if injury.expected_return %}
+              {{ injury.expected_return }}
+            {% else %}
+              <span class="no-data">&mdash;</span>
+            {% endif %}
+          </td>
+          <td class="updated-col">
+            <span class="injury-confidence confidence-{{ injury.confidence_level.value }}">
+              {{ injury.confidence_level.value | title }}
+            </span>
+            {% if injury.latest_update %}
+            <br><small class="injury-note">{{ injury.latest_update }}</small>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="no-content">No injury reports available for this edition.</p>
+  {% endif %}
+</section>

@@ -1,0 +1,57 @@
+# ---------------------------------------------------------------------------
+# SportzBallz Daily Sports Page — schedules.yaml
+# Publication schedule in America/New_York timezone.
+# All times are cron expressions evaluated in the configured timezone.
+# ---------------------------------------------------------------------------
+
+timezone: America/New_York
+
+editions:
+  - type: morning
+    cron: "0 6 * * *"
+    description: >
+      Morning edition — emphasizes previous day's results, full game recaps,
+      updated standings, league leaders, today's schedule, and probable pitchers.
+
+  - type: midday
+    cron: "0 12 * * *"
+    description: >
+      Midday edition — lineup announcements, weather changes, injuries,
+      transactions, day-game previews, and updated probable pitchers.
+
+  - type: evening
+    cron: "0 17 * * *"
+    description: >
+      Evening preview — night-game previews, confirmed lineups, starting pitchers,
+      weather, key matchups, and results from games already completed.
+
+  - type: late
+    cron: "30 23 * * *"
+    description: >
+      Late edition — in-progress night games, early final scores,
+      updated standings for completed games.
+
+  - type: final
+    cron: "30 1 * * *"
+    description: >
+      Final edition — full results for all completed games, final standings,
+      player-of-the-day selections, and complete recap coverage.
+
+# ---------------------------------------------------------------------------
+# Event-triggered runs (in addition to the scheduled runs above)
+# These are triggered by external events, not by the cron schedule.
+# The pipeline checks these conditions; external tooling must invoke the CLI.
+# ---------------------------------------------------------------------------
+event_triggers:
+  after_final_game: true # trigger after last MLB game concludes each night
+  after_major_game: false # trigger after any nationally significant game concludes
+  after_transaction: false # trigger after a significant transaction is announced
+  before_first_game: false # trigger 30 minutes before first game each day
+  on_manual_request: true # always support `daily-sports-page run` manual invocation
+
+# ---------------------------------------------------------------------------
+# Overlap protection
+# A new generation run will not start if one is already in progress for the
+# same publish target. Set the lock timeout in seconds.
+# ---------------------------------------------------------------------------
+lock_timeout_seconds: 600 # 10 minutes
