@@ -46,10 +46,10 @@ class FeaturesConfig(BaseModel):
 
 class Settings(BaseModel):
     build_dir: str = "build"
-    publish_root: str = "/var/www/sportzballz/daily-sports-page"
-    archive_root: str = "/var/www/sportzballz/daily-sports-page/archive"
+    publish_root: str = "/var/www/sportzballz/sportzpage"
+    archive_root: str = "/var/www/sportzballz/sportzpage/archive"
     last_known_good_filename: str = "index.html.lkg"
-    public_base_url: str = "https://sportzballz.io/daily-sports-page"
+    public_base_url: str = "https://sportzballz.io/sportzpage"
     publication_name: str = "The Daily Sporting Press"
     cdn_purge_hook: Optional[str] = None
     mlb_api: MLBApiConfig = Field(default_factory=MLBApiConfig)

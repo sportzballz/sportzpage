@@ -39,7 +39,7 @@ class HTMLRenderer:
         return cls(templates_dir=tdir, static_asset_manifest=manifest)
 
     def _asset_url(self, name: str) -> str:
-        return self._manifest.get(name, f"/daily-sports-page/static/{name}")
+        return self._manifest.get(name, f"/sportzpage/static/{name}")
 
     def render(self, edition: Edition) -> str:
         """Render the edition to an HTML string. Deterministic — no side effects."""

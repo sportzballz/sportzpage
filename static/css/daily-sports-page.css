@@ -1234,3 +1234,198 @@ body {
     content: "";
   }
 }
+
+/* =========================================================
+   BROADSHEET EDITION
+   Dense, monochrome newspaper treatment inspired by the
+   traditional American daily sports section.
+   ========================================================= */
+
+:root {
+  --color-bg: #eeeae0;
+  --color-text: #111;
+  --color-text-muted: #353535;
+  --color-border: #777;
+  --color-border-light: #aaa;
+  --color-border-dark: #111;
+  --color-accent: #111;
+  --color-stripe: rgba(0, 0, 0, 0.035);
+  --font-serif: "Times New Roman", Times, Georgia, serif;
+  --font-sans: Arial, Helvetica, sans-serif;
+  --max-width: 1500px;
+  --section-gap: 0.85rem;
+}
+
+body {
+  background-color: var(--color-bg);
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(70, 58, 38, 0.025) 0,
+    rgba(70, 58, 38, 0.025) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  font-size: 13px;
+  line-height: 1.18;
+  padding: 0 0.6rem;
+}
+
+.masthead {
+  margin: 0.35rem 0 0;
+  padding: 0.25rem 0 0.4rem;
+  border-top: 1px solid var(--color-border-dark);
+  border-bottom: 5px double var(--color-border-dark);
+}
+
+.masthead-kicker {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border-dark);
+  padding: 0.1rem 0.25rem;
+  font: 700 0.68rem/1 var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.masthead-kicker span:last-child { text-align: right; }
+.masthead-kicker strong { font-size: 0.9rem; }
+
+.masthead-title {
+  margin: 0.16rem 0 0.08rem;
+  font-size: clamp(2.35rem, 6vw, 5.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+}
+
+.masthead-meta {
+  justify-content: space-between;
+  padding: 0.15rem 0.35rem 0;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.section-nav {
+  position: static;
+  margin: 0 0 0.55rem;
+  padding: 0.2rem 0.4rem;
+  border-bottom: 1px solid #111;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.section-nav ul { gap: 0.15rem 0.75rem; }
+.section-nav a,
+.print-btn {
+  color: var(--color-text);
+  border-color: var(--color-border);
+  font-size: 0.61rem;
+  font-weight: 700;
+}
+
+.section-nav a:hover,
+.section-nav a:focus-visible,
+.print-btn:hover,
+.print-btn:focus-visible { color: #000; background: #ddd8ca; }
+
+.section {
+  margin-bottom: 0;
+  padding: 0 0.55rem 0.7rem;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.section-heading {
+  margin: 0 -0.55rem 0.45rem;
+  padding: 0.13rem 0.35rem;
+  border-top: 3px solid var(--color-border-dark);
+  border-bottom: 1px solid var(--color-border-dark);
+  font: 900 1.05rem/1 var(--font-sans);
+  text-align: center;
+  text-transform: none;
+  letter-spacing: -0.02em;
+}
+
+.lead-headline {
+  margin-bottom: 0.25rem;
+  font-size: clamp(2rem, 4vw, 4.25rem);
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+  border-bottom: 2px solid #111;
+  padding-bottom: 0.25rem;
+}
+
+.story-deck { font: italic 0.8rem/1.15 var(--font-serif); margin-bottom: 0.25rem; }
+.story-byline { font-size: 0.6rem; margin-bottom: 0.3rem; }
+.story-body { columns: 2 13rem; column-gap: 0.8rem; column-rule: 1px solid var(--color-border-light); text-align: justify; }
+.story-body p { margin-bottom: 0.45rem; }
+.story-first-para::first-letter { font-size: 4.2em; line-height: 0.72; }
+.story-tags, .copy-link-btn { display: none; }
+
+table { font: 0.66rem/1.05 var(--font-sans); border-collapse: collapse; }
+th, td { padding: 0.11rem 0.18rem; border-color: var(--color-border-light); }
+thead th { border-top: 1px solid #111; border-bottom: 1px solid #111; text-transform: uppercase; font-size: 0.58rem; }
+tbody tr:nth-child(even) { background: var(--color-stripe); }
+caption,
+.scoreboard-group-label,
+.standings-wc-heading {
+  background: #111;
+  color: var(--color-bg);
+  padding: 0.12rem 0.25rem;
+  font: 700 0.64rem/1 var(--font-sans);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.secondary-stories,
+.games-list,
+.standings-divisions,
+.atl-grid { gap: 0.55rem; }
+
+.secondary-story,
+.game-card,
+.game-recap,
+.atl-item,
+.history-item { padding-bottom: 0.45rem; border-bottom: 1px solid var(--color-border); }
+
+.site-footer { margin-top: 0.35rem; padding: 0.4rem; font-size: 0.62rem; }
+
+@media (min-width: 900px) {
+  body { padding: 0 0.9rem; }
+
+  main {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: start;
+    border-left: 1px solid var(--color-border);
+  }
+
+  #front-page { grid-column: span 8; }
+  #scoreboard { grid-column: span 4; }
+  #todays-games { grid-column: span 4; }
+  #standings { grid-column: span 8; }
+  #league-leaders,
+  #team-leaders { grid-column: span 6; }
+  #game-recaps { grid-column: span 8; }
+  #box-scores { grid-column: span 4; }
+  #around-the-league { grid-column: span 5; }
+  #transactions { grid-column: span 4; }
+  #injuries { grid-column: span 3; }
+  #history { grid-column: 1 / -1; }
+
+  .front-page { grid-template-columns: minmax(0, 2fr) minmax(12rem, 1fr); gap: 0.65rem; }
+  .secondary-stories { padding-left: 0.65rem; }
+  .standings-divisions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .games-list, .atl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 899px) {
+  .masthead-kicker { grid-template-columns: 1fr; gap: 0.15rem; text-align: center; }
+  .masthead-kicker span:last-child { text-align: center; }
+  .masthead-meta { justify-content: center; }
+  .section { border-left: 1px solid var(--color-border); }
+  .story-body { columns: 1; }
+}
