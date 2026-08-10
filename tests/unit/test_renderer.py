@@ -109,6 +109,14 @@ def test_edition_id_meta_tag():
     assert "2026-07-13-0600" in html
 
 
+def test_production_urls_use_sportzpage_path():
+    edition = make_minimal_edition()
+    html = make_renderer().render(edition)
+    assert 'href="https://sportzballz.io/sportzpage/index.html"' in html
+    assert 'href="/sportzpage/static/css/daily-sports-page.css"' in html
+    assert 'src="/sportzpage/static/js/daily-sports-page.js"' in html
+
+
 # ---------------------------------------------------------------------------
 # Test 4: Masthead has generated_at and data_current_through separately
 # ---------------------------------------------------------------------------

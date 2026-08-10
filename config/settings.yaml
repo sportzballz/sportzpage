@@ -11,7 +11,7 @@ archive_root: build/output/archive
 last_known_good_filename: index.html.lkg
 
 # Public URL base
-public_base_url: https://sportzballz.io/daily-sports-page
+public_base_url: https://sportzballz.io/sportzpage
 publication_name: "The Daily Sporting Press"
 
 # CDN purge hook — path to a shell script that purges the CDN cache.
