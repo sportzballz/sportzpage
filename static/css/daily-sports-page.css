@@ -1410,12 +1410,12 @@ caption,
   #todays-games { grid-column: span 4; }
   #standings { grid-column: span 8; }
   #league-leaders { grid-column: span 6; }
+  #history { grid-column: span 6; }
   #team-leaders { grid-column: 1 / -1; }
   #game-recaps { grid-column: span 8; }
   #box-scores { grid-column: 1 / -1; }
-  #around-the-league { grid-column: span 5; }
-  #transactions { grid-column: span 7; }
-  #history { grid-column: 1 / -1; }
+  #transactions,
+  #around-the-league { grid-column: 1 / -1; }
 
   .front-page { display: flex; flex-wrap: wrap; gap: 0.65rem; }
   .front-page > .section-heading { flex: 0 0 calc(100% + 1.1rem); }
@@ -1458,7 +1458,7 @@ caption,
   #team-leaders,
   #game-recaps,
   #box-scores,
-  #history { grid-column: 1 / -1; }
+  #around-the-league { grid-column: 1 / -1; }
 
   .front-page { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 
