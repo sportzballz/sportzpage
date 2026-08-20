@@ -11,7 +11,9 @@
           <span class="history-year">{{ item.year }}</span>
           <h3 id="history-headline-{{ loop.index }}" class="history-headline">{{ item.headline }}</h3>
         </header>
+        {% if item.description %}
         <p class="history-description">{{ item.description }}</p>
+        {% endif %}
         {% if item.teams or item.players %}
         <footer class="story-tags">
           {% for team in item.teams %}

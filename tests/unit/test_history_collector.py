@@ -32,10 +32,10 @@ def test_builds_collector_from_manifest_slug():
     assert collector.source_url.endswith("/October_31")
 
 
-def test_parses_events_and_selects_five_with_phillies_priority():
+def test_parses_events_and_fills_column_with_phillies_priority():
     collector = HistoryCollector(date(2026, 8, 20))
     selected = collector.select_subset(collector.parse(SAMPLE_HTML))
-    assert len(selected) == 5
+    assert len(selected) == 7
     assert "Phillies" in selected[0]["description"]
     assert all("must not" not in event["description"] for event in selected)
 
@@ -50,6 +50,29 @@ def test_random_selection_is_stable_for_the_same_calendar_date():
     assert first == second
 
 
+def test_separates_multiple_events_from_the_same_year():
+    events = [{
+        "year": 2009,
+        "description": (
+            "Houston beats Florida, 4 - 1. This ends a 15-game streak. "
+            "Julio Borbon hits his first career homer. He drives in three runs."
+        ),
+    }]
+
+    separated = HistoryCollector.separate_events(events)
+
+    assert separated == [
+        {
+            "year": 2009,
+            "description": "Houston beats Florida, 4 - 1. This ends a 15-game streak.",
+        },
+        {
+            "year": 2009,
+            "description": "Julio Borbon hits his first career homer. He drives in three runs.",
+        },
+    ]
+
+
 def test_normalizes_history_for_edition():
     normalized = Normalizer().normalize(
         {
@@ -61,6 +84,23 @@ def test_normalizes_history_for_edition():
     )
     assert normalized.historical_items[0].year == 1950
     assert normalized.historical_items[0].source.endswith("August_20")
+
+
+def test_normalized_history_does_not_repeat_headline_in_description():
+    normalized = Normalizer().normalize(
+        {
+            "history": {
+                "source": "https://example.test/August_20",
+                "items": [{
+                    "year": 2009,
+                    "description": "Houston beats Florida. The win ends a 15-game streak.",
+                }],
+            }
+        }
+    ).historical_items[0]
+
+    assert normalized.headline == "Houston beats Florida"
+    assert normalized.description == "The win ends a 15-game streak."
 
 
 async def test_local_database_is_curated_only_when_collected(tmp_path, monkeypatch):
@@ -78,5 +118,5 @@ async def test_local_database_is_curated_only_when_collected(tmp_path, monkeypat
 
     result = await HistoryCollector(date(2026, 8, 20)).collect()
 
-    assert len(result["items"]) == 5
+    assert len(result["items"]) == 10
     assert "Phillies" in result["items"][0]["description"]

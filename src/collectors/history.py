@@ -11,12 +11,22 @@ from typing import Any
 import httpx
 from bs4 import BeautifulSoup, Tag
 
+from src.history_text import split_sentences
+
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.baseball-reference.com/bullpen"
-MAX_ITEMS = 5
+MIN_ITEMS = 8
+MAX_ITEMS = 24
+TARGET_CHARACTERS = 2600
 PHILADELPHIA_TERMS = ("phillies", "philadelphia", "athletics", "phils")
 YEAR_EVENT = re.compile(r"^(18\d{2}|19\d{2}|20\d{2})\s*[-–—:]\s*(.+)$")
+DEPENDENT_OPENERS = (
+    "also ", "as a result", "by doing so", "he ", "her ", "his ", "it ",
+    "its ", "she ", "that ", "the game ", "the loss ", "the only ",
+    "the previous ", "the rookie ", "the victory ", "the win ", "their ",
+    "these ", "they ", "this ", "those ", "when the ",
+)
 
 
 class HistoryCollector:
@@ -90,8 +100,37 @@ class HistoryCollector:
             raise ValueError("no dated events found on Bullpen page")
         return events
 
+    @classmethod
+    def separate_events(cls, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Turn year-level source entries into individual historical events.
+
+        Bullpen stores every occurrence from a year in one list item. Supporting
+        sentences stay with the event they explain, while a new standalone
+        sentence becomes a separately selectable newspaper item.
+        """
+        separated: list[dict[str, Any]] = []
+        for event in events:
+            groups: list[str] = []
+            for sentence in split_sentences(" ".join(str(event.get("description", "")).split())):
+                first_word = sentence.split(maxsplit=1)[0] if sentence else ""
+                dependent = (
+                    sentence.lower().startswith(DEPENDENT_OPENERS)
+                    or first_word.endswith(("'s", "’s"))
+                )
+                if dependent and groups:
+                    groups[-1] = f"{groups[-1]} {sentence}"
+                else:
+                    groups.append(sentence)
+            separated.extend(
+                {"year": event.get("year"), "description": description}
+                for description in groups
+                if description
+            )
+        return separated
+
     def select_subset(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Return a stable random sample, including one Philadelphia event when available."""
+        """Fill the history column with a stable sample of separate events."""
+        events = self.separate_events(events)
         if not events:
             return []
         rng = random.Random(self._edition_date.strftime("%B_%d"))  # noqa: S311
@@ -102,6 +141,12 @@ class HistoryCollector:
         ]
         selected = rng.sample(philly, k=1) if philly else []
         remaining = [event for event in events if event not in selected]
-        slots = MAX_ITEMS - len(selected)
-        selected.extend(rng.sample(remaining, k=min(slots, len(remaining))))
-        return selected[:MAX_ITEMS]
+        rng.shuffle(remaining)
+        for event in remaining:
+            if len(selected) >= MAX_ITEMS:
+                break
+            selected.append(event)
+            character_count = sum(len(item["description"]) for item in selected)
+            if len(selected) >= MIN_ITEMS and character_count >= TARGET_CHARACTERS:
+                break
+        return selected

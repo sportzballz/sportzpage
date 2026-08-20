@@ -6,6 +6,7 @@ from typing import Any, List, Optional
 from pydantic import BaseModel, Field
 from src.models.game import Game, GameStatus, LinescoreInning, Pitcher, TeamBoxLine, TeamGameLine
 from src.models.history import HistoricalItem
+from src.history_text import split_sentences
 from src.models.standings import StandingsRow, DivisionStandings, WildCardStandings, Standings
 from src.models.leaders import LeaderEntry, LeagueLeaders, TeamSeasonLeaders, TeamStatLeader
 from src.models.transactions import Transaction, TransactionType
@@ -213,14 +214,16 @@ class Normalizer:
         for event in raw.get("items", []):
             try:
                 description = " ".join(str(event["description"]).split())
-                headline = description.split(".", 1)[0]
+                sentences = split_sentences(description)
+                headline = sentences[0].rstrip(".!?") if sentences else description
                 if len(headline) > 110:
                     headline = f"{headline[:107].rstrip()}..."
+                detail = " ".join(sentences[1:])
                 result.append(
                     HistoricalItem(
                         year=int(event["year"]),
                         headline=headline,
-                        description=description,
+                        description=detail,
                         source=source,
                     )
                 )
