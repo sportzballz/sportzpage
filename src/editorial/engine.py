@@ -10,6 +10,7 @@ from src.editorial.fallback import generate_fallback_recap
 from src.editorial.scoring import ScoringContext, ScoringWeights, score_game
 from src.models.edition import Edition, EditionMetadata, EditionType, GenerationMetadata
 from src.models.game import Game, GameStatus
+from src.models.leaders import TeamGameLeaders, TeamPerformer
 from src.models.story import GameRecap, Story, StoryType
 from src.normalization.normalizer import NormalizedData
 from src.statistics.processor import StatisticsProcessor
@@ -190,12 +191,77 @@ class EditorialEngine:
             transactions=normalized.transactions,
             injuries=normalized.injuries,
             historical_items=normalized.historical_items,
+            team_game_leaders=self._build_team_game_leaders(normalized.games),
             generation_metadata=GenerationMetadata(
                 pipeline_version="0.1.0",
                 python_version=platform.python_version(),
                 ai_fallbacks=ai_fallbacks,
             ),
         )
+
+    def _build_team_game_leaders(self, games: list[Game]) -> list[TeamGameLeaders]:
+        """Select a top batter and pitcher for each team in every completed game."""
+        leaders: list[TeamGameLeaders] = []
+        for game in games:
+            if game.status != GameStatus.final:
+                continue
+            performers: list[TeamPerformer] = []
+            for abbreviation in (game.away.team_abbr, game.home.team_abbr):
+                batters = game.batting_lines.get(abbreviation, [])
+                if batters:
+                    batter = max(
+                        batters,
+                        key=lambda line: (line.rbi or 0, line.h or 0, line.r or 0),
+                    )
+                    performers.append(
+                        TeamPerformer(
+                            player_name=batter.player_name,
+                            player_id=batter.player_id,
+                            team_abbr=abbreviation,
+                            stat_line=(
+                                f"{batter.h or 0}-for-{batter.ab or 0}, "
+                                f"{batter.r or 0} R, {batter.rbi or 0} RBI"
+                            ),
+                            role="batter",
+                            game_id=game.game_id,
+                        )
+                    )
+
+                pitchers = game.pitching_lines.get(abbreviation, [])
+                if pitchers:
+                    pitcher = max(
+                        pitchers,
+                        key=lambda line: (
+                            1 if line.decision in {"W", "S"} else 0,
+                            float(line.ip or 0),
+                            line.k_pitched or 0,
+                            -(line.er or 0),
+                        ),
+                    )
+                    decision = f" ({pitcher.decision})" if pitcher.decision else ""
+                    performers.append(
+                        TeamPerformer(
+                            player_name=pitcher.player_name,
+                            player_id=pitcher.player_id,
+                            team_abbr=abbreviation,
+                            stat_line=(
+                                f"{pitcher.ip or '0.0'} IP, {pitcher.er or 0} ER, "
+                                f"{pitcher.k_pitched or 0} K{decision}"
+                            ),
+                            role="pitcher",
+                            game_id=game.game_id,
+                        )
+                    )
+            if performers:
+                leaders.append(
+                    TeamGameLeaders(
+                        game_id=game.game_id,
+                        away_abbr=game.away.team_abbr,
+                        home_abbr=game.home.team_abbr,
+                        performers=performers,
+                    )
+                )
+        return leaders
 
     async def _generate_recap(self, game: Game) -> GameRecap:
         """Generate a recap via AI, falling back to deterministic template."""
