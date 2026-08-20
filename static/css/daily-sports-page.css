@@ -1588,8 +1588,19 @@ caption,
   margin: 0 0 1.25rem;
   padding: 0 0 0.9rem;
   border-bottom: 3px double var(--color-border-dark);
+  break-inside: auto;
+}
+
+.box-score-matchup,
+.linescore-wrap,
+.box-decisions,
+.box-notes,
+.box-game-info {
   break-inside: avoid-column;
 }
+
+.box-team-label { break-after: avoid-column; }
+.box-team-section { break-inside: avoid-column; }
 
 @media (min-width: 900px) {
   .box-scores-flow {
@@ -1764,11 +1775,11 @@ caption,
   }
 
   .box-score {
-    display: inline-block !important;
+    display: block !important;
     width: 100% !important;
     margin: 0 0 0.14in !important;
     padding: 0 0 0.1in !important;
-    break-inside: avoid !important;
+    break-inside: auto !important;
   }
 
   table {
