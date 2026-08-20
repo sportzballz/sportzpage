@@ -1412,7 +1412,6 @@ caption,
   #league-leaders { grid-column: span 6; }
   #history { grid-column: span 6; }
   #team-leaders { grid-column: 1 / -1; }
-  #game-recaps { grid-column: span 8; }
   #box-scores { grid-column: 1 / -1; }
   #transactions,
   #around-the-league { grid-column: 1 / -1; }
@@ -1456,7 +1455,6 @@ caption,
   #front-page,
   #standings,
   #team-leaders,
-  #game-recaps,
   #box-scores,
   #around-the-league { grid-column: 1 / -1; }
 

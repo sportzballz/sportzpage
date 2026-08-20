@@ -19,7 +19,6 @@ REQUIRED_SECTION_IDS = [
     'id="todays-games"',
     'id="standings"',
     'id="league-leaders"',
-    'id="game-recaps"',
     'id="around-the-league"',
     'id="transactions"',
     'id="history"',
