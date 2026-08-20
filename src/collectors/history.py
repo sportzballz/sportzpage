@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.baseball-reference.com/bullpen"
 MIN_ITEMS = 8
-MAX_ITEMS = 14
-TARGET_CHARACTERS = 1500
+MAX_ITEMS = 12
+TARGET_CHARACTERS = 1200
 PHILADELPHIA_TERMS = ("phillies", "philadelphia", "athletics", "phils")
 YEAR_EVENT = re.compile(r"^(18\d{2}|19\d{2}|20\d{2})\s*[-–—:]\s*(.+)$")
 
