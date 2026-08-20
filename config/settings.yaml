@@ -12,7 +12,7 @@ last_known_good_filename: index.html.lkg
 
 # Public URL base
 public_base_url: https://sportzballz.io/sportzpage
-publication_name: "The Daily Sporting Press"
+publication_name: "The Daily Sportz Page"
 
 # CDN purge hook — path to a shell script that purges the CDN cache.
 # Set to null to disable. The script is called after successful publication.

@@ -1,10 +1,10 @@
 # tests/unit/test_editorial.py
 from __future__ import annotations
-import pytest
-from src.models.game import Game, GameStatus, TeamGameLine, Pitcher
-from src.editorial.scoring import ScoringWeights, ScoringContext, score_game
-from src.editorial.fallback import generate_fallback_recap
 
+from src.editorial.engine import EditorialEngine, prioritize_primary_team
+from src.editorial.fallback import generate_fallback_recap
+from src.editorial.scoring import ScoringContext, ScoringWeights, score_game
+from src.models.game import Game, GameStatus, Pitcher, TeamGameLine
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -101,6 +101,49 @@ def test_score_game_zero_context():
     game = _make_game()
     result = score_game(game, context, weights, {})
     assert result == 0.0
+
+
+def test_phillies_game_is_always_prioritized_for_front_page():
+    national_game = _make_game(game_id=1)
+    phillies_game = _make_game(game_id=2)
+    phillies_game.away = TeamGameLine(
+        team_id=143,
+        team_abbr="PHI",
+        team_name="Philadelphia Phillies",
+        runs=2,
+    )
+
+    ordered = prioritize_primary_team(
+        [(national_game, 10.0), (phillies_game, 1.0)], "PHI"
+    )
+
+    assert ordered[0][0].game_id == 2
+    assert ordered[1][0].game_id == 1
+
+
+def test_phillies_fallback_headline_covers_scheduled_game():
+    game = _make_game(game_id=3)
+    game.status = GameStatus.scheduled
+    game.away = TeamGameLine(
+        team_id=143,
+        team_abbr="PHI",
+        team_name="Philadelphia Phillies",
+        runs=None,
+    )
+    game.home.runs = None
+    game.game_time_et = "7:05 PM"
+
+    engine = EditorialEngine(
+        scoring_weights=_default_weights(),
+        manual_overrides={},
+        suppress_story_ids=[],
+        large_market_teams=set(),
+    )
+    story = engine._primary_team_fallback(game)
+
+    assert story.headline.startswith("Phillies")
+    assert "New York Yankees" in story.headline
+    assert story.story_type.value == "lead"
 
 
 # ---------------------------------------------------------------------------

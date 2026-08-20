@@ -29,6 +29,15 @@ secondary_story_count:
   max: 6
 
 # ---------------------------------------------------------------------------
+# Philadelphia-first editorial focus
+# The Phillies own the front-page lead. The remainder of the edition continues
+# to cover the strongest stories from across Major League Baseball.
+# ---------------------------------------------------------------------------
+editorial_focus:
+  primary_team: PHI
+  require_primary_team_lead: true
+
+# ---------------------------------------------------------------------------
 # Manual editorial overrides
 # Set a specific game as lead story by assigning it a very high score.
 # Format: game_id (integer MLB game PK): score (float)
@@ -66,8 +75,8 @@ large_market_teams:
   - STL
 
 # ---------------------------------------------------------------------------
-# Editorial neutrality
-# The front page must not be tailored to any single team.
+# Editorial breadth
+# After the required Phillies lead, keep the remaining front-page report broad.
 # Maximum percentage of front-page stories that may reference the same team.
 # ---------------------------------------------------------------------------
 neutrality:
