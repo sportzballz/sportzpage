@@ -186,6 +186,35 @@ class MLBCollector(Collector):
             self._cache.set(key, leaders)
         return leaders
 
+    async def get_team_player_stats(self, season: int) -> dict[str, Any]:
+        """Fetch season stats for every MLB player so club leaders can be calculated."""
+        key = f"team_player_stats_{season}"
+        if self._cache:
+            cached = self._cache.get(key, self._max_ages["stats_leaders"])
+            if cached is not None:
+                return cached
+
+        async def fetch(group: str) -> Any:
+            return await self._get(
+                "/stats",
+                params={
+                    "stats": "season",
+                    "group": group,
+                    "season": season,
+                    "sportIds": 1,
+                    "playerPool": "ALL",
+                    "hydrate": "team",
+                    "limit": 2000,
+                },
+            )
+
+        hitting, pitching = await asyncio.gather(fetch("hitting"), fetch("pitching"))
+        data = {"hitting": hitting, "pitching": pitching}
+        if self._cache:
+            self._cache.set(key, data)
+        self._maybe_save_fixture("team_player_stats", data)
+        return data
+
     async def get_transactions(self) -> Any:
         """Fetch recent transactions."""
         key = f"transactions_{self._game_date}"
@@ -254,11 +283,12 @@ class MLBCollector(Collector):
         season = self._game_date.year
 
         # Required: fetch concurrently
-        schedule, standings, leaders, teams = await asyncio.gather(
+        schedule, standings, leaders, teams, team_player_stats = await asyncio.gather(
             self.get_schedule(),
             self.get_standings(),
             self.get_all_leaders(season),
             self.get_teams(),
+            self.get_team_player_stats(season),
         )
         boxscores = await self.get_boxscores(schedule)
 
@@ -280,6 +310,7 @@ class MLBCollector(Collector):
             "schedule": schedule,
             "standings": standings,
             "leaders": leaders,
+            "team_player_stats": team_player_stats,
             "teams": teams,  # id -> abbreviation map
             "transactions": transactions,
             "injuries": injuries,

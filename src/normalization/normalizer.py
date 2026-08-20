@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from src.models.game import Game, GameStatus, LinescoreInning, Pitcher, TeamBoxLine, TeamGameLine
 from src.models.history import HistoricalItem
 from src.models.standings import StandingsRow, DivisionStandings, WildCardStandings, Standings
-from src.models.leaders import LeaderEntry, LeagueLeaders
+from src.models.leaders import LeaderEntry, LeagueLeaders, TeamSeasonLeaders, TeamStatLeader
 from src.models.transactions import Transaction, TransactionType
 from src.models.injuries import Injury, RosterStatus, InjuryConfidence
 
@@ -20,6 +20,7 @@ class NormalizedData(BaseModel):
     games: List[Game] = Field(default_factory=list)
     standings: Optional[Standings] = Field(default=None)
     league_leaders: Optional[LeagueLeaders] = Field(default=None)
+    team_season_leaders: List[TeamSeasonLeaders] = Field(default_factory=list)
     transactions: List[Transaction] = Field(default_factory=list)
     injuries: List[Injury] = Field(default_factory=list)
     historical_items: List[HistoricalItem] = Field(default_factory=list)
@@ -77,9 +78,105 @@ class Normalizer:
             result.injuries = self._normalize_injuries(raw["injuries"])
         if "leaders" in raw:
             result.league_leaders = self._normalize_leaders(raw["leaders"])
+        if "team_player_stats" in raw:
+            result.team_season_leaders = self._normalize_team_leaders(raw["team_player_stats"])
         if "history" in raw:
             result.historical_items = self._normalize_history(raw["history"])
         return result
+
+    def _normalize_team_leaders(self, raw: dict[str, Any]) -> list[TeamSeasonLeaders]:
+        """Calculate category leaders within each club from all-player season stats."""
+        teams: dict[int, dict[str, Any]] = {}
+        for group in ("hitting", "pitching"):
+            payload = raw.get(group, {})
+            stats_blocks = payload.get("stats", []) if isinstance(payload, dict) else []
+            splits = stats_blocks[0].get("splits", []) if stats_blocks else []
+            for split in splits:
+                team = split.get("team", {})
+                person = split.get("player") or split.get("person") or {}
+                team_id = team.get("id")
+                if not team_id or not person.get("fullName"):
+                    continue
+                bucket = teams.setdefault(
+                    int(team_id),
+                    {
+                        "abbr": team.get("abbreviation", ""),
+                        "name": team.get("name", ""),
+                        "hitting": [],
+                        "pitching": [],
+                    },
+                )
+                bucket[group].append(
+                    {
+                        "player_id": int(person.get("id", 0)),
+                        "player_name": person["fullName"],
+                        "stat": split.get("stat", {}),
+                    }
+                )
+
+        batting_categories = (
+            ("avg", "AVG", False),
+            ("homeRuns", "HR", False),
+            ("rbi", "RBI", False),
+            ("ops", "OPS", False),
+            ("stolenBases", "SB", False),
+        )
+        pitching_categories = (
+            ("era", "ERA", True),
+            ("wins", "W", False),
+            ("strikeOuts", "SO", False),
+            ("saves", "SV", False),
+            ("whip", "WHIP", True),
+        )
+
+        def pick(players: list[dict[str, Any]], categories):
+            result: list[TeamStatLeader] = []
+            for key, label, lower_is_better in categories:
+                eligible = players
+                if key in {"avg", "ops"}:
+                    eligible = [p for p in players if int(p["stat"].get("plateAppearances", 0)) >= 100]
+                elif key in {"era", "whip"}:
+                    eligible = [p for p in players if float(p["stat"].get("inningsPitched", 0) or 0) >= 20]
+                values = []
+                for player in eligible:
+                    value = player["stat"].get(key)
+                    try:
+                        values.append((float(value), player, str(value)))
+                    except (TypeError, ValueError):
+                        continue
+                if not values:
+                    continue
+                _, player, value = (
+                    min(values, key=lambda item: item[0])
+                    if lower_is_better
+                    else max(values, key=lambda item: item[0])
+                )
+                result.append(
+                    TeamStatLeader(
+                        category=key,
+                        label=label,
+                        player_id=player["player_id"],
+                        player_name=player["player_name"],
+                        value=value,
+                    )
+                )
+            return result
+
+        result = []
+        for team_id, data in teams.items():
+            batting = pick(data["hitting"], batting_categories)
+            pitching = pick(data["pitching"], pitching_categories)
+            if batting or pitching:
+                result.append(
+                    TeamSeasonLeaders(
+                        team_id=team_id,
+                        team_abbr=data["abbr"],
+                        team_name=data["name"],
+                        batting=batting,
+                        pitching=pitching,
+                    )
+                )
+        return sorted(result, key=lambda team: (team.team_abbr != "PHI", team.team_name))
 
     def _normalize_history(self, raw: dict[str, Any]) -> list[HistoricalItem]:
         source = raw.get("source", "")

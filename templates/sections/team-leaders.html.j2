@@ -1,35 +1,33 @@
 {# templates/sections/team-leaders.html.j2 #}
 <section id="team-leaders" class="team-leaders section" aria-labelledby="team-leaders-heading">
   <h2 id="team-leaders-heading" class="section-heading">Team Leaders</h2>
-  <p class="section-subhead">Key performers from today's games</p>
+  <p class="section-subhead">Season leaders within each MLB club</p>
 
-  {% if edition.team_game_leaders %}
+  {% if edition.team_season_leaders %}
   <div class="team-leaders-grid">
-    {% for tgl in edition.team_game_leaders %}
+    {% for team in edition.team_season_leaders %}
     <div class="team-leaders-card">
-      <h3 class="team-leaders-matchup">{{ tgl.away_abbr }} at {{ tgl.home_abbr }}</h3>
-      {% if tgl.performers %}
-      <table class="team-leaders-table">
-        <thead>
-          <tr>
-            <th scope="col">Player</th>
-            <th scope="col">Team</th>
-            <th scope="col">Line</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in tgl.performers %}
-          <tr class="performer-{{ p.role }}">
-            <td class="performer-name">{{ p.player_name }}</td>
-            <td class="performer-team">{{ p.team_abbr }}</td>
-            <td class="performer-line">{{ p.stat_line }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p class="no-content">No performers listed.</p>
-      {% endif %}
+      <h3 class="team-leaders-team">{{ team.team_name }} <span>{{ team.team_abbr }}</span></h3>
+      <div class="team-leaders-groups">
+        <table class="team-leaders-table">
+          <caption>Batting</caption>
+          <thead><tr><th scope="col">Stat</th><th scope="col">Player</th><th scope="col">Value</th></tr></thead>
+          <tbody>
+            {% for leader in team.batting %}
+            <tr><th scope="row">{{ leader.label }}</th><td>{{ leader.player_name }}</td><td class="leader-value">{{ leader.value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <table class="team-leaders-table">
+          <caption>Pitching</caption>
+          <thead><tr><th scope="col">Stat</th><th scope="col">Player</th><th scope="col">Value</th></tr></thead>
+          <tbody>
+            {% for leader in team.pitching %}
+            <tr><th scope="row">{{ leader.label }}</th><td>{{ leader.player_name }}</td><td class="leader-value">{{ leader.value }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
     {% endfor %}
   </div>

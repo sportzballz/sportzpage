@@ -85,3 +85,23 @@ class TeamGameLeaders(BaseModel):
     away_abbr: str
     home_abbr: str
     performers: list[TeamPerformer] = Field(default_factory=list)
+
+
+class TeamStatLeader(BaseModel):
+    """The season leader for one statistical category on one club."""
+
+    category: str
+    label: str
+    player_id: int = Field(default=0)
+    player_name: str
+    value: str
+
+
+class TeamSeasonLeaders(BaseModel):
+    """Season statistical leaders drawn only from players on the same club."""
+
+    team_id: int
+    team_abbr: str
+    team_name: str
+    batting: list[TeamStatLeader] = Field(default_factory=list)
+    pitching: list[TeamStatLeader] = Field(default_factory=list)

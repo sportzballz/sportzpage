@@ -1408,8 +1408,8 @@ caption,
   #scoreboard { grid-column: span 4; }
   #todays-games { grid-column: span 4; }
   #standings { grid-column: span 8; }
-  #league-leaders,
-  #team-leaders { grid-column: span 6; }
+  #league-leaders { grid-column: span 6; }
+  #team-leaders { grid-column: 1 / -1; }
   #game-recaps { grid-column: span 8; }
   #box-scores { grid-column: span 4; }
   #around-the-league { grid-column: span 5; }
@@ -1430,6 +1430,8 @@ caption,
   }
   .standings-divisions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .games-list, .atl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .team-leaders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 899px) {
@@ -1453,6 +1455,7 @@ caption,
 
   #front-page,
   #standings,
+  #team-leaders,
   #game-recaps,
   #box-scores,
   #history { grid-column: 1 / -1; }
@@ -1472,6 +1475,7 @@ caption,
   .standings-divisions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .games-list,
   .atl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .team-leaders-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Phone edition: readable single-column order with compact, swipeable utilities. */
@@ -1574,4 +1578,57 @@ caption,
   .game-card,
   .atl-item,
   .history-item { padding-top: 0.35rem; }
+}
+
+.team-leaders-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+}
+
+.team-leaders-card {
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.team-leaders-team {
+  margin: 0;
+  padding: 0.22rem 0.35rem;
+  border-bottom: 2px solid var(--color-border-dark);
+  font: 800 0.86rem/1 var(--font-sans);
+}
+
+.team-leaders-team span {
+  float: right;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+}
+
+.team-leaders-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  padding: 0.35rem;
+}
+
+.team-leaders-table { width: 100%; }
+.team-leaders-table th:first-child { width: 2.25rem; }
+.team-leaders-table .leader-value {
+  width: 2.8rem;
+  text-align: right;
+  font-weight: 700;
+}
+
+@media (max-width: 599px) {
+  .team-leaders-groups { grid-template-columns: 1fr; }
+  .team-leaders-table { min-width: 0; }
+}
+
+@media (min-width: 600px) and (max-width: 899px) {
+  .team-leaders-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 900px) {
+  .team-leaders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

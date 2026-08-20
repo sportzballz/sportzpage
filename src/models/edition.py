@@ -5,7 +5,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 from src.models.game import Game
 from src.models.standings import Standings
-from src.models.leaders import LeagueLeaders, TeamGameLeaders
+from src.models.leaders import LeagueLeaders, TeamGameLeaders, TeamSeasonLeaders
 from src.models.story import Story, GameRecap
 from src.models.transactions import Transaction
 from src.models.injuries import Injury
@@ -65,6 +65,7 @@ class Edition(BaseModel):
     injuries: List[Injury] = Field(default_factory=list)
     historical_items: List[HistoricalItem] = Field(default_factory=list)
     team_game_leaders: List[TeamGameLeaders] = Field(default_factory=list)
+    team_season_leaders: List[TeamSeasonLeaders] = Field(default_factory=list)
     generation_metadata: GenerationMetadata = Field(
         default_factory=lambda: GenerationMetadata(pipeline_version="0.1.0")
     )

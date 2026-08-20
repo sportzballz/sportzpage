@@ -345,3 +345,36 @@ class TestNormalize:
         assert len(result.injuries) == 1
         assert result.injuries[0].player_name == "Hurt Guy"
         assert result.injuries[0].team_abbr == "LAD"
+
+    def test_normalize_team_season_leaders_by_club(self) -> None:
+        def split(name: str, player_id: int, stat: dict) -> dict:
+            return {
+                "team": {"id": 143, "abbreviation": "PHI", "name": "Philadelphia Phillies"},
+                "player": {"id": player_id, "fullName": name},
+                "stat": stat,
+            }
+
+        raw = {
+            "team_player_stats": {
+                "hitting": {
+                    "stats": [{"splits": [
+                        split("Power Hitter", 1, {"plateAppearances": 300, "avg": ".275", "homeRuns": 31, "rbi": 85, "ops": ".900", "stolenBases": 4}),
+                        split("Contact Hitter", 2, {"plateAppearances": 320, "avg": ".315", "homeRuns": 8, "rbi": 42, "ops": ".810", "stolenBases": 19}),
+                    ]}]
+                },
+                "pitching": {
+                    "stats": [{"splits": [
+                        split("Ace Starter", 3, {"inningsPitched": "140.0", "era": "2.80", "wins": 14, "strikeOuts": 170, "saves": 0, "whip": "1.05"}),
+                        split("Closer", 4, {"inningsPitched": "48.0", "era": "2.25", "wins": 3, "strikeOuts": 65, "saves": 32, "whip": "0.98"}),
+                    ]}]
+                },
+            }
+        }
+
+        result = self.normalizer.normalize(raw)
+        assert len(result.team_season_leaders) == 1
+        team = result.team_season_leaders[0]
+        assert team.team_abbr == "PHI"
+        assert {leader.label: leader.player_name for leader in team.batting}["AVG"] == "Contact Hitter"
+        assert {leader.label: leader.player_name for leader in team.batting}["HR"] == "Power Hitter"
+        assert {leader.label: leader.player_name for leader in team.pitching}["SV"] == "Closer"
