@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#8b1e2d">
   <title>The Daily Sportz Page &mdash; {{ edition.edition.date }} | SportzBallz</title>
   <meta name="description" content="Philadelphia-first MLB scores, standings, league leaders, game recaps, and analysis.">
   <link rel="canonical" href="https://sportzballz.io/sportzpage/index.html">
@@ -11,6 +12,9 @@
   <meta property="og:description" content="Philadelphia-first MLB scores, standings, and analysis.">
   <meta property="og:type" content="website">
   <meta name="sportzballz-edition-id" content="{{ edition.edition.id }}">
+  <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
   <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}">
 </head>
 <body>

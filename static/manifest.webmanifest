@@ -1,0 +1,24 @@
+{
+  "name": "The Daily Sportz Page",
+  "short_name": "SportzPage",
+  "description": "Philadelphia-first MLB scores, standings, recaps, and box scores.",
+  "start_url": "/sportzpage/",
+  "scope": "/sportzpage/",
+  "display": "standalone",
+  "background_color": "#faf8f0",
+  "theme_color": "#8b1e2d",
+  "icons": [
+    {
+      "src": "/sportzpage/static/icons/sportzpage-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/sportzpage/static/icons/sportzpage-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -13,7 +13,7 @@ echo "Generating The Daily Sportz Page for ${EDITION_DATE}"
 
 mkdir -p "$SITE_ROOT/sportzpage/static"
 cp "$ROOT/build/index.html" "$ROOT/build/edition.json" "$SITE_ROOT/sportzpage/"
-cp -R "$ROOT/static/css" "$ROOT/static/js" "$SITE_ROOT/sportzpage/static/"
+cp -R "$ROOT/static/." "$SITE_ROOT/sportzpage/static/"
 
 SPORTZBALLZ_SITE_ROOT="$SITE_ROOT" \
   /Users/asmith/.openclaw/workspace/baseball-llm/scripts/publish-site.sh
