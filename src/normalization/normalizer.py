@@ -140,15 +140,8 @@ class Normalizer:
                 for player_id in team.get("pitchers", [])
                 if players.get(f"ID{player_id}", {}).get("stats", {}).get("pitching")
             ]
-            for info in team.get("info", []):
-                section = info.get("title", "")
-                for field in info.get("fieldList", []):
-                    label, value = field.get("label"), field.get("value")
-                    if label and value:
-                        notes.append(f"{abbr} {section} — {label}: {value}")
-
         game_info = {item.get("label"): item.get("value") for item in raw.get("info", [])}
-        for label in ("E", "LOB", "2B", "3B", "HR", "RBI", "SB", "GIDP", "DP", "Umpires"):
+        for label in ("HBP", "Umpires"):
             if game_info.get(label):
                 notes.append(f"{label}: {game_info[label]}")
 
