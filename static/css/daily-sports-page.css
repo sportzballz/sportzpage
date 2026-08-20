@@ -1651,3 +1651,157 @@ caption,
 @media (min-width: 900px) {
   .team-leaders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Print is a separate, paginated newspaper edition. Keep this block last so
+   screen-oriented broadsheet rules cannot override it in the print cascade. */
+@page {
+  size: letter landscape;
+  margin: 0.35in;
+}
+
+@media print {
+  html,
+  body {
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    background-image: none !important;
+    color: #000 !important;
+    font-size: 8pt !important;
+    line-height: 1.16 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .skip-link,
+  .section-nav,
+  .copy-link-btn,
+  .print-btn,
+  .story-tags,
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  .masthead {
+    position: static !important;
+    margin: 0 0 0.12in !important;
+    padding: 0.04in 0 0.08in !important;
+  }
+
+  .masthead-title { font-size: 42pt !important; }
+  .masthead-kicker { grid-template-columns: 1fr auto 1fr !important; }
+  .masthead-kicker span:last-child { text-align: right !important; }
+  .masthead-meta { justify-content: space-between !important; }
+
+  main {
+    display: block !important;
+    border: 0 !important;
+  }
+
+  .section {
+    width: auto !important;
+    margin: 0 0 0.16in !important;
+    padding: 0 0 0.12in !important;
+    border-right: 0 !important;
+    border-left: 0 !important;
+    border-bottom: 1px solid #333 !important;
+  }
+
+  .section-heading {
+    margin: 0 0 0.08in !important;
+    padding: 0.04in !important;
+    font-size: 12pt !important;
+  }
+
+  .front-page {
+    display: grid !important;
+    grid-template-columns: minmax(0, 2fr) minmax(2.2in, 1fr) !important;
+    gap: 0.12in !important;
+    break-after: page;
+  }
+
+  .front-page > .section-heading { grid-column: 1 / -1 !important; }
+  .lead-story { grid-column: 1 !important; }
+  .secondary-stories {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 0 0 0 0.12in !important;
+    border-top: 0 !important;
+    border-left: 1px solid #777 !important;
+    gap: 0.08in !important;
+  }
+
+  .lead-headline { font-size: 28pt !important; }
+  .story-body { columns: 2 !important; column-gap: 0.14in !important; }
+
+  #standings,
+  #league-leaders,
+  #history,
+  #team-leaders,
+  #box-scores,
+  #transactions,
+  #around-the-league {
+    break-before: page;
+  }
+
+  .standings-divisions,
+  .games-list,
+  .atl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  .team-leaders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .team-leaders-groups { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  .leaders-tablist { display: none !important; }
+  .leaders-panel { display: none !important; }
+  .leaders-panels > .leaders-panel:first-child { display: block !important; }
+
+  .box-scores-flow {
+    column-count: 2 !important;
+    column-gap: 0.18in !important;
+    column-rule: 1px solid #777 !important;
+  }
+
+  .box-score {
+    display: inline-block !important;
+    width: 100% !important;
+    margin: 0 0 0.14in !important;
+    padding: 0 0 0.1in !important;
+    break-inside: avoid !important;
+  }
+
+  table {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 6.6pt !important;
+    break-inside: auto !important;
+  }
+
+  thead { display: table-header-group; }
+  tr,
+  .game-card,
+  .team-leaders-card,
+  .atl-item,
+  .history-item { break-inside: avoid !important; }
+
+  th,
+  td { padding: 0.025in 0.035in !important; }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  caption { break-after: avoid !important; }
+
+  a,
+  a:visited { color: #000 !important; text-decoration: none !important; }
+  a::after { content: none !important; }
+
+  .site-footer {
+    margin: 0 !important;
+    padding: 0.05in 0 0 !important;
+    border-top: 1px solid #333;
+    font-size: 6.5pt !important;
+  }
+}
