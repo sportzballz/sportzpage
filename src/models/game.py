@@ -55,6 +55,7 @@ class TeamBoxLine(BaseModel):
 
     player_name: str
     player_id: int = Field(default=0)
+    position: Optional[str] = Field(default=None)
     ab: Optional[int] = Field(default=None, description="At-bats")
     r: Optional[int] = Field(default=None, description="Runs")
     h: Optional[int] = Field(default=None, description="Hits")
@@ -70,6 +71,7 @@ class TeamBoxLine(BaseModel):
     k_pitched: Optional[int] = Field(default=None)
     era: Optional[str] = Field(default=None, description="Season ERA")
     decision: Optional[str] = Field(default=None, description="W, L, S, or H")
+    pitches: Optional[int] = Field(default=None, description="Total pitches thrown")
 
 
 class Game(BaseModel):
@@ -125,4 +127,8 @@ class Game(BaseModel):
     )
     pitching_lines: dict[str, list[TeamBoxLine]] = Field(
         default_factory=dict, description="Keyed by team_abbr. List of pitcher lines in order used."
+    )
+    boxscore_notes: List[str] = Field(
+        default_factory=list,
+        description="Game notes such as extra-base hits, runners left on base, and umpires.",
     )

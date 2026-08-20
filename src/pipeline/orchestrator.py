@@ -9,6 +9,7 @@ import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from src.collectors.history import HistoryCollector
 from src.collectors.mlb import MLBCollector
 from src.config import load_settings
 from src.editorial.engine import EditorialEngine
@@ -116,7 +117,10 @@ class GenerationOrchestrator:
             backoff_min=self._settings.mlb_api.backoff_min_seconds,
             backoff_max=self._settings.mlb_api.backoff_max_seconds,
         )
-        raw = await collector.collect()
+        raw, history = await asyncio.gather(
+            collector.collect(), HistoryCollector(self._game_date).collect()
+        )
+        raw["history"] = history
         # Save raw files for debugging and reruns
         raw_dir = self._build_dir / "raw"
         raw_dir.mkdir(parents=True, exist_ok=True)

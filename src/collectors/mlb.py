@@ -18,6 +18,7 @@ DEFAULT_MAX_AGE = {
     "injuries": 7200,
     "stats_leaders": 21600,
     "teams": 86400,
+    "boxscore": 86400,
 }
 
 # Batting categories to collect
@@ -212,6 +213,37 @@ class MLBCollector(Collector):
         self._maybe_save_fixture("injuries", data)
         return data
 
+    async def get_boxscore(self, game_id: int) -> dict[str, Any]:
+        """Fetch the full player-level box score for one game."""
+        key = f"boxscore_{game_id}"
+        if self._cache:
+            cached = self._cache.get(key, self._max_ages["boxscore"])
+            if cached is not None:
+                return cached
+        data = await self._get(f"/game/{game_id}/boxscore")
+        if self._cache:
+            self._cache.set(key, data)
+        return data
+
+    async def get_boxscores(self, schedule: dict[str, Any]) -> dict[str, Any]:
+        """Fetch full box scores for completed games, tolerating individual failures."""
+        game_ids = [
+            game["gamePk"]
+            for date_entry in schedule.get("dates", [])
+            for game in date_entry.get("games", [])
+            if game.get("status", {}).get("detailedState") in {"Final", "Game Over"}
+        ]
+
+        async def fetch(game_id: int) -> tuple[str, dict[str, Any] | None]:
+            try:
+                return str(game_id), await self.get_boxscore(game_id)
+            except Exception as exc:
+                logger.warning("box score unavailable for game %d: %s", game_id, exc)
+                return str(game_id), None
+
+        results = await asyncio.gather(*(fetch(game_id) for game_id in game_ids))
+        return {game_id: data for game_id, data in results if data is not None}
+
     async def collect(self) -> dict[str, Any]:
         """Collect all data needed for an edition. Returns raw responses keyed by domain.
 
@@ -228,6 +260,7 @@ class MLBCollector(Collector):
             self.get_all_leaders(season),
             self.get_teams(),
         )
+        boxscores = await self.get_boxscores(schedule)
 
         # Optional: transactions
         try:
@@ -250,6 +283,7 @@ class MLBCollector(Collector):
             "teams": teams,  # id -> abbreviation map
             "transactions": transactions,
             "injuries": injuries,
+            "boxscores": boxscores,
         }
 
     def _maybe_save_fixture(self, name: str, data: Any) -> None:

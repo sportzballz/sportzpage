@@ -1,0 +1,9 @@
+.playwright/
+**/__pycache__/
+*.pyc
+build-rich/
+build/cache/
+build/raw/history.json
+logs/
+data/history/days/raw/
+data/history/days/download_summary.json

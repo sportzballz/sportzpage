@@ -82,7 +82,7 @@
           <tbody>
             {% for line in lines %}
             <tr>
-              <td class="batter-name-col">{{ line.player_name }}</td>
+              <td class="batter-name-col">{{ line.player_name }}{% if line.position %} <small>{{ line.position | lower }}</small>{% endif %}</td>
               <td>{{ line.ab if line.ab is not none else '—' }}</td>
               <td>{{ line.r if line.r is not none else '—' }}</td>
               <td>{{ line.h if line.h is not none else '—' }}</td>
@@ -115,6 +115,7 @@
               <th scope="col">ER</th>
               <th scope="col">BB</th>
               <th scope="col">K</th>
+              <th scope="col">NP</th>
               <th scope="col">ERA</th>
               <th scope="col"></th>
             </tr>
@@ -129,6 +130,7 @@
               <td>{{ line.er if line.er is not none else '—' }}</td>
               <td>{{ line.bb_allowed if line.bb_allowed is not none else '—' }}</td>
               <td>{{ line.k_pitched if line.k_pitched is not none else '—' }}</td>
+              <td>{{ line.pitches if line.pitches is not none else '—' }}</td>
               <td>{{ line.era if line.era else '—' }}</td>
               <td class="decision-col">{% if line.decision %}<span class="pitcher-decision pitcher-{{ line.decision | lower }}">{{ line.decision }}</span>{% endif %}</td>
             </tr>
@@ -138,6 +140,19 @@
       </div>
       {% endfor %}
     </div>
+    {% endif %}
+
+    {% if game.boxscore_notes %}
+    <div class="box-notes">
+      {% for note in game.boxscore_notes %}<p>{{ note }}</p>{% endfor %}
+    </div>
+    {% endif %}
+    {% if game.time_of_game or game.attendance %}
+    <p class="box-game-info">
+      {% if game.time_of_game %}Time: {{ game.time_of_game }}{% endif %}
+      {% if game.time_of_game and game.attendance %} · {% endif %}
+      {% if game.attendance %}Attendance: {{ "{:,}".format(game.attendance) }}{% endif %}
+    </p>
     {% endif %}
 
   </div>

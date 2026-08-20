@@ -189,6 +189,7 @@ class EditorialEngine:
             game_recaps=game_recaps,
             transactions=normalized.transactions,
             injuries=normalized.injuries,
+            historical_items=normalized.historical_items,
             generation_metadata=GenerationMetadata(
                 pipeline_version="0.1.0",
                 python_version=platform.python_version(),

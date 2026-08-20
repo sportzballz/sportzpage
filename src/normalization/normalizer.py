@@ -4,7 +4,8 @@ import logging
 from datetime import date, datetime
 from typing import Any, List, Optional
 from pydantic import BaseModel, Field
-from src.models.game import Game, GameStatus, TeamGameLine, Pitcher, LinescoreInning
+from src.models.game import Game, GameStatus, LinescoreInning, Pitcher, TeamBoxLine, TeamGameLine
+from src.models.history import HistoricalItem
 from src.models.standings import StandingsRow, DivisionStandings, WildCardStandings, Standings
 from src.models.leaders import LeaderEntry, LeagueLeaders
 from src.models.transactions import Transaction, TransactionType
@@ -21,6 +22,7 @@ class NormalizedData(BaseModel):
     league_leaders: Optional[LeagueLeaders] = Field(default=None)
     transactions: List[Transaction] = Field(default_factory=list)
     injuries: List[Injury] = Field(default_factory=list)
+    historical_items: List[HistoricalItem] = Field(default_factory=list)
     collection_errors: List[str] = Field(default_factory=list)
 
 
@@ -64,7 +66,9 @@ class Normalizer:
 
         result = NormalizedData()
         if "schedule" in raw:
-            result.games = self._normalize_schedule(raw["schedule"], teams_map)
+            result.games = self._normalize_schedule(
+                raw["schedule"], teams_map, raw.get("boxscores", {})
+            )
         if "standings" in raw:
             result.standings = self._normalize_standings(raw["standings"], teams_map)
         if "transactions" in raw:
@@ -73,19 +77,133 @@ class Normalizer:
             result.injuries = self._normalize_injuries(raw["injuries"])
         if "leaders" in raw:
             result.league_leaders = self._normalize_leaders(raw["leaders"])
+        if "history" in raw:
+            result.historical_items = self._normalize_history(raw["history"])
+        return result
+
+    def _normalize_history(self, raw: dict[str, Any]) -> list[HistoricalItem]:
+        source = raw.get("source", "")
+        result: list[HistoricalItem] = []
+        for event in raw.get("items", []):
+            try:
+                description = " ".join(str(event["description"]).split())
+                headline = description.split(".", 1)[0]
+                if len(headline) > 110:
+                    headline = f"{headline[:107].rstrip()}..."
+                result.append(
+                    HistoricalItem(
+                        year=int(event["year"]),
+                        headline=headline,
+                        description=description,
+                        source=source,
+                    )
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                logger.warning("failed to normalize historical event: %s", exc)
         return result
 
     def _normalize_schedule(
-        self, raw: dict[str, Any], teams_map: dict[int, str] = {}
+        self,
+        raw: dict[str, Any],
+        teams_map: dict[int, str] = {},
+        boxscores: dict[str, Any] = {},
     ) -> list[Game]:
         games: list[Game] = []
         for date_entry in raw.get("dates", []):
             for g in date_entry.get("games", []):
                 try:
-                    games.append(self._parse_game(g, teams_map))
+                    game = self._parse_game(g, teams_map)
+                    boxscore = boxscores.get(str(game.game_id))
+                    if boxscore:
+                        game = self._add_boxscore(game, boxscore)
+                    games.append(game)
                 except Exception as exc:
                     logger.warning("failed to parse game %s: %s", g.get("gamePk"), exc)
         return games
+
+    def _add_boxscore(self, game: Game, raw: dict[str, Any]) -> Game:
+        batting: dict[str, list[TeamBoxLine]] = {}
+        pitching: dict[str, list[TeamBoxLine]] = {}
+        notes: list[str] = []
+
+        for side in ("away", "home"):
+            team = raw.get("teams", {}).get(side, {})
+            abbr = game.away.team_abbr if side == "away" else game.home.team_abbr
+            players = team.get("players", {})
+            batting[abbr] = [
+                self._parse_batter(players.get(f"ID{player_id}", {}))
+                for player_id in team.get("batters", [])
+                if players.get(f"ID{player_id}", {}).get("stats", {}).get("batting")
+            ]
+            pitching[abbr] = [
+                self._parse_box_pitcher(players.get(f"ID{player_id}", {}))
+                for player_id in team.get("pitchers", [])
+                if players.get(f"ID{player_id}", {}).get("stats", {}).get("pitching")
+            ]
+            for info in team.get("info", []):
+                section = info.get("title", "")
+                for field in info.get("fieldList", []):
+                    label, value = field.get("label"), field.get("value")
+                    if label and value:
+                        notes.append(f"{abbr} {section} — {label}: {value}")
+
+        game_info = {item.get("label"): item.get("value") for item in raw.get("info", [])}
+        for label in ("E", "LOB", "2B", "3B", "HR", "RBI", "SB", "GIDP", "DP", "Umpires"):
+            if game_info.get(label):
+                notes.append(f"{label}: {game_info[label]}")
+
+        attendance_text = str(game_info.get("Att", "")).replace(",", "").rstrip(".")
+        attendance = int(attendance_text) if attendance_text.isdigit() else None
+        duration = str(game_info.get("T", "")).rstrip(".") or None
+        return game.model_copy(
+            update={
+                "batting_lines": batting,
+                "pitching_lines": pitching,
+                "boxscore_notes": notes,
+                "attendance": attendance,
+                "time_of_game": duration,
+            }
+        )
+
+    def _parse_batter(self, player: dict[str, Any]) -> TeamBoxLine:
+        stats = player.get("stats", {}).get("batting", {})
+        season = player.get("seasonStats", {}).get("batting", {})
+        person = player.get("person", {})
+        return TeamBoxLine(
+            player_name=person.get("boxscoreName", person.get("fullName", "Unknown")),
+            player_id=person.get("id", 0),
+            position=player.get("position", {}).get("abbreviation"),
+            ab=stats.get("atBats"),
+            r=stats.get("runs"),
+            h=stats.get("hits"),
+            rbi=stats.get("rbi"),
+            bb=stats.get("baseOnBalls"),
+            k=stats.get("strikeOuts"),
+            avg=season.get("avg"),
+        )
+
+    def _parse_box_pitcher(self, player: dict[str, Any]) -> TeamBoxLine:
+        stats = player.get("stats", {}).get("pitching", {})
+        season = player.get("seasonStats", {}).get("pitching", {})
+        person = player.get("person", {})
+        note = stats.get("note", "")
+        decision = next(
+            (code for code in ("W", "L", "S", "H", "BS") if f"({code}," in note),
+            None,
+        )
+        return TeamBoxLine(
+            player_name=person.get("boxscoreName", person.get("fullName", "Unknown")),
+            player_id=person.get("id", 0),
+            ip=stats.get("inningsPitched"),
+            hits_allowed=stats.get("hits"),
+            r=stats.get("runs"),
+            er=stats.get("earnedRuns"),
+            bb_allowed=stats.get("baseOnBalls"),
+            k_pitched=stats.get("strikeOuts"),
+            pitches=stats.get("numberOfPitches"),
+            era=season.get("era"),
+            decision=decision,
+        )
 
     def _parse_game(self, g: dict[str, Any], teams_map: dict[int, str] = {}) -> Game:
         status_detail = g.get("status", {}).get("detailedState", "Scheduled")
