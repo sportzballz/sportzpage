@@ -38,6 +38,8 @@ class Story(BaseModel):
         description="Enumeration of facts from structured data used in this story.",
     )
     ai_generated: bool = Field(default=True)
+    source_name: Optional[str] = Field(default=None)
+    source_url: Optional[str] = Field(default=None)
 
 
 class GameRecap(Story):

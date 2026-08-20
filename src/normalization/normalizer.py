@@ -9,6 +9,7 @@ from src.models.history import HistoricalItem
 from src.models.standings import StandingsRow, DivisionStandings, WildCardStandings, Standings
 from src.models.leaders import LeaderEntry, LeagueLeaders, TeamSeasonLeaders, TeamStatLeader
 from src.models.transactions import Transaction, TransactionType
+from src.models.story import Story, StoryType
 from src.models.injuries import Injury, RosterStatus, InjuryConfidence
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ class NormalizedData(BaseModel):
     transactions: List[Transaction] = Field(default_factory=list)
     injuries: List[Injury] = Field(default_factory=list)
     historical_items: List[HistoricalItem] = Field(default_factory=list)
+    news_stories: List[Story] = Field(default_factory=list)
     collection_errors: List[str] = Field(default_factory=list)
 
 
@@ -82,7 +84,34 @@ class Normalizer:
             result.team_season_leaders = self._normalize_team_leaders(raw["team_player_stats"])
         if "history" in raw:
             result.historical_items = self._normalize_history(raw["history"])
+        if "news" in raw:
+            result.news_stories = self._normalize_news(raw["news"])
         return result
+
+    def _normalize_news(self, raw: dict[str, Any]) -> list[Story]:
+        source = raw.get("source", "MLB.com")
+        stories = []
+        for item in raw.get("items", []):
+            title = " ".join(str(item.get("title", "")).split())
+            summary = " ".join(str(item.get("summary", "")).split())
+            url = str(item.get("link", "")).strip()
+            if not title or not summary or not url:
+                continue
+            stories.append(
+                Story(
+                    headline=title,
+                    deck=summary,
+                    byline=item.get("author") or source,
+                    paragraphs=[summary],
+                    source_data_references=[url],
+                    story_type=StoryType.editorial,
+                    facts_used=[summary],
+                    ai_generated=False,
+                    source_name=source,
+                    source_url=url,
+                )
+            )
+        return stories
 
     def _normalize_team_leaders(self, raw: dict[str, Any]) -> list[TeamSeasonLeaders]:
         """Calculate category leaders within each club from all-player season stats."""

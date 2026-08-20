@@ -83,7 +83,6 @@ EXPECTED_IDS = [
     'id="game-recaps"',
     'id="around-the-league"',
     'id="transactions"',
-    'id="injuries"',
     'id="history"',
 ]
 

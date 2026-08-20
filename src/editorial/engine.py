@@ -187,8 +187,8 @@ class EditorialEngine:
             standings=normalized.standings,
             league_leaders=normalized.league_leaders,
             game_recaps=game_recaps,
+            around_the_league=normalized.news_stories,
             transactions=normalized.transactions,
-            injuries=normalized.injuries,
             historical_items=normalized.historical_items,
             team_season_leaders=normalized.team_season_leaders,
             generation_metadata=GenerationMetadata(

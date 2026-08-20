@@ -378,3 +378,23 @@ class TestNormalize:
         assert {leader.label: leader.player_name for leader in team.batting}["AVG"] == "Contact Hitter"
         assert {leader.label: leader.player_name for leader in team.batting}["HR"] == "Power Hitter"
         assert {leader.label: leader.player_name for leader in team.pitching}["SV"] == "Closer"
+
+    def test_normalize_mlb_news_as_around_the_league_stories(self) -> None:
+        raw = {
+            "news": {
+                "source": "MLB.com",
+                "items": [
+                    {
+                        "title": "Rookie completes a remarkable journey",
+                        "link": "https://www.mlb.com/news/example",
+                        "author": "MLB.com Staff",
+                        "summary": "A rookie reached the Majors after an unusual path through baseball.",
+                    }
+                ],
+            }
+        }
+
+        result = self.normalizer.normalize(raw)
+        assert len(result.news_stories) == 1
+        assert result.news_stories[0].headline == "Rookie completes a remarkable journey"
+        assert result.news_stories[0].source_url == "https://www.mlb.com/news/example"

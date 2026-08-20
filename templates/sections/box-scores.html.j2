@@ -4,6 +4,7 @@
 
   {% set final_games = edition.games | selectattr("status", "equalto", "final") | list %}
   {% if final_games %}
+  <div class="box-scores-flow">
   {% for game in final_games %}
   {% if game.linescore %}
   <div class="box-score" id="box-{{ game.game_id }}">
@@ -158,6 +159,7 @@
   </div>
   {% endif %}
   {% endfor %}
+  </div>
   {% else %}
   <p class="no-content">No completed games available for box scores.</p>
   {% endif %}

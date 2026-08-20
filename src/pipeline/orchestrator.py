@@ -11,6 +11,7 @@ from pathlib import Path
 
 from src.collectors.history import HistoryCollector
 from src.collectors.mlb import MLBCollector
+from src.collectors.news import NewsCollector
 from src.config import load_settings
 from src.editorial.engine import EditorialEngine
 from src.models.run import GenerationRun, PhaseStatus, RunStatus
@@ -117,10 +118,13 @@ class GenerationOrchestrator:
             backoff_min=self._settings.mlb_api.backoff_min_seconds,
             backoff_max=self._settings.mlb_api.backoff_max_seconds,
         )
-        raw, history = await asyncio.gather(
-            collector.collect(), HistoryCollector(self._game_date).collect()
+        raw, history, news = await asyncio.gather(
+            collector.collect(),
+            HistoryCollector(self._game_date).collect(),
+            NewsCollector().collect(),
         )
         raw["history"] = history
+        raw["news"] = news
         # Save raw files for debugging and reruns
         raw_dir = self._build_dir / "raw"
         raw_dir.mkdir(parents=True, exist_ok=True)

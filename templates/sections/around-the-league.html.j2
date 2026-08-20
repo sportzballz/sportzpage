@@ -9,8 +9,13 @@
       <h3 id="atl-headline-{{ loop.index }}" class="atl-headline">{{ item.headline }}</h3>
       <p class="story-deck">{{ item.deck }}</p>
       {% for para in item.paragraphs %}
+      {% if not loop.first %}
       <p>{{ para }}</p>
+      {% endif %}
       {% endfor %}
+      {% if item.source_url %}
+      <p class="story-source-link"><a href="{{ item.source_url }}" target="_blank" rel="noopener">Read at {{ item.source_name or 'MLB.com' }}</a></p>
+      {% endif %}
       {% if item.teams or item.players %}
       <footer class="story-tags">
         {% for team in item.teams %}

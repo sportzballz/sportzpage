@@ -22,7 +22,6 @@ REQUIRED_SECTION_IDS = [
     'id="game-recaps"',
     'id="around-the-league"',
     'id="transactions"',
-    'id="injuries"',
     'id="history"',
 ]
 
@@ -57,7 +56,7 @@ def test_full_slate_pipeline():
 
         html_content = index.read_text(encoding="utf-8")
 
-        # All 10 required section IDs present
+        # All required section IDs present
         for section_id in REQUIRED_SECTION_IDS:
             assert section_id in html_content, f"Missing section: {section_id}"
 

@@ -1411,10 +1411,9 @@ caption,
   #league-leaders { grid-column: span 6; }
   #team-leaders { grid-column: 1 / -1; }
   #game-recaps { grid-column: span 8; }
-  #box-scores { grid-column: span 4; }
+  #box-scores { grid-column: 1 / -1; }
   #around-the-league { grid-column: span 5; }
-  #transactions { grid-column: span 4; }
-  #injuries { grid-column: span 3; }
+  #transactions { grid-column: span 7; }
   #history { grid-column: 1 / -1; }
 
   .front-page { display: flex; flex-wrap: wrap; gap: 0.65rem; }
@@ -1584,6 +1583,27 @@ caption,
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.7rem;
+}
+
+.box-score {
+  margin: 0 0 1.25rem;
+  padding: 0 0 0.9rem;
+  border-bottom: 3px double var(--color-border-dark);
+  break-inside: avoid-column;
+}
+
+@media (min-width: 900px) {
+  .box-scores-flow {
+    column-count: 2;
+    column-gap: 1.15rem;
+    column-rule: 1px solid var(--color-border);
+  }
+}
+
+.story-source-link {
+  font: 700 0.68rem/1 var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
 }
 
 .team-leaders-card {

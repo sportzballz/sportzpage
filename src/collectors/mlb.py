@@ -299,13 +299,6 @@ class MLBCollector(Collector):
             logger.warning("transactions unavailable, continuing without: %s", exc)
             transactions = {"transactions": []}
 
-        # Optional: injuries
-        try:
-            injuries = await self.get_injuries()
-        except (ProviderUnavailableError, Exception) as exc:
-            logger.warning("injuries unavailable, continuing without: %s", exc)
-            injuries = {"injuries": []}
-
         return {
             "schedule": schedule,
             "standings": standings,
@@ -313,7 +306,6 @@ class MLBCollector(Collector):
             "team_player_stats": team_player_stats,
             "teams": teams,  # id -> abbreviation map
             "transactions": transactions,
-            "injuries": injuries,
             "boxscores": boxscores,
         }
 
