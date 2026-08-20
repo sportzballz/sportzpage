@@ -215,10 +215,15 @@ class Normalizer:
             try:
                 description = " ".join(str(event["description"]).split())
                 sentences = split_sentences(description)
-                headline = sentences[0].rstrip(".!?") if sentences else description
-                if len(headline) > 110:
-                    headline = f"{headline[:107].rstrip()}..."
-                detail = " ".join(sentences[1:])
+                full_event = sentences[0].rstrip(".!?") if sentences else description
+                if len(full_event) > 110:
+                    split_at = full_event.rfind(" ", 0, 111)
+                    split_at = split_at if split_at > 60 else 110
+                    headline = full_event[:split_at].rstrip()
+                    detail = full_event[split_at:].lstrip(" ,;:–—-")
+                else:
+                    headline = full_event
+                    detail = ""
                 result.append(
                     HistoricalItem(
                         year=int(event["year"]),

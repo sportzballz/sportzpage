@@ -17,16 +17,10 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.baseball-reference.com/bullpen"
 MIN_ITEMS = 8
-MAX_ITEMS = 24
-TARGET_CHARACTERS = 2600
+MAX_ITEMS = 14
+TARGET_CHARACTERS = 1500
 PHILADELPHIA_TERMS = ("phillies", "philadelphia", "athletics", "phils")
 YEAR_EVENT = re.compile(r"^(18\d{2}|19\d{2}|20\d{2})\s*[-–—:]\s*(.+)$")
-DEPENDENT_OPENERS = (
-    "also ", "as a result", "by doing so", "he ", "her ", "his ", "it ",
-    "its ", "she ", "that ", "the game ", "the loss ", "the only ",
-    "the previous ", "the rookie ", "the victory ", "the win ", "their ",
-    "these ", "they ", "this ", "those ", "when the ",
-)
 
 
 class HistoryCollector:
@@ -102,30 +96,22 @@ class HistoryCollector:
 
     @classmethod
     def separate_events(cls, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Turn year-level source entries into individual historical events.
+        """Extract one complete occurrence from each year-level source entry.
 
-        Bullpen stores every occurrence from a year in one list item. Supporting
-        sentences stay with the event they explain, while a new standalone
-        sentence becomes a separately selectable newspaper item.
+        Bullpen clubs every occurrence from a year into one list item. The first
+        sentence is a standalone occurrence; later sentences may either support
+        it or start unrelated events, so selecting them independently can produce
+        contextless fragments. The complete database record remains unchanged.
         """
         separated: list[dict[str, Any]] = []
         for event in events:
-            groups: list[str] = []
-            for sentence in split_sentences(" ".join(str(event.get("description", "")).split())):
-                first_word = sentence.split(maxsplit=1)[0] if sentence else ""
-                dependent = (
-                    sentence.lower().startswith(DEPENDENT_OPENERS)
-                    or first_word.endswith(("'s", "’s"))
-                )
-                if dependent and groups:
-                    groups[-1] = f"{groups[-1]} {sentence}"
-                else:
-                    groups.append(sentence)
-            separated.extend(
-                {"year": event.get("year"), "description": description}
-                for description in groups
-                if description
+            sentences = split_sentences(
+                " ".join(str(event.get("description", "")).split())
             )
+            if sentences:
+                separated.append(
+                    {"year": event.get("year"), "description": sentences[0]}
+                )
         return separated
 
     def select_subset(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:

@@ -61,16 +61,10 @@ def test_separates_multiple_events_from_the_same_year():
 
     separated = HistoryCollector.separate_events(events)
 
-    assert separated == [
-        {
-            "year": 2009,
-            "description": "Houston beats Florida, 4 - 1. This ends a 15-game streak.",
-        },
-        {
-            "year": 2009,
-            "description": "Julio Borbon hits his first career homer. He drives in three runs.",
-        },
-    ]
+    assert separated == [{
+        "year": 2009,
+        "description": "Houston beats Florida, 4 - 1.",
+    }]
 
 
 def test_normalizes_history_for_edition():
@@ -93,14 +87,19 @@ def test_normalized_history_does_not_repeat_headline_in_description():
                 "source": "https://example.test/August_20",
                 "items": [{
                     "year": 2009,
-                    "description": "Houston beats Florida. The win ends a 15-game streak.",
+                    "description": (
+                        "Houston defeats Florida in a tightly contested game that goes down "
+                        "to the final out and ends a long hitting streak."
+                    ),
                 }],
             }
         }
     ).historical_items[0]
 
-    assert normalized.headline == "Houston beats Florida"
-    assert normalized.description == "The win ends a 15-game streak."
+    assert normalized.headline == (
+        "Houston defeats Florida in a tightly contested game that goes down to the final out and ends a long hitting"
+    )
+    assert normalized.description == "streak"
 
 
 async def test_local_database_is_curated_only_when_collected(tmp_path, monkeypatch):
