@@ -85,6 +85,21 @@
         </div>
       </div>
 
+      {% if game.betting_line %}
+      <div class="game-betting-line" aria-label="Pregame betting lines">
+        <span class="betting-label">Line</span>
+        {% if game.betting_line.away_moneyline is not none %}
+        <span><strong>{{ game.away.team_abbr }}</strong> {{ "%+d"|format(game.betting_line.away_moneyline) }}</span>
+        {% endif %}
+        {% if game.betting_line.home_moneyline is not none %}
+        <span><strong>{{ game.home.team_abbr }}</strong> {{ "%+d"|format(game.betting_line.home_moneyline) }}</span>
+        {% endif %}
+        {% if game.betting_line.run_total is not none %}
+        <span><strong>O/U</strong> {{ "%g"|format(game.betting_line.run_total) }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+
       {% if game.tv_broadcasts or game.weather_description %}
       <div class="game-preview-extras">
         {% if game.tv_broadcasts %}

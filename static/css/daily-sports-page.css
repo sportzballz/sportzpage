@@ -554,6 +554,24 @@ body {
   align-items: center;
 }
 
+.game-betting-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.7rem;
+  margin-top: 0.55rem;
+  padding: 0.35rem 0.45rem;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-light);
+  font: 700 0.72rem/1.2 var(--font-sans);
+  letter-spacing: 0.02em;
+}
+
+.betting-label {
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 .doubleheader-label,
 .series-label {
   font-family: var(--font-sans);

@@ -74,6 +74,15 @@ class TeamBoxLine(BaseModel):
     pitches: Optional[int] = Field(default=None, description="Total pitches thrown")
 
 
+class BettingLine(BaseModel):
+    """Pregame market snapshot used in the Today's Games section."""
+
+    away_moneyline: Optional[int] = Field(default=None)
+    home_moneyline: Optional[int] = Field(default=None)
+    run_total: Optional[float] = Field(default=None)
+    provider: str = Field(default="ESPN")
+
+
 class Game(BaseModel):
     """A single MLB game with all state needed to render scoreboard, schedule, and recap sections."""
 
@@ -132,3 +141,4 @@ class Game(BaseModel):
         default_factory=list,
         description="Game notes such as extra-base hits, runners left on base, and umpires.",
     )
+    betting_line: Optional[BettingLine] = Field(default=None)

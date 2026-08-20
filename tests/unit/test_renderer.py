@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from src.models.edition import Edition, EditionMetadata, GenerationMetadata
-from src.models.game import Game, GameStatus, TeamGameLine
+from src.models.game import BettingLine, Game, GameStatus, TeamGameLine
 from src.models.story import Story, StoryType
 from src.rendering.html_renderer import HTMLRenderer
 from src.rendering.renderer import render_from_file
@@ -113,6 +113,30 @@ def test_production_urls_use_sportzpage_path():
     assert 'href="https://sportzballz.io/sportzpage/index.html"' in html
     assert 'href="/sportzpage/static/css/daily-sports-page.css"' in html
     assert 'src="/sportzpage/static/js/daily-sports-page.js"' in html
+
+
+def test_todays_games_renders_moneylines_and_run_total_only():
+    game = Game(
+        game_id=123,
+        game_date="2026-07-13",
+        status=GameStatus.scheduled,
+        away=TeamGameLine(team_id=111, team_abbr="BOS", team_name="Boston Red Sox"),
+        home=TeamGameLine(team_id=147, team_abbr="NYY", team_name="New York Yankees"),
+        betting_line=BettingLine(
+            away_moneyline=125,
+            home_moneyline=-145,
+            run_total=8.5,
+            provider="DraftKings",
+        ),
+    )
+
+    rendered = make_renderer().render(make_minimal_edition(games=[game]))
+
+    assert "BOS</strong> +125" in rendered
+    assert "NYY</strong> -145" in rendered
+    assert "O/U</strong> 8.5" in rendered
+    assert "Run Line" not in rendered
+    assert "Over Odds" not in rendered
 
 
 # ---------------------------------------------------------------------------

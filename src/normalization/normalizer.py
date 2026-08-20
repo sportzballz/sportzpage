@@ -4,7 +4,7 @@ import logging
 from datetime import date, datetime
 from typing import Any, List, Optional
 from pydantic import BaseModel, Field
-from src.models.game import Game, GameStatus, LinescoreInning, Pitcher, TeamBoxLine, TeamGameLine
+from src.models.game import BettingLine, Game, GameStatus, LinescoreInning, Pitcher, TeamBoxLine, TeamGameLine
 from src.models.history import HistoricalItem
 from src.history_text import split_sentences
 from src.models.standings import StandingsRow, DivisionStandings, WildCardStandings, Standings
@@ -71,7 +71,7 @@ class Normalizer:
         result = NormalizedData()
         if "schedule" in raw:
             result.games = self._normalize_schedule(
-                raw["schedule"], teams_map, raw.get("boxscores", {})
+                raw["schedule"], teams_map, raw.get("boxscores", {}), raw.get("odds", {})
             )
         if "standings" in raw:
             result.standings = self._normalize_standings(raw["standings"], teams_map)
@@ -241,7 +241,12 @@ class Normalizer:
         raw: dict[str, Any],
         teams_map: dict[int, str] = {},
         boxscores: dict[str, Any] = {},
+        odds: dict[str, Any] = {},
     ) -> list[Game]:
+        odds_by_matchup: dict[tuple[str, str], list[dict[str, Any]]] = {}
+        for item in odds.get("items", []):
+            key = (str(item.get("away_abbr", "")), str(item.get("home_abbr", "")))
+            odds_by_matchup.setdefault(key, []).append(item)
         games: list[Game] = []
         for date_entry in raw.get("dates", []):
             for g in date_entry.get("games", []):
@@ -250,6 +255,20 @@ class Normalizer:
                     boxscore = boxscores.get(str(game.game_id))
                     if boxscore:
                         game = self._add_boxscore(game, boxscore)
+                    matchup = (game.away.team_abbr, game.home.team_abbr)
+                    offers = odds_by_matchup.get(matchup, [])
+                    if offers:
+                        offer = offers.pop(0)
+                        game = game.model_copy(
+                            update={
+                                "betting_line": BettingLine(
+                                    away_moneyline=offer.get("away_moneyline"),
+                                    home_moneyline=offer.get("home_moneyline"),
+                                    run_total=offer.get("run_total"),
+                                    provider=offer.get("provider") or odds.get("source", "ESPN"),
+                                )
+                            }
+                        )
                     games.append(game)
                 except Exception as exc:
                     logger.warning("failed to parse game %s: %s", g.get("gamePk"), exc)
