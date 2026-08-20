@@ -13,6 +13,7 @@ class TransactionType(str, Enum):
     signed = "signed"
     optioned = "optioned"
     recalled = "recalled"
+    injury = "injury"
     placed_on_il = "placed_on_il"
     activated = "activated"
     claimed = "claimed"

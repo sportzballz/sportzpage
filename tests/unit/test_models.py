@@ -329,12 +329,12 @@ class TestGameRecap:
 
 
 # ---------------------------------------------------------------------------
-# 9. TransactionType all 11 values
+# 9. TransactionType values
 # ---------------------------------------------------------------------------
 
 
 class TestTransactionType:
-    def test_all_11_values(self):
+    def test_all_values(self):
         expected = {
             "trade",
             "dfa",
@@ -342,6 +342,7 @@ class TestTransactionType:
             "signed",
             "optioned",
             "recalled",
+            "injury",
             "placed_on_il",
             "activated",
             "claimed",

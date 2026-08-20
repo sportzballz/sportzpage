@@ -276,9 +276,9 @@ class TestNormalizeTransactions:
             "Signed": TransactionType.signed,
             "Optioned to Minors": TransactionType.optioned,
             "Recalled from Minors": TransactionType.recalled,
-            "Placed on 10-Day IL": TransactionType.placed_on_il,
-            "Placed on 15-Day IL": TransactionType.placed_on_il,
-            "Placed on 60-Day IL": TransactionType.placed_on_il,
+            "Placed on 10-Day IL": TransactionType.injury,
+            "Placed on 15-Day IL": TransactionType.injury,
+            "Placed on 60-Day IL": TransactionType.injury,
             "Activated from IL": TransactionType.activated,
             "Claimed off Waivers": TransactionType.claimed,
             "Retired": TransactionType.retired,
@@ -287,6 +287,23 @@ class TestNormalizeTransactions:
             raw = {"transactions": [_make_transaction(f"TX-{type_desc}", type_desc)]}
             result = self.normalizer._normalize_transactions(raw)
             assert result[0].transaction_type == expected, f"Failed for: {type_desc}"
+
+    def test_status_change_to_injured_list_is_injury(self) -> None:
+        transaction = _make_transaction("T005", "Status Change")
+        transaction["description"] = (
+            "New York Mets placed DH Jorge Polanco on the 10-day injured list. "
+            "Left ankle bursitis."
+        )
+        result = self.normalizer._normalize_transactions({"transactions": [transaction]})
+        assert result[0].transaction_type == TransactionType.injury
+
+    def test_activation_from_injured_list_remains_activated(self) -> None:
+        transaction = _make_transaction("T006", "Status Change")
+        transaction["description"] = (
+            "Colorado Rockies activated RHP Jaden Hill from the 15-day injured list."
+        )
+        result = self.normalizer._normalize_transactions({"transactions": [transaction]})
+        assert result[0].transaction_type == TransactionType.activated
 
 
 # ---------------------------------------------------------------------------

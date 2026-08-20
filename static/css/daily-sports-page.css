@@ -962,6 +962,7 @@ body {
   background: #e0edf5;
   border-color: #8ab0c8;
 }
+.txn-type-injury,
 .txn-type-placed_on_il {
   background: #fdf0d8;
   border-color: #c8a860;

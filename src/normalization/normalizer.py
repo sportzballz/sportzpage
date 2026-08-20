@@ -52,9 +52,9 @@ class Normalizer:
         "Signed": TransactionType.signed,
         "Optioned to Minors": TransactionType.optioned,
         "Recalled from Minors": TransactionType.recalled,
-        "Placed on 10-Day IL": TransactionType.placed_on_il,
-        "Placed on 15-Day IL": TransactionType.placed_on_il,
-        "Placed on 60-Day IL": TransactionType.placed_on_il,
+        "Placed on 10-Day IL": TransactionType.injury,
+        "Placed on 15-Day IL": TransactionType.injury,
+        "Placed on 60-Day IL": TransactionType.injury,
         "Activated from IL": TransactionType.activated,
         "Claimed off Waivers": TransactionType.claimed,
         "Retired": TransactionType.retired,
@@ -75,7 +75,7 @@ class Normalizer:
         if "standings" in raw:
             result.standings = self._normalize_standings(raw["standings"], teams_map)
         if "transactions" in raw:
-            result.transactions = self._normalize_transactions(raw["transactions"])
+            result.transactions = self._normalize_transactions(raw["transactions"], teams_map)
         if "injuries" in raw:
             result.injuries = self._normalize_injuries(raw["injuries"])
         if "leaders" in raw:
@@ -455,7 +455,10 @@ class Normalizer:
             run_differential=tr.get("runDifferential", 0),
         )
 
-    def _normalize_transactions(self, raw: dict[str, Any]) -> list[Transaction]:
+    def _normalize_transactions(
+        self, raw: dict[str, Any], teams_map: dict[int, str] | None = None
+    ) -> list[Transaction]:
+        teams_map = teams_map or {}
         seen: set[str] = set()
         result: list[Transaction] = []
         for t in raw.get("transactions", []):
@@ -464,20 +467,15 @@ class Normalizer:
                 continue
             seen.add(tid)
             try:
+                team = t.get("fromTeam") or t.get("toTeam") or {}
                 result.append(
                     Transaction(
                         transaction_id=tid,
-                        team_abbr=t.get("fromTeam", {}).get(
-                            "abbreviation", t.get("toTeam", {}).get("abbreviation", "")
-                        ),
-                        team_name=t.get("fromTeam", {}).get(
-                            "name", t.get("toTeam", {}).get("name", "")
-                        ),
+                        team_abbr=team.get("abbreviation", teams_map.get(team.get("id"), "")),
+                        team_name=team.get("name", ""),
                         player_name=t.get("person", {}).get("fullName", ""),
                         player_id=t.get("person", {}).get("id"),
-                        transaction_type=self._TRANSACTION_TYPE_MAP.get(
-                            t.get("typeDesc", ""), TransactionType.other
-                        ),
+                        transaction_type=self._classify_transaction(t),
                         effective_date=date.fromisoformat(t["date"][:10]),
                         explanation=t.get("description", t.get("typeDesc", "")),
                         source_timestamp=datetime.fromisoformat(
@@ -488,6 +486,19 @@ class Normalizer:
             except Exception as exc:
                 logger.warning("skipping transaction %s: %s", tid, exc)
         return result
+
+    def _classify_transaction(self, transaction: dict[str, Any]) -> TransactionType:
+        """Classify injury-list activity independently from generic status changes."""
+        type_desc = str(transaction.get("typeDesc", ""))
+        description = str(transaction.get("description", ""))
+        description_lower = description.lower()
+
+        if "injured list" in description_lower or "rehab assignment" in description_lower:
+            if "activated" in description_lower:
+                return TransactionType.activated
+            return TransactionType.injury
+
+        return self._TRANSACTION_TYPE_MAP.get(type_desc, TransactionType.other)
 
     def _normalize_injuries(self, raw: dict[str, Any]) -> list[Injury]:
         result: list[Injury] = []
