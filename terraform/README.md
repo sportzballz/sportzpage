@@ -34,8 +34,9 @@ therefore requires an explicit reviewed code change rather than an accidental de
 
 The standalone domain publishes a public teaser at `/`, a rolling seven-edition
 free archive under `/archive/`, and today’s complete edition under
-`/subscriber/current/`. CloudFront redirects the subscriber and delivery prefixes
-to `/subscribe/` until the Stripe-backed authentication flow is connected.
+`/subscriber/current/`. The subscriber and delivery prefixes are temporarily public
+for output monitoring. Restore the CloudFront gate when Stripe-backed authentication
+is connected.
 
 Each run also creates protected delivery artifacts under `/delivery/current/` for
 a concise HTML digest, full HTML, print-ready HTML, and the protected web URL.

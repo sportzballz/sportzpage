@@ -36,7 +36,8 @@ def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None
     landing = (output / "index.html").read_text(encoding="utf-8")
     assert "Headline for 2026-08-21" in landing
     assert "full-story-marker" not in landing
-    assert "$2/month" in landing
+    assert "free preview" in landing
+    assert 'href="/subscriber/current/"' in landing
     assert "full-story-marker" in (output / "subscriber/current/index.html").read_text()
     assert "football-full-marker" in (output / "subscriber/current/football/index.html").read_text()
     assert "Read the complete edition" in (output / "delivery/current/email.html").read_text()
@@ -92,10 +93,10 @@ def test_accepts_legacy_dated_archive_without_edition_json(tmp_path: Path) -> No
     assert (output / "archive/2026-08-20/index.html").read_text() == "legacy newspaper"
 
 
-def test_cloudfront_function_blocks_unauthenticated_current_and_delivery() -> None:
+def test_cloudfront_function_exposes_preview_and_routes_football_to_it() -> None:
     code = Path("terraform/functions/directory-index.js").read_text(encoding="utf-8")
     assert "uri === '/football'" in code
-    assert "uri.startsWith('/subscriber/')" in code
-    assert "uri.startsWith('/delivery/')" in code
-    assert "location: { value: '/subscribe/' }" in code
+    assert "location: { value: '/subscriber/current/football/' }" in code
+    assert "uri.startsWith('/subscriber/')" not in code
+    assert "uri.startsWith('/delivery/')" not in code
     assert "request.uri = '/static/icons/favicon.ico'" in code

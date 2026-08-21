@@ -5,9 +5,9 @@ function handler(event) {
   if (uri === '/football' || uri.startsWith('/football/')) {
     return {
       statusCode: 302,
-      statusDescription: 'Subscription Required',
+      statusDescription: 'Preview Edition',
       headers: {
-        location: { value: '/subscribe/' },
+        location: { value: '/subscriber/current/football/' },
         'cache-control': { value: 'no-store' }
       }
     };
@@ -16,17 +16,6 @@ function handler(event) {
   if (uri === '/favicon.ico') {
     request.uri = '/static/icons/favicon.ico';
     return request;
-  }
-
-  if (uri.startsWith('/subscriber/') || uri.startsWith('/delivery/')) {
-    return {
-      statusCode: 302,
-      statusDescription: 'Subscription Required',
-      headers: {
-        location: { value: '/subscribe/' },
-        'cache-control': { value: 'no-store' }
-      }
-    };
   }
 
   if (uri.endsWith('/')) {

@@ -72,8 +72,8 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
       <h2>{html.escape(headline)}</h2>
       <p class="subscription-deck">{html.escape(deck)}</p>
       <div class="teaser-fade" aria-hidden="true"></div>
-      <a class="subscribe-button" href="/subscribe/">Read today’s complete edition — $2/month</a>
-      <p class="delivery-note">Read through a protected URL or receive it in your inbox.</p>
+      <a class="subscribe-button" href="/subscriber/current/">Read today’s complete edition — free preview</a>
+      <p class="delivery-note">The subscription gate is temporarily disabled while editions are monitored.</p>
     </section>
     <section class="subscription-benefits">
       <h2>One daily sports page. Your choice of delivery.</h2>
@@ -118,9 +118,9 @@ def _subscribe_page() -> str:
     <section class="subscription-hero subscribe-panel">
       <p class="edition-label">Founding subscription</p>
       <h2>The complete daily edition for $2/month</h2>
-      <p class="subscription-deck">Secure checkout is being connected. No payment is being accepted yet.</p>
+      <p class="subscription-deck">Secure checkout is being connected. Today’s edition is temporarily available as a free preview.</p>
       <p>Subscribers will be able to read through a protected URL or choose a full HTML edition, concise digest, or print-ready delivery in their inbox.</p>
-      <span class="subscribe-button is-disabled" aria-disabled="true">Stripe checkout coming soon</span>
+      <a class="subscribe-button" href="/subscriber/current/">Read today’s free preview</a>
       <p><a href="/archive/">Read the previous seven editions free</a></p>
     </section>
   </main>"""
