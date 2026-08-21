@@ -158,7 +158,12 @@ class FootballEditionGenerator:
 
     async def generate(self, output_dir: Path) -> Path:
         data = await self.collect()
-        env = Environment(loader=FileSystemLoader("templates"), autoescape=select_autoescape(["html", "j2"]))
+        env = Environment(
+            loader=FileSystemLoader("templates"),
+            autoescape=select_autoescape(["html", "j2"]),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
         html = env.get_template("football.html.j2").render(page=data)
         output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / "edition.json").write_text(json.dumps(data, default=str, indent=2))
