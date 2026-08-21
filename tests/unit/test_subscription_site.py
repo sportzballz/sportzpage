@@ -92,6 +92,8 @@ def test_accepts_legacy_dated_archive_without_edition_json(tmp_path: Path) -> No
 
 def test_cloudfront_function_blocks_unauthenticated_current_and_delivery() -> None:
     code = Path("terraform/functions/directory-index.js").read_text(encoding="utf-8")
+    assert "uri === '/football'" in code
     assert "uri.startsWith('/subscriber/')" in code
     assert "uri.startsWith('/delivery/')" in code
     assert "location: { value: '/subscribe/' }" in code
+    assert "request.uri = '/static/icons/favicon.ico'" in code
