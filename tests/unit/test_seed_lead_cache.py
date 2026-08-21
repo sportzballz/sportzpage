@@ -53,6 +53,7 @@ def test_seeds_published_short_recaps(tmp_path: Path) -> None:
                     "source_data_references": ["game:1", "espn:lead"],
                     "ai_generated": True,
                 },
+                "games": [{"game_id": 2, "game_date": "2026-08-21"}],
                 "game_recaps": [
                     {
                         "headline": "Short headline",
@@ -77,5 +78,5 @@ def test_seeds_published_short_recaps(tmp_path: Path) -> None:
 
     seeded = seed_short_recaps(edition, "2026-08-20", tmp_path / "cache")
 
-    assert [path.name for path in seeded] == ["2026-08-20-secondary-short.json"]
+    assert [path.name for path in seeded] == ["2026-08-21-secondary-short.json"]
     assert GameRecap.model_validate_json(seeded[0].read_text()).ai_generated is True
