@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#8b1e2d">
+  <title>The Daily Sportz Page — Football | SportzBallz</title>
+  <meta name="description" content="Philadelphia-first NFL scores, schedules, standings, and stories.">
+  <link rel="canonical" href="https://sportzballz.io/sportzpage/football/">
+  <link rel="icon" href="/sportzpage/static/icons/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="/sportzpage/static/css/daily-sports-page.css">
+</head>
+<body>
+  <a href="#front-page" class="skip-link">Skip to content</a>
+  <header class="masthead" role="banner">
+    <div class="masthead-inner">
+      <div class="masthead-kicker"><span>SportzBallz</span><strong>National Football League</strong><span>Daily Sports Page</span></div>
+      <h1 class="masthead-title">The Daily Sportz Page</h1>
+      <div class="masthead-meta">
+        <span class="masthead-date">{{ page.generated_at.strftime('%A, %B %-d, %Y') }}</span>
+        <span class="masthead-sep">&bull;</span><span>{{ page.season_label }} Football Edition</span>
+        <span class="masthead-sep">&bull;</span><span>Generated at {{ page.generated_at.strftime('%-I:%M %p %Z') }}</span>
+      </div>
+    </div>
+  </header>
+  {% set active_sport = "football" %}{% include "sections/sport-tabs.html.j2" %}
+  <nav class="section-nav" aria-label="Football page sections">
+    <ul>
+      <li><a href="#scoreboard">Scoreboard</a></li><li><a href="#todays-games">Today's Games</a></li>
+      <li><a href="#standings">Standings</a></li><li><a href="#around-the-league">Around the NFL</a></li>
+    </ul>
+    <button class="print-btn" type="button" onclick="window.print()">Print</button>
+  </nav>
+  <main>
+    <div class="top-news-grid">
+      <section id="front-page" class="front-page section">
+        {% if page.lead %}
+        <article class="lead-story">
+          <p class="section-label">Football Front Page</p><h2 class="lead-headline">{{ page.lead.headline }}</h2>
+          <p class="story-deck">{{ page.lead.deck }}</p><p class="story-byline">By SportzBallz Staff</p>
+          <div class="story-body">{% for paragraph in page.lead.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</div>
+          <p class="source-link"><a href="{{ page.lead.url }}">Game recap on ESPN</a></p>
+        </article>
+        {% else %}<p class="no-content">The next NFL game story will appear after play is complete.</p>{% endif %}
+      </section>
+      <div class="top-news-rail">
+        <section id="scoreboard" class="scoreboard section"><h2 class="section-heading">Scoreboard</h2>
+          {% if page.scoreboard %}<table class="scoreboard-table" aria-label="NFL scores"><tbody>
+          {% for game in page.scoreboard %}<tr><td><strong>{{ game.away.abbr }}</strong><br><strong>{{ game.home.abbr }}</strong></td><td class="score"><strong>{{ game.away.score }}</strong><br><strong>{{ game.home.score }}</strong></td><td>{{ game.status }}</td></tr>{% endfor %}
+          </tbody></table>{% else %}<p class="no-content">No NFL games were played in this edition window.</p>{% endif %}
+        </section>
+      </div>
+    </div>
+    <section id="todays-games" class="section"><h2 class="section-heading">Today's NFL Games</h2>
+      {% if page.today_games %}<div class="games-grid">{% for game in page.today_games %}<article class="game-card">
+        <h3>{{ game.away.abbr }} at {{ game.home.abbr }}</h3><p class="game-time">{{ game.time }} &bull; {{ game.venue }}</p>
+        {% if game.broadcast %}<p>{{ game.broadcast }}</p>{% endif %}{% if game.odds %}<p class="betting-line">Line: {{ game.odds }}{% if game.over_under %} &bull; O/U {{ game.over_under }}{% endif %}</p>{% endif %}
+      </article>{% endfor %}</div>{% else %}<p class="no-content">No NFL games are scheduled today.</p>{% endif %}
+    </section>
+    <section id="standings" class="section standings"><h2 class="section-heading">NFL Standings</h2>
+      {% if page.standings %}<div class="standings-grid">{% for division in page.standings %}<div class="standings-division"><h3>{{ division.name }}</h3>
+        <table><thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th><th>Pct</th><th>Diff</th></tr></thead><tbody>
+        {% for row in division.rows %}<tr{% if row.abbr == 'PHI' %} class="is-primary-team"{% endif %}><td>{{ row.abbr }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.ties }}</td><td>{{ row.pct }}</td><td>{{ row.diff }}</td></tr>{% endfor %}
+        </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL standings are not available yet.</p>{% endif %}
+    </section>
+    <section id="around-the-league" class="section around-the-league"><h2 class="section-heading">Around the NFL</h2>
+      {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{% if story.url %}<a href="{{ story.url }}">{{ story.headline }}</a>{% else %}{{ story.headline }}{% endif %}</h3><p>{{ story.description }}</p></article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}
+    </section>
+  </main>
+  <footer class="site-footer"><p>SportzBallz — Football Edition — {{ page.edition_date }}</p></footer>
+</body>
+</html>

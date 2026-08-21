@@ -11,8 +11,16 @@ echo "Generating The Daily Sportz Page for ${EDITION_DATE}"
   --date "$EDITION_DATE" \
   --build-dir "$ROOT/build"
 
+echo "Generating the NFL edition"
+"$ROOT/.venv/bin/python" -m src.football.generator \
+  --date "$EDITION_DATE" \
+  --build-dir "$ROOT/build/football"
+
 mkdir -p "$SITE_ROOT/sportzpage/static"
+mkdir -p "$SITE_ROOT/sportzpage/football"
 cp "$ROOT/build/index.html" "$ROOT/build/edition.json" "$SITE_ROOT/sportzpage/"
+cp "$ROOT/build/football/index.html" "$ROOT/build/football/edition.json" \
+  "$SITE_ROOT/sportzpage/football/"
 cp -R "$ROOT/static/." "$SITE_ROOT/sportzpage/static/"
 
 SPORTZBALLZ_SITE_ROOT="$SITE_ROOT" \

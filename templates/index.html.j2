@@ -21,6 +21,8 @@
 <body>
   <a href="#front-page" class="skip-link">Skip to content</a>
   {% include "sections/masthead.html.j2" %}
+  {% set active_sport = "baseball" %}
+  {% include "sections/sport-tabs.html.j2" %}
   <nav class="section-nav" aria-label="Page sections">
     <ul>
       <li><a href="#scoreboard">Scoreboard</a></li>
