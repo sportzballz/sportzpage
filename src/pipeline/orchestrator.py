@@ -8,6 +8,7 @@ import os
 import time
 from datetime import date, datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from src.collectors.history import HistoryCollector
 from src.collectors.mlb import MLBCollector
@@ -24,6 +25,44 @@ from src.validation.validator import ContentValidator
 logger = logging.getLogger(__name__)
 
 LOCK_TIMEOUT_SECONDS = 600
+EASTERN = ZoneInfo("America/New_York")
+
+
+def merge_schedules(*schedules: dict) -> dict:
+    """Combine schedule responses without duplicating games or calendar dates."""
+    games_by_date: dict[str, list[dict]] = {}
+    seen_game_ids: set[int] = set()
+    for schedule in schedules:
+        for date_entry in schedule.get("dates", []):
+            date_key = date_entry.get("date", "")
+            games = games_by_date.setdefault(date_key, [])
+            for game in date_entry.get("games", []):
+                game_id = game.get("gamePk")
+                if game_id in seen_game_ids:
+                    continue
+                if game_id is not None:
+                    seen_game_ids.add(game_id)
+                games.append(game)
+    dates = [
+        {"date": date_key, "totalItems": len(games), "totalGames": len(games), "games": games}
+        for date_key, games in sorted(games_by_date.items())
+        if games
+    ]
+    return {
+        "copyright": next(
+            (schedule.get("copyright") for schedule in schedules if schedule.get("copyright")), ""
+        ),
+        "totalItems": len(seen_game_ids),
+        "totalEvents": 0,
+        "totalGames": len(seen_game_ids),
+        "totalGamesInProgress": sum(
+            1
+            for entry in dates
+            for game in entry["games"]
+            if game.get("status", {}).get("detailedState") in {"In Progress", "Manager challenge"}
+        ),
+        "dates": dates,
+    }
 
 
 class PipelineLock:
@@ -119,12 +158,15 @@ class GenerationOrchestrator:
             backoff_min=self._settings.mlb_api.backoff_min_seconds,
             backoff_max=self._settings.mlb_api.backoff_max_seconds,
         )
-        raw, history, news, odds = await asyncio.gather(
+        publication_date = datetime.now(EASTERN).date()
+        raw, todays_schedule, history, news, odds = await asyncio.gather(
             collector.collect(),
-            HistoryCollector(self._game_date).collect(),
+            collector.get_schedule(target_date=publication_date),
+            HistoryCollector(publication_date).collect(),
             NewsCollector().collect(),
-            OddsCollector(self._game_date).collect(),
+            OddsCollector(publication_date).collect(),
         )
+        raw["schedule"] = merge_schedules(raw["schedule"], todays_schedule)
         raw["history"] = history
         raw["news"] = news
         raw["odds"] = odds

@@ -153,6 +153,15 @@ class TestParseGame:
         assert result.home.runs is None
         assert result.away.runs is None
 
+    def test_schedule_uses_local_baseball_date_instead_of_utc_date(self) -> None:
+        game = _make_game(104, "Scheduled")
+        game["gameDate"] = "2026-08-22T02:10:00Z"
+        raw = {"schedule": {"dates": [{"date": "2026-08-21", "games": [game]}]}}
+
+        result = self.normalizer.normalize(raw).games[0]
+
+        assert result.game_date == "2026-08-21"
+
     def test_schedule_attaches_matching_betting_line(self) -> None:
         raw = {
             "schedule": _make_schedule(_make_game(103, "Scheduled")),

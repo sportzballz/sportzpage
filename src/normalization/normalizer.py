@@ -251,7 +251,7 @@ class Normalizer:
         for date_entry in raw.get("dates", []):
             for g in date_entry.get("games", []):
                 try:
-                    game = self._parse_game(g, teams_map)
+                    game = self._parse_game(g, teams_map, date_entry.get("date"))
                     boxscore = boxscores.get(str(game.game_id))
                     if boxscore:
                         game = self._add_boxscore(game, boxscore)
@@ -351,7 +351,12 @@ class Normalizer:
             decision=decision,
         )
 
-    def _parse_game(self, g: dict[str, Any], teams_map: dict[int, str] = {}) -> Game:
+    def _parse_game(
+        self,
+        g: dict[str, Any],
+        teams_map: dict[int, str] = {},
+        schedule_date: str | None = None,
+    ) -> Game:
         status_detail = g.get("status", {}).get("detailedState", "Scheduled")
         status = self._GAME_STATUS_MAP.get(status_detail, GameStatus.scheduled)
         teams = g.get("teams", {})
@@ -370,7 +375,9 @@ class Normalizer:
 
         return Game(
             game_id=g["gamePk"],
-            game_date=g.get("gameDate", "")[:10],
+            # MLB's gameDate is UTC and rolls evening West Coast games into the
+            # following date. The enclosing schedule date is the local baseball date.
+            game_date=schedule_date or g.get("gameDate", "")[:10],
             game_time_et=self._format_time(g.get("gameDate", "")),
             status=status,
             inning=linescore.get("currentInning"),
