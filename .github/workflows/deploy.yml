@@ -40,17 +40,22 @@ jobs:
           daily-sports-page run --date "$EDITION_DATE" --build-dir build
           python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
 
-      - name: Assemble immutable site artifact
-        run: |
-          mkdir -p dist/static dist/football
-          cp build/index.html build/edition.json dist/
-          cp build/football/index.html build/football/edition.json dist/football/
-          cp -R static/. dist/static/
-
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::716418748259:role/thedailysportspage-github-deploy
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Restore previous current edition and free archive
+        run: |
+          mkdir -p previous-site/subscriber/current previous-site/archive
+          aws s3 sync "s3://${SITE_BUCKET}/subscriber/current" previous-site/subscriber/current
+          aws s3 sync "s3://${SITE_BUCKET}/archive" previous-site/archive
+
+      - name: Assemble subscription-ready site artifact
+        run: |
+          python scripts/assemble_subscription_site.py \
+            --previous-site previous-site \
+            --output dist
 
       - name: Publish versioned site artifact
         run: |
@@ -60,6 +65,7 @@ jobs:
             --exclude "*.json" \
             --cache-control "public,max-age=3600"
           aws s3 sync dist "s3://${SITE_BUCKET}" \
+            --delete \
             --exclude "*" \
             --include "*.html" \
             --include "*.json" \

@@ -1,0 +1,34 @@
+.subscription-page { max-width: 1080px; }
+.subscription-shell { max-width: 920px; margin: 2rem auto 4rem; }
+.subscription-hero,
+.subscription-benefits,
+.free-archive { padding: clamp(1.25rem, 4vw, 3rem); border: 1px solid #aaa; background: #fffdf7; }
+.subscription-hero { position: relative; border-top: 8px solid #8b1e2d; text-align: center; }
+.edition-label,
+.section-label { font: 800 0.72rem/1.2 var(--font-sans); letter-spacing: .12em; text-transform: uppercase; color: #8b1e2d; }
+.subscription-hero h2 { max-width: 780px; margin: .6rem auto; font-size: clamp(2rem, 5vw, 4.4rem); line-height: .98; }
+.subscription-deck { max-width: 680px; margin: 1rem auto; font-size: 1.2rem; }
+.teaser-fade { height: 3rem; margin: .5rem auto; max-width: 620px; background: linear-gradient(to bottom, rgba(250,248,240,0), #fffdf7); border-top: 1px solid #ddd; }
+.subscribe-button { display: inline-block; margin: 1rem auto .5rem; padding: .9rem 1.2rem; color: #fff; background: #8b1e2d; font: 800 .9rem/1 var(--font-sans); text-decoration: none; text-transform: uppercase; letter-spacing: .04em; }
+.subscribe-button:hover { background: #651421; }
+.subscribe-button.is-disabled { background: #777; cursor: not-allowed; }
+.delivery-note { color: #555; font: .82rem var(--font-sans); }
+.subscription-benefits { margin-top: 1rem; columns: 2; column-gap: 3rem; }
+.subscription-benefits h2 { column-span: all; margin-bottom: 1rem; }
+.subscription-benefits ul { padding-left: 1.2rem; }
+.subscription-benefits li { margin-bottom: .65rem; break-inside: avoid; }
+.free-archive { margin-top: 1rem; }
+.free-archive > h2 { margin: .35rem 0 1rem; }
+.free-archive ul { list-style: none; border-top: 3px double #444; }
+.free-archive li { padding: .7rem .2rem; border-bottom: 1px solid #bbb; }
+.free-archive a { color: #1a1a1a; font-weight: 700; }
+.archive-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+.archive-card { padding: 1rem; border-top: 4px solid #8b1e2d; background: #f2f0e8; }
+.archive-card p { font: 700 .68rem var(--font-sans); text-transform: uppercase; color: #666; }
+.archive-card h2 { font-size: 1.15rem; }
+.subscribe-panel p { max-width: 680px; margin: 1rem auto; }
+@media (max-width: 640px) {
+  .subscription-shell { margin-top: 1rem; }
+  .subscription-benefits { columns: 1; }
+  .archive-grid { grid-template-columns: 1fr; }
+}

@@ -29,3 +29,14 @@ edition to `sportzballz.io/sportzpage/`.
 
 The S3 bucket and CloudFront distribution use `prevent_destroy`. Removing the stack
 therefore requires an explicit reviewed code change rather than an accidental destroy.
+
+## Subscription-ready publication layout
+
+The standalone domain publishes a public teaser at `/`, a rolling seven-edition
+free archive under `/archive/`, and today’s complete edition under
+`/subscriber/current/`. CloudFront redirects the subscriber and delivery prefixes
+to `/subscribe/` until the Stripe-backed authentication flow is connected.
+
+Each run also creates protected delivery artifacts under `/delivery/current/` for
+a concise HTML digest, full HTML, print-ready HTML, and the protected web URL.
+The separate macOS LaunchAgent continues to publish the free SportzBallz edition.
