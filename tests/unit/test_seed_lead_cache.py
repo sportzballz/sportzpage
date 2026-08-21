@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from scripts.seed_lead_cache import seed
+from src.models.story import GameRecap
 
 
 def test_seeds_ai_lead_by_espn_game_id(tmp_path: Path) -> None:
@@ -15,7 +16,7 @@ def test_seeds_ai_lead_by_espn_game_id(tmp_path: Path) -> None:
                     "byline": "SportzBallz Staff",
                     "paragraphs": ["One.", "Two.", "Three."],
                     "source_data_references": ["game:123", "espn:401877087"],
-                    "story_type": "game_recap",
+                    "story_type": "lead",
                     "teams": ["ATL", "CWS"],
                     "facts_used": [
                         "home_runs:0",
@@ -40,3 +41,4 @@ def test_seeds_ai_lead_by_espn_game_id(tmp_path: Path) -> None:
     assert saved["headline"] == "Cached lead"
     assert saved["game_id"] == 123
     assert saved["final_score"] == "ATL 2, CWS 0"
+    assert GameRecap.model_validate(saved).ai_generated is True

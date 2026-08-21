@@ -7,8 +7,6 @@ import argparse
 import json
 from pathlib import Path
 
-from src.models.story import GameRecap
-
 
 def seed(edition_path: Path, game_date: str, cache_dir: Path) -> Path | None:
     if not edition_path.exists():
@@ -37,7 +35,6 @@ def seed(edition_path: Path, game_date: str, cache_dir: Path) -> Path | None:
         final_score = "Final"
     story.setdefault("game_id", int(game_reference.split(":", 1)[1]) if game_reference else 0)
     story.setdefault("final_score", final_score)
-    recap = GameRecap.model_validate(story)
     espn_reference = next(
         (
             reference
@@ -52,7 +49,7 @@ def seed(edition_path: Path, game_date: str, cache_dir: Path) -> Path | None:
     cache_dir.mkdir(parents=True, exist_ok=True)
     destination = cache_dir / f"{game_date}-{espn_game_id}.json"
     if not destination.exists():
-        destination.write_text(recap.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        destination.write_text(json.dumps(story, indent=2) + "\n", encoding="utf-8")
     return destination
 
 
