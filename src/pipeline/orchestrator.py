@@ -100,12 +100,14 @@ class GenerationOrchestrator:
         publish_root: Path,
         archive_root: Path,
         game_date: date,
+        edition_date: date | None = None,
         dry_run: bool = False,
     ) -> None:
         self._build_dir = build_dir
         self._publish_root = publish_root
         self._archive_root = archive_root
         self._game_date = game_date
+        self._edition_date = edition_date or datetime.now(EASTERN).date()
         self._dry_run = dry_run
         self._settings = load_settings()
 
@@ -191,7 +193,7 @@ class GenerationOrchestrator:
     async def _generate(self, normalized_path: Path, run: GenerationRun) -> Path:
         run.record_phase("generating", PhaseStatus.in_progress)
         engine = EditorialEngine.from_config()
-        edition = await engine.generate(normalized_path, edition_date=self._game_date)
+        edition = await engine.generate(normalized_path, edition_date=self._edition_date)
         run.game_count = len(edition.games)
         run.story_count = len(edition.game_recaps) + len(edition.secondary_stories)
         run.leader_category_count = (

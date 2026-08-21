@@ -320,6 +320,9 @@ def publish(
 @app.command()
 def run(
     date_str: Optional[str] = typer.Option(None, "--date", "-d", help="Game date (YYYY-MM-DD)."),
+    edition_date_str: Optional[str] = typer.Option(
+        None, "--edition-date", help="Publication date for the masthead (YYYY-MM-DD)."
+    ),
     edition_json: Optional[str] = typer.Option(
         None,
         "--edition-json",
@@ -344,6 +347,7 @@ def run(
 
     settings = load_settings()
     game_date = _resolve_date(date_str)
+    edition_date = _resolve_date(edition_date_str) if edition_date_str else None
     build = Path(build_dir_override) if build_dir_override else _build_dir_from_settings()
     edition_override = Path(edition_json) if edition_json else None
 
@@ -359,6 +363,7 @@ def run(
         publish_root=Path(settings.publish_root),
         archive_root=Path(settings.archive_root),
         game_date=game_date,
+        edition_date=edition_date,
         dry_run=effective_dry_run,
     )
 

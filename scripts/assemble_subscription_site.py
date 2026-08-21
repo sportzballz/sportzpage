@@ -162,7 +162,11 @@ def assemble(build_dir: Path, football_dir: Path, static_dir: Path, previous: Pa
         _copy_tree(previous_current, archive_root / previous_date)
 
     archive_dates = sorted(
-        (path.name for path in archive_root.iterdir() if path.is_dir() and _edition_date(path)),
+        (
+            path.name
+            for path in archive_root.iterdir()
+            if path.is_dir() and _edition_date(path) and path.name < current_date
+        ),
         reverse=True,
     )[:ARCHIVE_LIMIT]
     for path in list(archive_root.iterdir()):

@@ -59,6 +59,7 @@ def test_promotes_previous_current_and_keeps_seven_free_editions(tmp_path: Path)
     for offset in range(2, 10):
         day = (date(2026, 8, 21) - timedelta(days=offset)).isoformat()
         _write_edition(previous / "archive" / day, day)
+    _write_edition(previous / "archive/2026-08-21", "2026-08-21", "current-must-stay-paid")
 
     output = tmp_path / "dist"
     assemble(build, football, static, previous, output)
@@ -69,6 +70,7 @@ def test_promotes_previous_current_and_keeps_seven_free_editions(tmp_path: Path)
     assert manifest[-1] == "2026-08-14"
     assert "yesterday-full" in (output / "archive/2026-08-20/index.html").read_text()
     assert not (output / "archive/2026-08-13").exists()
+    assert not (output / "archive/2026-08-21").exists()
     assert "/archive/2026-08-20/" in (output / "index.html").read_text()
 
 
