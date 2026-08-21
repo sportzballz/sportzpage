@@ -100,6 +100,14 @@ def test_scoreboard_has_concise_today_schedule():
     assert "Pitcher" not in scoreboard.split("Today's Schedule", 1)[1]
 
 
+def test_scoreboard_does_not_render_recap_links():
+    html = make_renderer().render(build_full_slate_edition())
+    scoreboard = html.split('id="scoreboard"', 1)[1].split("</section>", 1)[0]
+
+    assert ">Recap<" not in scoreboard
+    assert 'class="recap-cell"' not in scoreboard
+
+
 def test_history_event_fragments_render_as_one_headline():
     html = make_renderer().render(build_full_slate_edition())
     first_history_item = html.split('class="history-item"', 1)[1].split("</li>", 1)[0]

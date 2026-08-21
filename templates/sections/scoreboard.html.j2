@@ -54,7 +54,6 @@
           <th scope="col">Matchup</th>
           <th scope="col" class="score-col">Score</th>
           <th scope="col">Pitching Decisions</th>
-          <th scope="col">Recap</th>
         </tr>
       </thead>
       <tbody>
@@ -90,13 +89,6 @@
             {% endif %}
             {% if game.save_pitcher %}
             <span class="pitcher-decision pitcher-save" title="Save">SV: {{ game.save_pitcher.name }}</span>
-            {% endif %}
-          </td>
-          <td class="recap-cell">
-            {% if game.recap_anchor %}
-            <a href="#{{ game.recap_anchor }}">Recap</a>
-            {% else %}
-            &mdash;
             {% endif %}
           </td>
         </tr>
