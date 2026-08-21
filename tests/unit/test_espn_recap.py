@@ -24,6 +24,22 @@ def test_parses_structured_espn_recap_page() -> None:
     assert story["hdln"] == "Braves win 2-0"
 
 
+def test_parses_espn_summary_article() -> None:
+    payload = {
+        "article": {
+            "headline": "Braves win 2-0",
+            "story": "<p>Grant Holmes carried a no-hitter into the seventh.</p>",
+        }
+    }
+
+    story = ESPNLeadStoryService.parse_summary(payload)
+
+    assert story == {
+        "hdln": "Braves win 2-0",
+        "bdy": "<p>Grant Holmes carried a no-hitter into the seventh.</p>",
+    }
+
+
 def test_parses_model_json_code_fence() -> None:
     text = '```json\n{"headline":"A","deck":"B","paragraphs":["1","2","3"]}\n```'
 

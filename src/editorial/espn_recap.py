@@ -16,6 +16,9 @@ from src.models.story import GameRecap, StoryType
 
 logger = logging.getLogger(__name__)
 ESPN_RECAP_URL = "https://www.espn.com/mlb/recap/_/gameId/{game_id}"
+ESPN_SUMMARY_URL = (
+    "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event={game_id}"
+)
 
 
 @dataclass
@@ -53,9 +56,15 @@ class ESPNLeadStoryService:
         source_url = ESPN_RECAP_URL.format(game_id=espn_game_id)
         try:
             async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
-                response = await client.get(source_url, headers={"User-Agent": "Mozilla/5.0"})
-                response.raise_for_status()
-            story = self.parse_page(response.text)
+                summary = await client.get(ESPN_SUMMARY_URL.format(game_id=espn_game_id))
+                summary.raise_for_status()
+                story = self.parse_summary(summary.json())
+                if not story:
+                    response = await client.get(
+                        source_url, headers={"User-Agent": "Mozilla/5.0"}
+                    )
+                    response.raise_for_status()
+                    story = self.parse_page(response.text)
             if not story:
                 return None
             return ESPNRecap(
@@ -67,6 +76,13 @@ class ESPNLeadStoryService:
         except (httpx.HTTPError, ValueError) as exc:
             logger.warning("ESPN recap unavailable for %s: %s", espn_game_id, exc)
             return None
+
+    @staticmethod
+    def parse_summary(payload: dict[str, Any]) -> dict[str, Any] | None:
+        article = payload.get("article")
+        if not isinstance(article, dict) or not article.get("story"):
+            return None
+        return {"hdln": article.get("headline", ""), "bdy": article["story"]}
 
     @staticmethod
     def parse_page(html: str) -> dict[str, Any] | None:
