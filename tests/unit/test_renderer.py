@@ -14,6 +14,7 @@ from src.models.game import BettingLine, Game, GameStatus, TeamGameLine
 from src.models.story import Story, StoryType
 from src.rendering.html_renderer import HTMLRenderer
 from src.rendering.renderer import render_from_file
+from tests.fixtures.builders import build_full_slate_edition
 
 
 # ---------------------------------------------------------------------------
@@ -68,6 +69,23 @@ def test_basic_render_returns_html():
     assert isinstance(result, str)
     assert len(result) > 0
     assert "<!doctype html>" in result.lower()
+
+
+def test_standings_have_league_and_division_labels():
+    html = make_renderer().render(build_full_slate_edition())
+
+    assert "American League" in html
+    assert "National League" in html
+    assert "East Division" in html
+    assert "Central Division" in html
+    assert "West Division" in html
+
+
+def test_box_scores_follow_standings():
+    html = make_renderer().render(build_full_slate_edition())
+
+    assert html.index('id="standings"') < html.index('id="box-scores"')
+    assert html.index('id="box-scores"') < html.index('id="league-leaders"')
 
 
 # ---------------------------------------------------------------------------

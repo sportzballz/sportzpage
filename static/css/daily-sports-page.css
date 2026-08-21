@@ -592,6 +592,22 @@ body {
   gap: 1.5rem;
 }
 
+.standings-league + .standings-league {
+  margin-top: 1.5rem;
+}
+
+.standings-league-heading {
+  margin: 0 0 0.7rem;
+  padding: 0.3rem 0.45rem;
+  background: var(--color-accent);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .standings-wildcards {
   margin-top: 2rem;
 }
@@ -1426,7 +1442,7 @@ caption,
   #front-page { grid-column: span 8; }
   #scoreboard { grid-column: span 4; }
   #todays-games { grid-column: span 4; }
-  #standings { grid-column: span 8; }
+  #standings { grid-column: 1 / -1; }
   #league-leaders { grid-column: span 6; }
   #history { grid-column: span 6; }
   #team-leaders { grid-column: 1 / -1; }

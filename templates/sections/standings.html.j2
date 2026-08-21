@@ -52,11 +52,18 @@
   </div>
   {% endmacro %}
 
-  <div class="standings-divisions">
-    {% for division in edition.standings.divisions %}
-    {{ standings_table(division.rows, division.division_name) }}
-    {% endfor %}
-  </div>
+  {% for league_code, league_name in [('AL', 'American League'), ('NL', 'National League')] %}
+  <section class="standings-league" aria-labelledby="standings-{{ league_code | lower }}">
+    <h3 id="standings-{{ league_code | lower }}" class="standings-league-heading">{{ league_name }}</h3>
+    <div class="standings-divisions">
+      {% for division in edition.standings.divisions %}
+        {% if division.division_name.startswith(league_code) %}
+        {{ standings_table(division.rows, division.division_name | replace(league_code ~ ' ', '') ~ ' Division') }}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
 
   {% if edition.standings.wild_cards %}
   <div class="standings-wildcards">
