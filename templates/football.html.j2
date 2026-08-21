@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8b1e2d">
-  <title>The Daily Sportz Page — Football</title>
+  <title>The Daily Sports Page — Football</title>
   <meta name="description" content="Philadelphia-first NFL scores, schedules, standings, and stories.">
   <link rel="canonical" href="https://thedailysportspage.com/football/">
   <link rel="icon" href="../static/icons/favicon.ico" sizes="any">
@@ -15,7 +15,7 @@
   <header class="masthead" role="banner">
     <div class="masthead-inner">
       <div class="masthead-kicker"><span>Independent Daily Coverage</span><strong>National Football League</strong><span>Daily Sports Page</span></div>
-      <h1 class="masthead-title">The Daily Sportz Page</h1>
+      <h1 class="masthead-title">The Daily Sports Page</h1>
       <div class="masthead-meta">
         <span class="masthead-date">{{ page.edition_date.strftime('%A, %B %-d, %Y') }}</span>
         <span class="masthead-sep">&bull;</span><span>{{ page.season_label }} Football Edition</span>
@@ -37,7 +37,7 @@
         {% if page.lead %}
         <article class="lead-story">
           <p class="section-label">Football Front Page</p><h2 class="lead-headline">{{ page.lead.headline }}</h2>
-          <p class="story-deck">{{ page.lead.deck }}</p><p class="story-byline">By Daily Sportz Page Staff</p>
+          <p class="story-deck">{{ page.lead.deck }}</p><p class="story-byline">By Daily Sports Page Staff</p>
           <div class="story-body">{% for paragraph in page.lead.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</div>
           <p class="source-link"><a href="{{ page.lead.url }}">Game recap on ESPN</a></p>
         </article>
@@ -67,6 +67,6 @@
       {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{% if story.url %}<a href="{{ story.url }}">{{ story.headline }}</a>{% else %}{{ story.headline }}{% endif %}</h3><p>{{ story.description }}</p></article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}
     </section>
   </main>
-  <footer class="site-footer"><p>The Daily Sportz Page — Football Edition — {{ page.edition_date }}</p></footer>
+  <footer class="site-footer"><p>The Daily Sports Page — Football Edition — {{ page.edition_date }}</p></footer>
 </body>
 </html>

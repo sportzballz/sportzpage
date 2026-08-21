@@ -118,7 +118,7 @@ class FootballEditionGenerator:
             "headline": f"{winner['name']} Take the Day, {winner['score']}-{loser['score']}",
             "deck": f"{winner['abbr']} finished ahead of {loser['abbr']} in {game['status'].lower()} action at {game['venue']}.",
             "paragraphs": [
-                f"The {winner['name']} came away with a {winner['score']}-{loser['score']} result over the {loser['name']}, putting the defining score of the day at the top of The Daily Sportz Page's football edition.",
+                f"The {winner['name']} came away with a {winner['score']}-{loser['score']} result over the {loser['name']}, putting the defining score of the day at the top of The Daily Sports Page's football edition.",
                 f"The game was played at {game['venue']}. The result offers an early checkpoint for both clubs as the NFL calendar moves toward the regular season.",
                 "The football page will follow the Eagles first when Philadelphia plays, turn next to the NFC East, and still keep the full league slate in view.",
             ],

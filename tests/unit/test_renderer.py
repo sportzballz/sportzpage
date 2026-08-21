@@ -311,4 +311,4 @@ def test_lead_story_renders():
     renderer = make_renderer()
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
-    assert "Daily Sportz Page Staff" in html
+    assert "Daily Sports Page Staff" in html

@@ -296,7 +296,7 @@ class EditorialEngine:
                 byline="SportzBallz Staff",
                 paragraphs=[
                     f"The Phillies and {opponent.team_name} are the Philadelphia focus while "
-                    "The Daily Sportz Page tracks the full Major League Baseball slate."
+                    "The Daily Sports Page tracks the full Major League Baseball slate."
                 ],
                 source_data_references=[f"game:{game.game_id}"],
                 story_type=StoryType.lead,
@@ -307,7 +307,7 @@ class EditorialEngine:
         return Story(
             headline="Phillies Remain the Focus in Philadelphia",
             deck=(
-                "The Daily Sportz Page leads with the Phillies and covers the rest of "
+                "The Daily Sports Page leads with the Phillies and covers the rest of "
                 "Major League Baseball."
             ),
             byline="SportzBallz Staff",

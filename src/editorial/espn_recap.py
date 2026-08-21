@@ -299,7 +299,7 @@ class ESPNLeadStoryService:
 
     @staticmethod
     def _prompt(recap: ESPNRecap, game: Game) -> str:
-        return f"""You are writing the lead game story for The Daily Sportz Page.
+        return f"""You are writing the lead game story for The Daily Sports Page.
 Create an original synopsis based only on the supplied ESPN recap facts. Do not copy ESPN
 sentences or distinctive phrases. Use a classic American baseball beat-writer voice: vivid,
 economical, observant, and newspaper-ready, without imitating or naming a specific writer.

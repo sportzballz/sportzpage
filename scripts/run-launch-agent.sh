@@ -6,7 +6,7 @@ SITE_ROOT="${SPORTZBALLZ_SITE_ROOT:-/Users/asmith/.openclaw/workspace/sportzball
 EDITION_DATE="${SPORTZPAGE_EDITION_DATE:-$(TZ=America/New_York date -v-1d +%F)}"
 
 cd "$ROOT"
-echo "Generating The Daily Sportz Page for ${EDITION_DATE}"
+echo "Generating The Daily Sports Page for ${EDITION_DATE}"
 "$ROOT/.venv/bin/daily-sports-page" run \
   --date "$EDITION_DATE" \
   --build-dir "$ROOT/build"

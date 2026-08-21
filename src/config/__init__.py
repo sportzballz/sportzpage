@@ -50,7 +50,7 @@ class Settings(BaseModel):
     archive_root: str = "/var/www/sportzballz/sportzpage/archive"
     last_known_good_filename: str = "index.html.lkg"
     public_base_url: str = "https://sportzballz.io/sportzpage"
-    publication_name: str = "The Daily Sportz Page"
+    publication_name: str = "The Daily Sports Page"
     cdn_purge_hook: Optional[str] = None
     mlb_api: MLBApiConfig = Field(default_factory=MLBApiConfig)
     ai: AIConfig = Field(default_factory=AIConfig)

@@ -46,11 +46,11 @@ def _page(title: str, body: str, *, description: str) -> str:
 <body class="subscription-page">
   <header class="masthead">
     <p class="masthead-label">Independent Daily Coverage</p>
-    <h1 class="masthead-title">The Daily Sportz Page</h1>
+    <h1 class="masthead-title">The Daily Sports Page</h1>
     <p class="masthead-meta">Baseball &bull; Football &bull; Delivered Daily</p>
   </header>
   {body}
-  <footer class="site-footer"><p>The Daily Sportz Page</p></footer>
+  <footer class="site-footer"><p>The Daily Sports Page</p></footer>
 </body>
 </html>
 """
@@ -59,7 +59,7 @@ def _page(title: str, body: str, *, description: str) -> str:
 def _landing(edition: dict, archive_dates: list[str]) -> str:
     metadata = edition["edition"]
     story = edition.get("lead_story") or {}
-    headline = story.get("headline") or "Today’s Daily Sportz Page is ready"
+    headline = story.get("headline") or "Today’s Daily Sports Page is ready"
     deck = story.get("deck") or "Scores, standings, reporting, and analysis in one daily edition."
     archive = "".join(
         f'<li><a href="/archive/{day}/">{date.fromisoformat(day).strftime("%A, %B %-d, %Y")}</a></li>'
@@ -91,7 +91,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
     </section>
   </main>"""
     return _page(
-        "The Daily Sportz Page — Today’s Edition",
+        "The Daily Sports Page — Today’s Edition",
         body,
         description="Preview today’s sports page and read the previous seven editions free.",
     )
@@ -104,11 +104,11 @@ def _archive_index(archive_dates: list[str]) -> str:
         for day in archive_dates
     ) or '<p class="no-content">The rolling archive begins with the next daily publication.</p>'
     return _page(
-        "Free Archive — The Daily Sportz Page",
+        "Free Archive — The Daily Sports Page",
         f'<main class="subscription-shell"><p><a href="/">&larr; Today’s preview</a></p>'
         f'<section class="free-archive"><p class="section-label">Seven days free</p>'
         f'<h2>Recent editions</h2><div class="archive-grid">{items}</div></section></main>',
-        description="Read the previous seven Daily Sportz Page editions free.",
+        description="Read the previous seven Daily Sports Page editions free.",
     )
 
 
@@ -125,20 +125,20 @@ def _subscribe_page() -> str:
     </section>
   </main>"""
     return _page(
-        "Subscribe — The Daily Sportz Page",
+        "Subscribe — The Daily Sports Page",
         body,
-        description="Subscribe to The Daily Sportz Page for $2 per month.",
+        description="Subscribe to The Daily Sports Page for $2 per month.",
     )
 
 
 def _email_digest(edition: dict) -> str:
     metadata = edition["edition"]
     story = edition.get("lead_story") or {}
-    headline = html.escape(story.get("headline") or "Today’s Daily Sportz Page")
+    headline = html.escape(story.get("headline") or "Today’s Daily Sports Page")
     deck = html.escape(story.get("deck") or "Your complete daily edition is ready.")
     return f"""<!doctype html><html><body style="font-family:Georgia,serif;color:#1a1a1a">
 <div style="max-width:640px;margin:auto"><p style="font:700 12px Arial;color:#8b1e2d;text-transform:uppercase">{metadata['date']}</p>
-<h1 style="border-bottom:4px double #444">The Daily Sportz Page</h1><h2>{headline}</h2><p>{deck}</p>
+<h1 style="border-bottom:4px double #444">The Daily Sports Page</h1><h2>{headline}</h2><p>{deck}</p>
 <p><a href="https://thedailysportspage.com/subscriber/current/" style="background:#8b1e2d;color:white;padding:12px 18px;text-decoration:none">Read the complete edition</a></p>
 <p style="font:12px Arial;color:#666">Subscriber access is required. Delivery preferences will be available after account activation.</p></div>
 </body></html>"""

@@ -11,7 +11,13 @@
 }
 .subscription-hero,
 .subscription-benefits,
-.free-archive { padding: clamp(1.25rem, 4vw, 3rem); border: 1px solid #aaa; background: #fffdf7; }
+.free-archive {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: clamp(1.25rem, 4vw, 3rem);
+  border: 1px solid #aaa;
+  background: #fffdf7;
+}
 .subscription-hero { position: relative; border-top: 8px solid #8b1e2d; text-align: center; }
 .edition-label,
 .section-label { font: 800 0.72rem/1.2 var(--font-sans); letter-spacing: .12em; text-transform: uppercase; color: #8b1e2d; }

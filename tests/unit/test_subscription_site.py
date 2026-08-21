@@ -100,3 +100,10 @@ def test_cloudfront_function_exposes_preview_and_routes_football_to_it() -> None
     assert "uri.startsWith('/subscriber/')" not in code
     assert "uri.startsWith('/delivery/')" not in code
     assert "request.uri = '/static/icons/favicon.ico'" in code
+
+
+def test_subscription_panels_span_the_newspaper_grid() -> None:
+    css = Path("static/css/subscription.css").read_text(encoding="utf-8")
+    panel_rule = css.split(".free-archive {", maxsplit=1)[1].split("}", maxsplit=1)[0]
+    assert "grid-column: 1 / -1" in panel_rule
+    assert "min-width: 0" in panel_rule

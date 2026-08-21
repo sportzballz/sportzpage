@@ -1,1 +1,1 @@
-"""NFL edition generation for The Daily Sportz Page."""
+"""NFL edition generation for The Daily Sports Page."""

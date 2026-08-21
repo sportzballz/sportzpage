@@ -5,10 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8b1e2d">
-  <title>The Daily Sportz Page &mdash; {{ edition.edition.date }}</title>
+  <title>The Daily Sports Page &mdash; {{ edition.edition.date }}</title>
   <meta name="description" content="Philadelphia-first MLB scores, standings, league leaders, game recaps, and analysis.">
   <link rel="canonical" href="https://thedailysportspage.com/">
-  <meta property="og:title" content="The Daily Sportz Page &mdash; {{ edition.edition.date }}">
+  <meta property="og:title" content="The Daily Sports Page &mdash; {{ edition.edition.date }}">
   <meta property="og:description" content="Philadelphia-first MLB scores, standings, and analysis.">
   <meta property="og:type" content="website">
   <meta name="daily-sportz-page-edition-id" content="{{ edition.edition.id }}">
@@ -54,7 +54,7 @@
     {% include "sections/around-the-league.html.j2" %}
   </main>
   <footer class="site-footer">
-    <p>The Daily Sportz Page &mdash; {{ edition.edition.date }} &mdash;
+    <p>The Daily Sports Page &mdash; {{ edition.edition.date }} &mdash;
     {% if edition.edition.generated_at %}
       Generated at {{ edition.edition.generated_at.strftime('%I:%M %p %Z') }}
     {% endif %}
