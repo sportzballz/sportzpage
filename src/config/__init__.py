@@ -73,6 +73,11 @@ def load_settings(config_path: Optional[Union[str, Path]] = None) -> Settings:
         return Settings()
 
     raw: dict[str, Any] = yaml.safe_load(path.read_text()) or {}
+    ai = raw.setdefault("ai", {})
+    if provider := os.getenv("AI_PROVIDER"):
+        ai["provider"] = provider
+    if model := os.getenv("AI_MODEL"):
+        ai["model"] = model
     settings = Settings.model_validate(raw)
     if config_path is None:
         _cached_settings = settings

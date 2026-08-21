@@ -23,6 +23,9 @@ jobs:
       AWS_REGION: us-east-1
       SITE_BUCKET: thedailysportspage-com-716418748259
       CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.DAILY_SPORTS_PAGE_CLOUDFRONT_ID }}
+      AI_PROVIDER: openai
+      AI_MODEL: gpt-5-mini
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 

@@ -256,6 +256,11 @@ class Normalizer:
         for item in odds.get("items", []):
             key = (str(item.get("away_abbr", "")), str(item.get("home_abbr", "")))
             odds_by_matchup.setdefault(key, []).append(item)
+        espn_ids_by_matchup: dict[tuple[str, str], list[str]] = {}
+        for event in odds.get("events", []):
+            key = (str(event.get("away_abbr", "")), str(event.get("home_abbr", "")))
+            if event.get("espn_game_id"):
+                espn_ids_by_matchup.setdefault(key, []).append(str(event["espn_game_id"]))
         games: list[Game] = []
         for date_entry in raw.get("dates", []):
             for g in date_entry.get("games", []):
@@ -265,6 +270,9 @@ class Normalizer:
                     if boxscore:
                         game = self._add_boxscore(game, boxscore)
                     matchup = (game.away.team_abbr, game.home.team_abbr)
+                    espn_ids = espn_ids_by_matchup.get(matchup, [])
+                    if espn_ids:
+                        game = game.model_copy(update={"espn_game_id": espn_ids.pop(0)})
                     offers = odds_by_matchup.get(matchup, [])
                     if offers:
                         offer = offers.pop(0)

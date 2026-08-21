@@ -58,10 +58,26 @@ class OddsCollector:
                             covered.add(matchup)
                     except (httpx.HTTPError, ValueError) as exc:
                         logger.debug("ESPN summary odds unavailable for %s: %s", event["id"], exc)
-            return {"source": "ESPN", "items": items}
+            return {"source": "ESPN", "items": items, "events": self.parse_events(payload)}
         except (httpx.HTTPError, ValueError) as exc:
             logger.warning("ESPN betting lines unavailable for %s: %s", self._game_date, exc)
-            return {"source": "ESPN", "items": [], "error": str(exc)}
+            return {"source": "ESPN", "items": [], "events": [], "error": str(exc)}
+
+    @classmethod
+    def parse_events(cls, payload: dict[str, Any]) -> list[dict[str, str]]:
+        events: list[dict[str, str]] = []
+        for event in payload.get("events", []):
+            competition = (event.get("competitions") or [{}])[0]
+            matchup = cls._matchup(competition)
+            if event.get("id") and matchup:
+                events.append(
+                    {
+                        "espn_game_id": str(event["id"]),
+                        "away_abbr": matchup[0],
+                        "home_abbr": matchup[1],
+                    }
+                )
+        return events
 
     @staticmethod
     def _matchup(competition: dict[str, Any]) -> tuple[str, str] | None:

@@ -87,6 +87,9 @@ class Game(BaseModel):
     """A single MLB game with all state needed to render scoreboard, schedule, and recap sections."""
 
     game_id: int = Field(description="MLB game PK.")
+    espn_game_id: Optional[str] = Field(
+        default=None, description="ESPN event ID used for recap and game-package lookups."
+    )
     game_date: str = Field(description="Game date in YYYY-MM-DD.")
     game_time_et: Optional[str] = Field(
         default=None, description="Scheduled start time in ET, e.g. 7:05 PM."

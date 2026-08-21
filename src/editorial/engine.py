@@ -6,6 +6,7 @@ import logging
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from src.editorial.espn_recap import ESPNLeadStoryService
 from src.editorial.fallback import generate_fallback_recap
 from src.editorial.scoring import ScoringContext, ScoringWeights, score_game
 from src.models.edition import Edition, EditionMetadata, EditionType, GenerationMetadata
@@ -66,6 +67,7 @@ class EditorialEngine:
         require_primary_team_lead: bool = True,
         edition_type_override: str | None = None,
         ai_client: object | None = None,
+        lead_story_service: ESPNLeadStoryService | None = None,
     ) -> None:
         self._weights = scoring_weights
         self._overrides = manual_overrides
@@ -78,6 +80,7 @@ class EditorialEngine:
         self._require_primary_team_lead = require_primary_team_lead
         self._edition_type_override = edition_type_override
         self._ai_client = ai_client
+        self._lead_story_service = lead_story_service
         self._stats = StatisticsProcessor()
 
     @classmethod
@@ -93,6 +96,20 @@ class EditorialEngine:
         sec = cfg.get("secondary_story_count", {})
         neutrality = cfg.get("neutrality", {}).get("max_single_team_fraction", 0.4)
         focus = cfg.get("editorial_focus", {})
+        settings = None
+        try:
+            from src.config import load_settings
+
+            settings = load_settings().ai
+        except Exception as exc:
+            logger.warning("AI settings unavailable; using deterministic lead: %s", exc)
+        lead_story_service = None
+        if settings and settings.provider in {"openclaw", "openai"}:
+            lead_story_service = ESPNLeadStoryService(
+                provider=settings.provider,
+                model=settings.model,
+                timeout=settings.timeout_seconds + 30,
+            )
         return cls(
             scoring_weights=weights,
             manual_overrides=overrides,
@@ -104,6 +121,7 @@ class EditorialEngine:
             primary_team_abbr=focus.get("primary_team", "PHI"),
             require_primary_team_lead=focus.get("require_primary_team_lead", True),
             edition_type_override=edition_type_override,
+            lead_story_service=lead_story_service,
         )
 
     async def generate(
@@ -158,7 +176,11 @@ class EditorialEngine:
             lead_story = self._primary_team_fallback(primary_game)
 
         for i, (game, _score) in enumerate(scored_games):
-            recap = await self._generate_recap(game)
+            recap = (
+                await self._generate_lead_recap(game)
+                if i == 0
+                else await self._generate_recap(game)
+            )
             if not recap.ai_generated:
                 ai_fallbacks += 1
             game_recaps.append(recap)
@@ -175,6 +197,8 @@ class EditorialEngine:
                     players=recap.players,
                     facts_used=recap.facts_used,
                     ai_generated=recap.ai_generated,
+                    source_name=recap.source_name,
+                    source_url=recap.source_url,
                 )
             elif len(secondary_stories) < self._sec_max:
                 secondary_stories.append(
@@ -245,6 +269,17 @@ class EditorialEngine:
         except Exception as exc:
             logger.warning("AI recap failed for game %d, using fallback: %s", game.game_id, exc)
             return generate_fallback_recap(game)
+
+    async def _generate_lead_recap(self, game: Game) -> GameRecap:
+        """Prefer an ESPN-grounded LLM synopsis for the selected front-page game."""
+        if self._lead_story_service:
+            try:
+                recap = await self._lead_story_service.generate(game)
+                if recap:
+                    return recap
+            except Exception as exc:
+                logger.warning("ESPN lead story failed for game %d: %s", game.game_id, exc)
+        return await self._generate_recap(game)
 
     async def _generate_ai_recap(self, game: Game) -> GameRecap:
         raise NotImplementedError("AI recap generation to be implemented with provider SDK.")

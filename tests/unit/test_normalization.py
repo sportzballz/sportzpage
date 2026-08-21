@@ -185,6 +185,22 @@ class TestParseGame:
         assert game.betting_line.home_moneyline == -140
         assert game.betting_line.run_total == 8.5
 
+    def test_schedule_attaches_matching_espn_game_id(self) -> None:
+        raw = {
+            "schedule": _make_schedule(_make_game(105, "Final")),
+            "odds": {
+                "events": [{
+                    "away_abbr": "BOS",
+                    "home_abbr": "NYY",
+                    "espn_game_id": "401877087",
+                }]
+            },
+        }
+
+        game = self.normalizer.normalize(raw).games[0]
+
+        assert game.espn_game_id == "401877087"
+
     def test_postponed_game_status(self) -> None:
         g = _make_game(102, "Postponed")
         result = self.normalizer._parse_game(g)

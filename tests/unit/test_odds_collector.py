@@ -42,6 +42,24 @@ def test_parses_moneylines_and_total_without_total_prices():
     }]
 
 
+def test_parses_espn_game_id_for_matchup():
+    payload = {
+        "events": [{
+            "id": "401877087",
+            "competitions": [{"competitors": [
+                {"homeAway": "away", "team": {"abbreviation": "ATL"}},
+                {"homeAway": "home", "team": {"abbreviation": "CHW"}},
+            ]}],
+        }]
+    }
+
+    assert OddsCollector.parse_events(payload) == [{
+        "espn_game_id": "401877087",
+        "away_abbr": "ATL",
+        "home_abbr": "CWS",
+    }]
+
+
 def test_parses_in_progress_game_pickcenter_fallback():
     competition = {
         "competitors": [

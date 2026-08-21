@@ -161,14 +161,19 @@ class GenerationOrchestrator:
             backoff_max=self._settings.mlb_api.backoff_max_seconds,
         )
         publication_date = datetime.now(EASTERN).date()
-        raw, todays_schedule, history, news, odds = await asyncio.gather(
+        raw, todays_schedule, history, news, odds, lead_day_espn = await asyncio.gather(
             collector.collect(),
             collector.get_schedule(target_date=publication_date),
             HistoryCollector(publication_date).collect(),
             NewsCollector().collect(),
             OddsCollector(publication_date).collect(),
+            OddsCollector(self._game_date).collect(),
         )
         raw["schedule"] = merge_schedules(raw["schedule"], todays_schedule)
+        odds["events"] = [
+            *lead_day_espn.get("events", []),
+            *odds.get("events", []),
+        ]
         raw["history"] = history
         raw["news"] = news
         raw["odds"] = odds
