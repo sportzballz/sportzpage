@@ -149,16 +149,16 @@ def test_edition_id_meta_tag():
     edition = make_minimal_edition()
     renderer = make_renderer()
     html = renderer.render(edition)
-    assert 'name="sportzballz-edition-id"' in html
+    assert 'name="daily-sportz-page-edition-id"' in html
     assert "2026-07-13-0600" in html
 
 
 def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
-    assert 'href="https://sportzballz.io/sportzpage/index.html"' in html
-    assert 'href="/sportzpage/static/css/daily-sports-page.css"' in html
-    assert 'src="/sportzpage/static/js/daily-sports-page.js"' in html
+    assert 'href="https://thedailysportspage.com/"' in html
+    assert 'href="static/css/daily-sports-page.css"' in html
+    assert 'src="static/js/daily-sports-page.js"' in html
 
 
 def test_todays_games_renders_moneylines_and_run_total_only():
@@ -310,4 +310,4 @@ def test_lead_story_renders():
     renderer = make_renderer()
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
-    assert "SportzBallz Staff" in html
+    assert "Daily Sportz Page Staff" in html

@@ -1,4 +1,4 @@
 <nav class="sport-tabs" aria-label="Sports editions">
-  <a class="sport-tab{% if active_sport == 'baseball' %} is-active{% endif %}" href="/sportzpage/"{% if active_sport == 'baseball' %} aria-current="page"{% endif %}>Baseball</a>
-  <a class="sport-tab{% if active_sport == 'football' %} is-active{% endif %}" href="/sportzpage/football/"{% if active_sport == 'football' %} aria-current="page"{% endif %}>Football</a>
+  <a class="sport-tab{% if active_sport == 'baseball' %} is-active{% endif %}" href="{% if active_sport == 'football' %}../{% else %}./{% endif %}"{% if active_sport == 'baseball' %} aria-current="page"{% endif %}>Baseball</a>
+  <a class="sport-tab{% if active_sport == 'football' %} is-active{% endif %}" href="{% if active_sport == 'football' %}./{% else %}football/{% endif %}"{% if active_sport == 'football' %} aria-current="page"{% endif %}>Football</a>
 </nav>

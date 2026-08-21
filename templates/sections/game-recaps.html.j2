@@ -11,7 +11,7 @@
       <div class="recap-meta">
         <span class="recap-score">{{ recap.final_score }}</span>
         <span class="recap-sep">&bull;</span>
-        <span class="recap-byline">By {{ recap.byline }}</span>
+        <span class="recap-byline">By {{ recap.byline | replace('SportzBallz Staff', 'Daily Sportz Page Staff') }}</span>
       </div>
       {% if recap.tags %}
       <div class="recap-tags">

@@ -7,3 +7,10 @@ build/raw/history.json
 logs/
 data/history/days/raw/
 data/history/days/download_summary.json
+.terraform/
+*.tfplan
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+terraform/tfplan
+.coverage

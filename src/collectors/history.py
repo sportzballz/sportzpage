@@ -51,7 +51,7 @@ class HistoryCollector:
             }
         headers = {
             "User-Agent": (
-                "SportzBallz/1.0 (+https://sportzballz.io; "
+                "DailySportzPage/1.0 (+https://thedailysportspage.com; "
                 "daily baseball-history attribution)"
             )
         }

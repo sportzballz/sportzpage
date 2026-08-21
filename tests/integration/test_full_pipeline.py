@@ -62,4 +62,4 @@ def test_full_slate_pipeline():
         # Edition ID meta tag present
         edition_id = edition.edition.id
         assert edition_id in html_content, f"Edition ID {edition_id!r} not found in HTML"
-        assert 'name="sportzballz-edition-id"' in html_content, "Edition ID meta tag missing"
+        assert 'name="daily-sportz-page-edition-id"' in html_content, "Edition ID meta tag missing"

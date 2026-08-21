@@ -1,0 +1,69 @@
+name: Deploy The Daily Sportz Page
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "15 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: thedailysportspage-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.DAILY_SPORTS_PAGE_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      SITE_BUCKET: thedailysportspage-com-716418748259
+      CLOUDFRONT_DISTRIBUTION_ID: ${{ vars.DAILY_SPORTS_PAGE_CLOUDFRONT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install generator
+        run: python -m pip install .
+
+      - name: Generate Baseball and Football editions
+        run: |
+          EDITION_DATE="$(TZ=America/New_York date -d 'yesterday' +%F)"
+          daily-sports-page run --date "$EDITION_DATE" --build-dir build
+          python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
+
+      - name: Assemble immutable site artifact
+        run: |
+          mkdir -p dist/static dist/football
+          cp build/index.html build/edition.json dist/
+          cp build/football/index.html build/football/edition.json dist/football/
+          cp -R static/. dist/static/
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::716418748259:role/thedailysportspage-github-deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Publish versioned site artifact
+        run: |
+          aws s3 sync dist "s3://${SITE_BUCKET}" \
+            --delete \
+            --exclude "*.html" \
+            --exclude "*.json" \
+            --cache-control "public,max-age=3600"
+          aws s3 sync dist "s3://${SITE_BUCKET}" \
+            --exclude "*" \
+            --include "*.html" \
+            --include "*.json" \
+            --cache-control "public,max-age=60,must-revalidate"
+          aws cloudfront create-invalidation \
+            --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" \
+            --paths "/*"

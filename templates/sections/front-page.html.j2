@@ -6,7 +6,7 @@
     <header class="story-header">
       <h2 id="lead-headline" class="lead-headline">{{ edition.lead_story.headline }}</h2>
       <p class="story-deck">{{ edition.lead_story.deck }}</p>
-      <p class="story-byline">By {{ edition.lead_story.byline }}</p>
+      <p class="story-byline">By {{ edition.lead_story.byline | replace('SportzBallz Staff', 'Daily Sportz Page Staff') }}</p>
     </header>
     <div class="story-body">
       {% for para in edition.lead_story.paragraphs %}
