@@ -41,7 +41,7 @@ def _page(title: str, body: str, *, description: str) -> str:
   <meta name="description" content="{html.escape(description)}">
   <link rel="icon" href="/static/icons/favicon.ico" sizes="any">
   <link rel="stylesheet" href="/static/css/daily-sports-page.css">
-  <link rel="stylesheet" href="/static/css/subscription.css">
+  <link rel="stylesheet" href="/static/css/subscription.css?v=20260821-layout-fix">
 </head>
 <body class="subscription-page">
   <header class="masthead">

@@ -37,6 +37,7 @@ def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None
     assert "Headline for 2026-08-21" in landing
     assert "full-story-marker" not in landing
     assert "free preview" in landing
+    assert 'subscription.css?v=20260821-layout-fix' in landing
     assert 'href="/subscriber/current/"' in landing
     assert "full-story-marker" in (output / "subscriber/current/index.html").read_text()
     assert "football-full-marker" in (output / "subscriber/current/football/index.html").read_text()
