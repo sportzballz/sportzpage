@@ -1,5 +1,14 @@
-.subscription-page { max-width: 1080px; }
-.subscription-shell { max-width: 920px; margin: 2rem auto 4rem; }
+.subscription-page {
+  width: 100%;
+  max-width: 1440px;
+  min-width: 0;
+  padding-inline: clamp(.65rem, 2vw, 2rem);
+  overflow-x: hidden;
+}
+.subscription-shell {
+  width: min(100%, 1120px);
+  margin: clamp(1rem, 3vw, 2.5rem) auto clamp(2.5rem, 6vw, 5rem);
+}
 .subscription-hero,
 .subscription-benefits,
 .free-archive { padding: clamp(1.25rem, 4vw, 3rem); border: 1px solid #aaa; background: #fffdf7; }
@@ -22,13 +31,37 @@
 .free-archive ul { list-style: none; border-top: 3px double #444; }
 .free-archive li { padding: .7rem .2rem; border-bottom: 1px solid #bbb; }
 .free-archive a { color: #1a1a1a; font-weight: 700; }
-.archive-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+.archive-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
 .archive-card { padding: 1rem; border-top: 4px solid #8b1e2d; background: #f2f0e8; }
 .archive-card p { font: 700 .68rem var(--font-sans); text-transform: uppercase; color: #666; }
 .archive-card h2 { font-size: 1.15rem; }
 .subscribe-panel p { max-width: 680px; margin: 1rem auto; }
 @media (max-width: 640px) {
-  .subscription-shell { margin-top: 1rem; }
+  .subscription-page { padding-inline: .55rem; }
+  .subscription-page .masthead { padding-inline: .35rem; }
+  .subscription-page .masthead-title { font-size: clamp(2.15rem, 12vw, 3.1rem); }
+  .subscription-shell { margin-top: .75rem; }
+  .subscription-hero,
+  .subscription-benefits,
+  .free-archive { padding: 1.1rem .9rem; }
+  .subscription-hero h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); }
+  .subscription-deck { font-size: 1rem; }
+  .subscribe-button { display: block; width: 100%; line-height: 1.2; }
   .subscription-benefits { columns: 1; }
   .archive-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .subscription-shell { width: min(100%, 900px); }
+  .subscription-hero,
+  .subscription-benefits,
+  .free-archive { padding: clamp(1.5rem, 4vw, 2.4rem); }
+}
+
+@media (orientation: landscape) and (max-height: 700px) and (min-width: 700px) {
+  .subscription-page .masthead { margin-top: .2rem; padding-block: .2rem .35rem; }
+  .subscription-page .masthead-title { font-size: clamp(2.2rem, 5vw, 3.7rem); }
+  .subscription-shell { margin-top: .75rem; }
+  .subscription-hero h2 { font-size: clamp(2rem, 4.5vw, 3.5rem); }
+  .teaser-fade { height: 1.5rem; }
 }

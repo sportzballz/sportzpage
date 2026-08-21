@@ -34,12 +34,31 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Resolve edition date
+        id: edition
+        run: echo "date=$(TZ=America/New_York date -d 'yesterday' +%F)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore daily LLM enrichment
+        uses: actions/cache@v4
+        with:
+          path: build/ai-cache
+          key: sportzpage-lead-${{ steps.edition.outputs.date }}
+
+      - name: Reuse the already published daily lead
+        run: |
+          curl -fsS \
+            https://thedailysportspage.com/subscriber/current/edition.json \
+            -o /tmp/current-edition.json || true
+          python scripts/seed_lead_cache.py \
+            /tmp/current-edition.json \
+            --game-date "${{ steps.edition.outputs.date }}"
+
       - name: Install generator
         run: python -m pip install .
 
       - name: Generate Baseball and Football editions
         run: |
-          EDITION_DATE="$(TZ=America/New_York date -d 'yesterday' +%F)"
+          EDITION_DATE="${{ steps.edition.outputs.date }}"
           daily-sports-page run --date "$EDITION_DATE" --build-dir build
           python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
 

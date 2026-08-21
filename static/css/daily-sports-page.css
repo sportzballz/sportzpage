@@ -1715,6 +1715,27 @@ caption,
   .history-item { padding-top: 0.35rem; }
 }
 
+/* Tablet landscape and smaller desktop windows keep the broadsheet structure
+   without letting wide tables force the viewport wider than the device. */
+@media (min-width: 900px) and (max-width: 1199px) {
+  body { padding-inline: .75rem; }
+  .top-news-grid { grid-template-columns: minmax(0, 3fr) minmax(17rem, 2fr); }
+  .lead-headline { font-size: clamp(2.35rem, 5vw, 3.75rem); }
+  .games-list,
+  .games-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .team-leaders-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+html,
+body,
+main,
+.top-news-grid,
+.section { min-width: 0; }
+
+img,
+svg,
+video { max-width: 100%; height: auto; }
+
 .team-leaders-grid {
   display: grid;
   grid-template-columns: 1fr;

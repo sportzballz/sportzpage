@@ -1,8 +1,40 @@
 import json
+from pathlib import Path
 
 import pytest
 
-from src.editorial.espn_recap import ESPNLeadStoryService
+from src.editorial.espn_recap import ESPNLeadStoryService, ESPNRecap
+from src.models.game import Game, GameStatus, TeamGameLine
+from src.models.story import GameRecap, StoryType
+
+
+def _game() -> Game:
+    return Game(
+        game_id=123,
+        espn_game_id="401877087",
+        game_date="2026-08-20",
+        status=GameStatus.final,
+        away=TeamGameLine(team_id=1, team_abbr="ATL", team_name="Braves", runs=2),
+        home=TeamGameLine(team_id=2, team_abbr="CWS", team_name="White Sox", runs=0),
+    )
+
+
+def _recap() -> GameRecap:
+    return GameRecap(
+        headline="Cached lead",
+        deck="Cached deck",
+        byline="SportzBallz Staff",
+        paragraphs=["One.", "Two.", "Three."],
+        source_data_references=["game:123", "espn:401877087"],
+        story_type=StoryType.game_recap,
+        teams=["ATL", "CWS"],
+        facts_used=["espn_game_id:401877087"],
+        ai_generated=True,
+        source_name="ESPN recap",
+        source_url="https://www.espn.com/mlb/recap/_/gameId/401877087",
+        game_id=123,
+        final_score="ATL 2, CWS 0",
+    )
 
 
 def test_parses_structured_espn_recap_page() -> None:
@@ -88,3 +120,22 @@ def test_missing_openai_key_falls_back_without_calling_api() -> None:
         import asyncio
 
         asyncio.run(service._rewrite_with_openai("prompt"))
+
+
+@pytest.mark.asyncio
+async def test_reuses_daily_cached_recap_without_fetch_or_llm(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = ESPNLeadStoryService(provider="openai", api_key="unused", cache_dir=tmp_path)
+    game = _game()
+    service._save_cached(game, _recap())
+
+    async def should_not_fetch(_game_id: str) -> ESPNRecap | None:
+        raise AssertionError("ESPN and OpenAI must not be called when today's recap is cached")
+
+    monkeypatch.setattr(service, "fetch", should_not_fetch)
+
+    result = await service.generate(game)
+
+    assert result is not None
+    assert result.headline == "Cached lead"

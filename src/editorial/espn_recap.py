@@ -6,6 +6,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -38,19 +39,46 @@ class ESPNLeadStoryService:
         model: str | None = None,
         timeout: float = 45.0,
         api_key: str | None = None,
+        cache_dir: Path | None = None,
     ) -> None:
         self._provider = provider
         self._model = model
         self._timeout = timeout
         self._api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self._cache_dir = cache_dir or Path(os.getenv("AI_CACHE_DIR", "build/ai-cache"))
 
     async def generate(self, game: Game) -> GameRecap | None:
         if not game.espn_game_id:
             return None
+        cached = self._load_cached(game)
+        if cached:
+            logger.info("reusing cached lead story for ESPN game %s", game.espn_game_id)
+            return cached
         recap = await self.fetch(game.espn_game_id)
         if not recap:
             return None
-        return await self.rewrite(recap, game)
+        generated = await self.rewrite(recap, game)
+        if generated:
+            self._save_cached(game, generated)
+        return generated
+
+    def _cache_path(self, game: Game) -> Path:
+        return self._cache_dir / f"{game.game_date}-{game.espn_game_id}.json"
+
+    def _load_cached(self, game: Game) -> GameRecap | None:
+        path = self._cache_path(game)
+        try:
+            cached = GameRecap.model_validate_json(path.read_text(encoding="utf-8"))
+            return cached if cached.ai_generated else None
+        except (OSError, ValueError):
+            return None
+
+    def _save_cached(self, game: Game, recap: GameRecap) -> None:
+        path = self._cache_path(game)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(recap.model_dump_json(indent=2) + "\n", encoding="utf-8")
+        temporary.replace(path)
 
     async def fetch(self, espn_game_id: str) -> ESPNRecap | None:
         source_url = ESPN_RECAP_URL.format(game_id=espn_game_id)
