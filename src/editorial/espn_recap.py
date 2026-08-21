@@ -47,34 +47,39 @@ class ESPNLeadStoryService:
         self._api_key = api_key or os.getenv("OPENAI_API_KEY")
         self._cache_dir = cache_dir or Path(os.getenv("AI_CACHE_DIR", "build/ai-cache"))
 
-    async def generate(self, game: Game) -> GameRecap | None:
+    async def generate(self, game: Game, *, short: bool = False) -> GameRecap | None:
         if not game.espn_game_id:
             return None
-        cached = self._load_cached(game)
+        cached = self._load_cached(game, short=short)
         if cached:
-            logger.info("reusing cached lead story for ESPN game %s", game.espn_game_id)
+            logger.info(
+                "reusing cached %s for ESPN game %s",
+                "short recap" if short else "lead story",
+                game.espn_game_id,
+            )
             return cached
         recap = await self.fetch(game.espn_game_id)
         if not recap:
             return None
-        generated = await self.rewrite(recap, game)
+        generated = await self.rewrite(recap, game, short=short)
         if generated:
-            self._save_cached(game, generated)
+            self._save_cached(game, generated, short=short)
         return generated
 
-    def _cache_path(self, game: Game) -> Path:
-        return self._cache_dir / f"{game.game_date}-{game.espn_game_id}.json"
+    def _cache_path(self, game: Game, *, short: bool = False) -> Path:
+        suffix = "-short" if short else ""
+        return self._cache_dir / f"{game.game_date}-{game.espn_game_id}{suffix}.json"
 
-    def _load_cached(self, game: Game) -> GameRecap | None:
-        path = self._cache_path(game)
+    def _load_cached(self, game: Game, *, short: bool = False) -> GameRecap | None:
+        path = self._cache_path(game, short=short)
         try:
             cached = GameRecap.model_validate_json(path.read_text(encoding="utf-8"))
             return cached if cached.ai_generated else None
         except (OSError, ValueError):
             return None
 
-    def _save_cached(self, game: Game, recap: GameRecap) -> None:
-        path = self._cache_path(game)
+    def _save_cached(self, game: Game, recap: GameRecap, *, short: bool = False) -> None:
+        path = self._cache_path(game, short=short)
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(".tmp")
         temporary.write_text(recap.model_dump_json(indent=2) + "\n", encoding="utf-8")
@@ -151,14 +156,16 @@ class ESPNLeadStoryService:
             heading.replace_with("\n\n" + heading.get_text(" ", strip=True) + "\n")
         return "\n".join(line.strip() for line in soup.get_text(" ").splitlines() if line.strip())
 
-    async def rewrite(self, recap: ESPNRecap, game: Game) -> GameRecap | None:
-        prompt = self._prompt(recap, game)
+    async def rewrite(
+        self, recap: ESPNRecap, game: Game, *, short: bool = False
+    ) -> GameRecap | None:
+        prompt = self._prompt(recap, game, short=short)
         try:
             if self._provider == "openai":
-                text = await self._rewrite_with_openai(prompt)
+                text = await self._rewrite_with_openai(prompt, short=short)
             else:
                 text = await self._rewrite_with_openclaw(prompt)
-            return self._build_game_recap(text, recap, game)
+            return self._build_game_recap(text, recap, game, short=short)
         except (
             OSError,
             TimeoutError,
@@ -186,7 +193,7 @@ class ESPNLeadStoryService:
         result = json.loads(stdout)
         return str((result.get("outputs") or [{}])[0].get("text", ""))
 
-    async def _rewrite_with_openai(self, prompt: str) -> str:
+    async def _rewrite_with_openai(self, prompt: str, *, short: bool = False) -> str:
         if not self._api_key:
             raise ValueError("OPENAI_API_KEY is not configured")
         schema = {
@@ -197,8 +204,8 @@ class ESPNLeadStoryService:
                 "paragraphs": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "minItems": 3,
-                    "maxItems": 5,
+                    "minItems": 1 if short else 3,
+                    "maxItems": 1 if short else 5,
                 },
             },
             "required": ["headline", "deck", "paragraphs"],
@@ -210,7 +217,7 @@ class ESPNLeadStoryService:
             "text": {
                 "format": {
                     "type": "json_schema",
-                    "name": "baseball_lead_story",
+                    "name": "baseball_short_recap" if short else "baseball_lead_story",
                     "strict": True,
                     "schema": schema,
                 }
@@ -234,11 +241,22 @@ class ESPNLeadStoryService:
                     return str(content["text"])
         raise ValueError("OpenAI response did not contain output text")
 
-    def _build_game_recap(self, text: str, recap: ESPNRecap, game: Game) -> GameRecap:
+    def _build_game_recap(
+        self, text: str, recap: ESPNRecap, game: Game, *, short: bool = False
+    ) -> GameRecap:
         story = self._parse_model_json(text)
         paragraphs = [str(p).strip() for p in story.get("paragraphs", []) if str(p).strip()]
-        if not 3 <= len(paragraphs) <= 5:
-            raise ValueError("LLM synopsis must contain 3 to 5 paragraphs")
+        valid_length = len(paragraphs) == 1 if short else 3 <= len(paragraphs) <= 5
+        if not valid_length:
+            raise ValueError(
+                "LLM short recap must contain one paragraph"
+                if short
+                else "LLM synopsis must contain 3 to 5 paragraphs"
+            )
+        if short:
+            sentence_count = len(re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"“])", paragraphs[0]))
+            if not 2 <= sentence_count <= 3:
+                raise ValueError("LLM short recap must contain 2 to 3 sentences")
         generated_text = " ".join(
             [str(story.get("headline", "")), str(story.get("deck", "")), *paragraphs]
         )
@@ -298,7 +316,25 @@ class ESPNLeadStoryService:
                 raise ValueError(f"unsupported claim in synopsis: {phrase}")
 
     @staticmethod
-    def _prompt(recap: ESPNRecap, game: Game) -> str:
+    def _prompt(recap: ESPNRecap, game: Game, *, short: bool = False) -> str:
+        if short:
+            return f"""You are writing a short Front Page game brief for The Daily Sports Page.
+Create an original, lively baseball recap based only on the supplied ESPN facts. Use a crisp,
+observant newspaper voice without imitating or naming a specific writer. Return ONLY valid
+JSON with keys headline, deck, and paragraphs. paragraphs must contain exactly one paragraph
+of 2 to 3 concise sentences. Make the headline specific and interesting. The deck must be one
+short sentence. Do not add facts, quotations, statistics, rivalries, streaks, or milestones
+absent from the source. Every number in your JSON must occur in the source text.
+
+MLB game ID: {game.game_id}
+ESPN game ID: {recap.game_id}
+Matchup: {game.away.team_name} at {game.home.team_name}
+Final: {game.away.team_abbr} {game.away.runs}, {game.home.team_abbr} {game.home.runs}
+ESPN headline: {recap.headline}
+
+ESPN recap facts (the source ends before its separate Up next section):
+{recap.body.split('Up next', 1)[0][:8000]}
+"""
         return f"""You are writing the lead game story for The Daily Sports Page.
 Create an original synopsis based only on the supplied ESPN recap facts. Do not copy ESPN
 sentences or distinctive phrases. Use a classic American baseball beat-writer voice: vivid,

@@ -176,11 +176,12 @@ class EditorialEngine:
             lead_story = self._primary_team_fallback(primary_game)
 
         for i, (game, _score) in enumerate(scored_games):
-            recap = (
-                await self._generate_lead_recap(game)
-                if i == 0
-                else await self._generate_recap(game)
-            )
+            if i == 0:
+                recap = await self._generate_lead_recap(game)
+            elif len(secondary_stories) < self._sec_max:
+                recap = await self._generate_secondary_recap(game)
+            else:
+                recap = await self._generate_recap(game)
             if not recap.ai_generated:
                 ai_fallbacks += 1
             game_recaps.append(recap)
@@ -279,6 +280,17 @@ class EditorialEngine:
                     return recap
             except Exception as exc:
                 logger.warning("ESPN lead story failed for game %d: %s", game.game_id, exc)
+        return await self._generate_recap(game)
+
+    async def _generate_secondary_recap(self, game: Game) -> GameRecap:
+        """Prefer a cached ESPN-grounded short brief for each Front Page recap."""
+        if self._lead_story_service:
+            try:
+                recap = await self._lead_story_service.generate(game, short=True)
+                if recap:
+                    return recap
+            except Exception as exc:
+                logger.warning("ESPN short recap failed for game %d: %s", game.game_id, exc)
         return await self._generate_recap(game)
 
     async def _generate_ai_recap(self, game: Game) -> GameRecap:

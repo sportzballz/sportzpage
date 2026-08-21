@@ -139,3 +139,49 @@ async def test_reuses_daily_cached_recap_without_fetch_or_llm(
 
     assert result is not None
     assert result.headline == "Cached lead"
+
+
+@pytest.mark.asyncio
+async def test_reuses_daily_cached_short_recap_without_fetch_or_llm(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = ESPNLeadStoryService(provider="openai", api_key="unused", cache_dir=tmp_path)
+    game = _game()
+    short = _recap().model_copy(update={"paragraphs": ["Two lively sentences. Still brief."]})
+    service._save_cached(game, short, short=True)
+
+    async def should_not_fetch(_game_id: str) -> ESPNRecap | None:
+        raise AssertionError("ESPN and OpenAI must not be called when today's recap is cached")
+
+    monkeypatch.setattr(service, "fetch", should_not_fetch)
+
+    result = await service.generate(game, short=True)
+
+    assert result is not None
+    assert result.paragraphs == ["Two lively sentences. Still brief."]
+    assert service._cache_path(game, short=True).name.endswith("-short.json")
+
+
+def test_short_recap_prompt_and_output_are_concise() -> None:
+    service = ESPNLeadStoryService()
+    source = ESPNRecap(
+        game_id="401877087",
+        headline="Braves win",
+        body="The Braves won 2-0 behind Grant Holmes.",
+        source_url="https://www.espn.com/mlb/recap/_/gameId/401877087",
+    )
+    text = json.dumps(
+        {
+            "headline": "Holmes Sets the Tone",
+            "deck": "Atlanta rode its starter to a crisp victory.",
+            "paragraphs": [
+                "Grant Holmes carried Atlanta through the afternoon. "
+                "The Braves turned his work into a 2-0 win."
+            ],
+        }
+    )
+
+    result = service._build_game_recap(text, source, _game(), short=True)
+
+    assert len(result.paragraphs) == 1
+    assert "2 to 3 concise sentences" in service._prompt(source, _game(), short=True)

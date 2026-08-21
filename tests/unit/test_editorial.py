@@ -1,6 +1,8 @@
 # tests/unit/test_editorial.py
 from __future__ import annotations
 
+import pytest
+
 from src.editorial.engine import (
     NL_EAST_TEAMS,
     EditorialEngine,
@@ -10,6 +12,7 @@ from src.editorial.engine import (
 from src.editorial.fallback import generate_fallback_recap
 from src.editorial.scoring import ScoringContext, ScoringWeights, score_game
 from src.models.game import Game, GameStatus, Pitcher, TeamGameLine
+from src.models.story import GameRecap
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -151,6 +154,34 @@ def test_lead_story_is_three_to_five_paragraphs():
     paragraphs = EditorialEngine._lead_paragraphs(recap, game)
 
     assert 3 <= len(paragraphs) <= 5
+
+
+@pytest.mark.asyncio
+async def test_secondary_front_page_recap_uses_short_llm_mode() -> None:
+    game = _make_game()
+    generated = generate_fallback_recap(game).model_copy(update={"ai_generated": True})
+
+    class FakeStoryService:
+        short_requested = False
+
+        async def generate(self, requested_game: Game, *, short: bool = False) -> GameRecap:
+            assert requested_game is game
+            self.short_requested = short
+            return generated
+
+    service = FakeStoryService()
+    engine = EditorialEngine(
+        scoring_weights=_default_weights(),
+        manual_overrides={},
+        suppress_story_ids=[],
+        large_market_teams=set(),
+        lead_story_service=service,  # type: ignore[arg-type]
+    )
+
+    result = await engine._generate_secondary_recap(game)
+
+    assert service.short_requested is True
+    assert result.ai_generated is True
 
 
 def test_phillies_fallback_headline_covers_scheduled_game():
