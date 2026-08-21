@@ -17,6 +17,7 @@ from src.statistics.processor import StatisticsProcessor
 logger = logging.getLogger(__name__)
 
 NATIONALLY_TELEVISED = {"ESPN", "FOX", "FS1", "TBS", "MLB Network"}
+NL_EAST_TEAMS = {"ATL", "MIA", "NYM", "PHI", "WSH"}
 
 
 def _involves_team(game: Game, team_abbr: str) -> bool:
@@ -31,6 +32,21 @@ def prioritize_primary_team(
     if not primary:
         return scored_games
     lead = primary[0]
+    return [lead, *(item for item in scored_games if item is not lead)]
+
+
+def prioritize_division_team(
+    scored_games: list[tuple[Game, float]], division_teams: set[str]
+) -> list[tuple[Game, float]]:
+    """Lead with the highest-ranked completed game involving a division club."""
+    division = [
+        item
+        for item in scored_games
+        if item[0].home.team_abbr in division_teams or item[0].away.team_abbr in division_teams
+    ]
+    if not division:
+        return scored_games
+    lead = division[0]
     return [lead, *(item for item in scored_games if item is not lead)]
 
 
@@ -119,16 +135,20 @@ class EditorialEngine:
 
         scored_games.sort(key=lambda x: x[1], reverse=True)
         if self._require_primary_team_lead:
-            scored_games = prioritize_primary_team(scored_games, self._primary_team)
+            has_primary_game = any(
+                _involves_team(game, self._primary_team) for game, _score in scored_games
+            )
+            if has_primary_game:
+                scored_games = prioritize_primary_team(scored_games, self._primary_team)
+            else:
+                scored_games = prioritize_division_team(scored_games, NL_EAST_TEAMS)
 
         lead_story: Story | None = None
         secondary_stories: list[Story] = []
         game_recaps: list[GameRecap] = []
         ai_fallbacks = 0
 
-        if self._require_primary_team_lead and not any(
-            _involves_team(game, self._primary_team) for game, _score in scored_games
-        ):
+        if self._require_primary_team_lead and not scored_games:
             primary_game = next(
                 (game for game in normalized.games if _involves_team(game, self._primary_team)),
                 None,
@@ -146,7 +166,7 @@ class EditorialEngine:
                     headline=recap.headline,
                     deck=recap.deck,
                     byline=recap.byline,
-                    paragraphs=recap.paragraphs,
+                    paragraphs=self._lead_paragraphs(recap, game),
                     source_data_references=recap.source_data_references,
                     story_type=StoryType.lead,
                     teams=recap.teams,
@@ -197,6 +217,22 @@ class EditorialEngine:
                 ai_fallbacks=ai_fallbacks,
             ),
         )
+
+    @staticmethod
+    def _lead_paragraphs(recap: GameRecap, game: Game) -> list[str]:
+        """Keep the newspaper lead substantial without exceeding five paragraphs."""
+        paragraphs = list(recap.paragraphs[:5])
+        if len(paragraphs) < 3:
+            home_runs = game.home.runs or 0
+            away_runs = game.away.runs or 0
+            winner = game.home if home_runs > away_runs else game.away
+            loser = game.away if home_runs > away_runs else game.home
+            margin = abs(home_runs - away_runs)
+            paragraphs.append(
+                f"The result went into the books with the {winner.team_name} finishing "
+                f"{margin} run{'s' if margin != 1 else ''} ahead of the {loser.team_name}."
+            )
+        return paragraphs[:5]
 
     async def _generate_recap(self, game: Game) -> GameRecap:
         """Generate a recap via AI, falling back to deterministic template."""

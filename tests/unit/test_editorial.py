@@ -1,7 +1,12 @@
 # tests/unit/test_editorial.py
 from __future__ import annotations
 
-from src.editorial.engine import EditorialEngine, prioritize_primary_team
+from src.editorial.engine import (
+    NL_EAST_TEAMS,
+    EditorialEngine,
+    prioritize_division_team,
+    prioritize_primary_team,
+)
 from src.editorial.fallback import generate_fallback_recap
 from src.editorial.scoring import ScoringContext, ScoringWeights, score_game
 from src.models.game import Game, GameStatus, Pitcher, TeamGameLine
@@ -119,6 +124,33 @@ def test_phillies_game_is_always_prioritized_for_front_page():
 
     assert ordered[0][0].game_id == 2
     assert ordered[1][0].game_id == 1
+
+
+def test_nl_east_game_is_prioritized_when_phillies_did_not_play():
+    national_game = _make_game(game_id=1)
+    nationals_game = _make_game(game_id=2)
+    nationals_game.away = TeamGameLine(
+        team_id=120,
+        team_abbr="WSH",
+        team_name="Washington Nationals",
+        runs=3,
+    )
+
+    ordered = prioritize_division_team(
+        [(national_game, 10.0), (nationals_game, 1.0)], NL_EAST_TEAMS
+    )
+
+    assert ordered[0][0].game_id == 2
+    assert ordered[1][0].game_id == 1
+
+
+def test_lead_story_is_three_to_five_paragraphs():
+    game = _make_game()
+    recap = generate_fallback_recap(game)
+
+    paragraphs = EditorialEngine._lead_paragraphs(recap, game)
+
+    assert 3 <= len(paragraphs) <= 5
 
 
 def test_phillies_fallback_headline_covers_scheduled_game():
