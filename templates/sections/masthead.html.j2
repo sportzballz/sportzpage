@@ -9,7 +9,7 @@
     <h1 class="masthead-title">The Daily Sportz Page</h1>
     <div class="masthead-meta">
       <span class="masthead-date">
-        {{ edition.edition.generated_at.strftime('%A, %B %-d, %Y') if edition.edition.generated_at else edition.edition.date }}
+        {{ format_edition_date(edition.edition.date) }}
       </span>
       <span class="masthead-sep">&bull;</span>
       <span class="masthead-edition-type">{{ edition.edition.type | title }} Edition</span>

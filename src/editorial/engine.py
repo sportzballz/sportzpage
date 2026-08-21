@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 from src.editorial.fallback import generate_fallback_recap
@@ -106,7 +106,9 @@ class EditorialEngine:
             edition_type_override=edition_type_override,
         )
 
-    async def generate(self, normalized_path: Path) -> Edition:
+    async def generate(
+        self, normalized_path: Path, edition_date: date | None = None
+    ) -> Edition:
         """Generate an Edition from a normalized data file."""
         raw = json.loads(normalized_path.read_text())
         normalized = NormalizedData.model_validate(raw)
@@ -196,7 +198,7 @@ class EditorialEngine:
             edition=EditionMetadata(
                 id=edition_id,
                 type=edition_type,
-                date=datetime.now(UTC).strftime("%Y-%m-%d"),
+                date=(edition_date or datetime.now(UTC).date()).isoformat(),
                 generated_at=datetime.now(UTC),
                 data_current_through=datetime.now(UTC),
                 status="draft",

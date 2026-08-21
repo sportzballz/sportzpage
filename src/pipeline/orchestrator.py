@@ -191,7 +191,7 @@ class GenerationOrchestrator:
     async def _generate(self, normalized_path: Path, run: GenerationRun) -> Path:
         run.record_phase("generating", PhaseStatus.in_progress)
         engine = EditorialEngine.from_config()
-        edition = await engine.generate(normalized_path)
+        edition = await engine.generate(normalized_path, edition_date=self._game_date)
         run.game_count = len(edition.games)
         run.story_count = len(edition.game_recaps) + len(edition.secondary_stories)
         run.leader_category_count = (

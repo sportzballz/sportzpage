@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from datetime import date, datetime
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape, StrictUndefined
 from src.models.edition import Edition
@@ -25,6 +26,7 @@ class HTMLRenderer:
         )
         self._manifest = static_asset_manifest or {}
         self._env.globals["asset"] = self._asset_url
+        self._env.globals["format_edition_date"] = self._format_edition_date
 
     @classmethod
     def from_config(cls, templates_dir: Path | None = None) -> "HTMLRenderer":
@@ -40,6 +42,11 @@ class HTMLRenderer:
 
     def _asset_url(self, name: str) -> str:
         return self._manifest.get(name, f"static/{name}")
+
+    @staticmethod
+    def _format_edition_date(value: str | date) -> str:
+        parsed = value if isinstance(value, date) else datetime.strptime(value, "%Y-%m-%d").date()
+        return parsed.strftime("%A, %B %-d, %Y")
 
     def render(self, edition: Edition) -> str:
         """Render the edition to an HTML string. Deterministic — no side effects."""

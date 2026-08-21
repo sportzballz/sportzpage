@@ -151,6 +151,7 @@ def test_edition_id_meta_tag():
     html = renderer.render(edition)
     assert 'name="daily-sportz-page-edition-id"' in html
     assert "2026-07-13-0600" in html
+    assert "Monday, July 13, 2026" in html
 
 
 def test_production_urls_use_sportzpage_path():
