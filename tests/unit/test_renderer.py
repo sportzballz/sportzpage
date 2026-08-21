@@ -88,11 +88,16 @@ def test_box_scores_follow_standings():
     assert html.index('id="box-scores"') < html.index('id="league-leaders"')
 
 
-def test_scheduled_games_are_not_duplicated_in_scoreboard():
+def test_scoreboard_has_concise_today_schedule():
     html = make_renderer().render(build_full_slate_edition())
     scoreboard = html.split('id="scoreboard"', 1)[1].split("</section>", 1)[0]
 
-    assert ">Scheduled<" not in scoreboard
+    assert "Today's Schedule" in scoreboard
+    assert "schedule-summary-table" in scoreboard
+    assert "Teams" in scoreboard
+    assert "Time" in scoreboard
+    assert "Venue" in scoreboard
+    assert "Pitcher" not in scoreboard.split("Today's Schedule", 1)[1]
 
 
 def test_history_event_fragments_render_as_one_headline():

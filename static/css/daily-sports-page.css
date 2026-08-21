@@ -385,6 +385,32 @@ body {
   background: var(--color-stripe);
 }
 
+.scoreboard-schedule {
+  margin-bottom: 0.5rem;
+}
+
+.schedule-summary-table {
+  table-layout: fixed;
+}
+
+.schedule-summary-table th:nth-child(1) { width: 25%; }
+.schedule-summary-table th:nth-child(2) { width: 22%; }
+.schedule-summary-table th:nth-child(3) { width: 53%; }
+
+.schedule-summary-table th,
+.schedule-summary-table td {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+
+.schedule-time {
+  white-space: nowrap;
+}
+
+.schedule-venue {
+  overflow-wrap: anywhere;
+}
+
 .score-col {
   text-align: center;
 }

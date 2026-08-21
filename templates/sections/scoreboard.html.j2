@@ -4,6 +4,7 @@
 
   {% set final_games = edition.games | selectattr('status', 'equalto', 'final') | list %}
   {% set live_games = edition.games | selectattr('status', 'equalto', 'in_progress') | list %}
+  {% set sched_games = edition.games | selectattr('status', 'equalto', 'scheduled') | list %}
   {% set postponed_games = edition.games | rejectattr('status', 'in', ['final', 'in_progress', 'scheduled']) | list %}
 
   {% if live_games %}
@@ -105,6 +106,31 @@
   </div>
   {% endif %}
 
+  {% if sched_games %}
+  <div class="scoreboard-group scoreboard-schedule">
+    <h3 class="scoreboard-group-label">Today's Schedule</h3>
+    <table class="scoreboard-table schedule-summary-table" aria-label="Today's scheduled games">
+      <caption class="visually-hidden">Today's scheduled games</caption>
+      <thead>
+        <tr>
+          <th scope="col">Teams</th>
+          <th scope="col">Time</th>
+          <th scope="col">Venue</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for game in sched_games %}
+        <tr>
+          <td class="matchup-cell"><strong>{{ game.away.team_abbr }}</strong> @ <strong>{{ game.home.team_abbr }}</strong></td>
+          <td class="schedule-time">{{ game.game_time_et or 'TBD' }}</td>
+          <td class="schedule-venue">{{ game.venue_name or '&mdash;' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
   {% if postponed_games %}
   <div class="scoreboard-group">
     <h3 class="scoreboard-group-label">Postponed / Delayed / Suspended</h3>
@@ -134,7 +160,7 @@
   </div>
   {% endif %}
 
-  {% if not final_games and not live_games and not postponed_games %}
+  {% if not final_games and not live_games and not sched_games and not postponed_games %}
   <p class="no-content">Scores will appear here after play begins. See Today's Games below.</p>
   {% endif %}
 </section>
