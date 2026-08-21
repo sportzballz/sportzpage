@@ -15,6 +15,15 @@ from src.models.injuries import Injury, RosterStatus, InjuryConfidence
 
 logger = logging.getLogger(__name__)
 
+MLB_DIVISION_NAMES = {
+    201: "AL East",
+    202: "AL Central",
+    200: "AL West",
+    204: "NL East",
+    205: "NL Central",
+    203: "NL West",
+}
+
 
 class NormalizedData(BaseModel):
     """All provider data normalized to domain models, ready for editorial processing."""
@@ -451,7 +460,9 @@ class Normalizer:
         for record in raw.get("records", []):
             div = record.get("division", {})
             div_id = div.get("id", 0)
-            div_name = div.get("nameShort", div.get("name", ""))
+            div_name = (
+                div.get("nameShort") or div.get("name") or MLB_DIVISION_NAMES.get(div_id, "")
+            )
             rows = [
                 self._parse_standings_row(tr, teams_map) for tr in record.get("teamRecords", [])
             ]

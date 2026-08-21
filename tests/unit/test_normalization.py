@@ -366,6 +366,19 @@ class TestNormalize:
         assert result.standings is not None
         assert len(result.standings.divisions) == 1
 
+    def test_standings_map_division_id_when_api_omits_name(self) -> None:
+        record = _make_standings_record(
+            204,
+            "NL East",
+            [(143, "PHI", "Philadelphia Phillies", 70, 50)],
+        )
+        record["division"] = {"id": 204, "link": "/api/v1/divisions/204"}
+
+        result = self.normalizer.normalize({"standings": {"records": [record]}})
+
+        assert result.standings is not None
+        assert result.standings.divisions[0].division_name == "NL East"
+
     def test_normalize_empty_raw(self) -> None:
         result = self.normalizer.normalize({})
         assert result.games == []
