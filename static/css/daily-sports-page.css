@@ -1439,9 +1439,24 @@ caption,
     border-left: 1px solid var(--color-border);
   }
 
-  #front-page { grid-column: span 8; }
-  #scoreboard { grid-column: span 4; }
-  #todays-games { grid-column: span 4; }
+  .top-news-grid {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(20rem, 1fr);
+    align-items: start;
+  }
+
+  #todays-games { grid-column: 1 / -1; }
+
+  .top-news-rail {
+    min-width: 0;
+    border-left: 1px solid var(--color-border);
+  }
+
+  .top-news-grid > #front-page,
+  .top-news-rail > .section {
+    border-left: 0;
+  }
   #standings { grid-column: 1 / -1; }
   #league-leaders { grid-column: span 6; }
   #history { grid-column: span 6; }
@@ -1462,12 +1477,22 @@ caption,
     border-left: 1px solid var(--color-border-light);
   }
   .standings-divisions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .games-list, .atl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .games-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .atl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .team-leaders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .box-batting,
+  .box-pitching {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
 }
 
 @media (max-width: 899px) {
+  .top-news-grid,
+  .top-news-rail { display: contents; }
   .masthead-kicker { grid-template-columns: 1fr; gap: 0.15rem; text-align: center; }
   .masthead-kicker span:last-child { text-align: center; }
   .masthead-meta { justify-content: center; }
@@ -1619,8 +1644,8 @@ caption,
 }
 
 .box-score {
-  margin: 0 0 1.25rem;
-  padding: 0 0 0.9rem;
+  margin: 0 0 0.75rem;
+  padding: 0 0 0.55rem;
   border-bottom: 3px double var(--color-border-dark);
   break-inside: auto;
 }
@@ -1641,6 +1666,16 @@ caption,
     column-count: 2;
     column-gap: 1.15rem;
     column-rule: 1px solid var(--color-border);
+  }
+
+  .box-team-section {
+    min-width: 0;
+  }
+
+  .box-batting-table,
+  .box-pitching-table {
+    width: 100%;
+    table-layout: fixed;
   }
 }
 

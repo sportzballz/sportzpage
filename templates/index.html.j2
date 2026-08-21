@@ -36,8 +36,12 @@
     <button class="print-btn" type="button" onclick="window.print()">Print</button>
   </nav>
   <main>
-    {% include "sections/front-page.html.j2" %}
-    {% include "sections/scoreboard.html.j2" %}
+    <div class="top-news-grid">
+      {% include "sections/front-page.html.j2" %}
+      <div class="top-news-rail">
+        {% include "sections/scoreboard.html.j2" %}
+      </div>
+    </div>
     {% include "sections/todays-games.html.j2" %}
     {% include "sections/standings.html.j2" %}
     {% include "sections/box-scores.html.j2" %}

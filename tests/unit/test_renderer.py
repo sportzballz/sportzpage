@@ -88,6 +88,13 @@ def test_box_scores_follow_standings():
     assert html.index('id="box-scores"') < html.index('id="league-leaders"')
 
 
+def test_scheduled_games_are_not_duplicated_in_scoreboard():
+    html = make_renderer().render(build_full_slate_edition())
+    scoreboard = html.split('id="scoreboard"', 1)[1].split("</section>", 1)[0]
+
+    assert ">Scheduled<" not in scoreboard
+
+
 # ---------------------------------------------------------------------------
 # Test 2: All section IDs present
 # ---------------------------------------------------------------------------
