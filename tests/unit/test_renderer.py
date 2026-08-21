@@ -95,6 +95,14 @@ def test_scheduled_games_are_not_duplicated_in_scoreboard():
     assert ">Scheduled<" not in scoreboard
 
 
+def test_history_event_fragments_render_as_one_headline():
+    html = make_renderer().render(build_full_slate_edition())
+    first_history_item = html.split('class="history-item"', 1)[1].split("</li>", 1)[0]
+
+    assert first_history_item.count('class="history-headline"') == 1
+    assert 'class="history-description"' not in first_history_item
+
+
 # ---------------------------------------------------------------------------
 # Test 2: All section IDs present
 # ---------------------------------------------------------------------------
