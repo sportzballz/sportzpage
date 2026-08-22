@@ -6,12 +6,15 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import re
 import shutil
 from datetime import date
 from pathlib import Path
+from xml.sax.saxutils import escape as xml_escape
 
 
 ARCHIVE_LIMIT = 7
+SITE_URL = "https://thedailysportspage.com"
 
 
 def _copy_tree(source: Path, destination: Path) -> None:
@@ -30,7 +33,23 @@ def _edition_date(directory: Path) -> str | None:
     return directory.name if (directory / "index.html").exists() else None
 
 
-def _page(title: str, body: str, *, description: str) -> str:
+def _json_ld(payload: dict) -> str:
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+
+
+def _page(title: str, body: str, *, description: str, canonical: str) -> str:
+    canonical_url = f"{SITE_URL}{canonical}"
+    structured_data = _json_ld(
+        {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": title,
+            "description": description,
+            "url": canonical_url,
+            "isPartOf": {"@type": "WebSite", "name": "The Daily Sports Page", "url": f"{SITE_URL}/"},
+            "publisher": {"@type": "Organization", "name": "The Daily Sports Page", "url": f"{SITE_URL}/"},
+        }
+    )
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -39,6 +58,15 @@ def _page(title: str, body: str, *, description: str) -> str:
   <meta name="theme-color" content="#8b1e2d">
   <title>{html.escape(title)}</title>
   <meta name="description" content="{html.escape(description)}">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <link rel="canonical" href="{canonical_url}">
+  <meta property="og:site_name" content="The Daily Sports Page">
+  <meta property="og:title" content="{html.escape(title)}">
+  <meta property="og:description" content="{html.escape(description)}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{canonical_url}">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">{structured_data}</script>
   <link rel="icon" href="/static/icons/favicon.ico" sizes="any">
   <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260822-blackletter-masthead">
   <link rel="stylesheet" href="/static/css/subscription.css?v=20260821-layout-fix">
@@ -94,6 +122,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
         "The Daily Sports Page — Today’s Edition",
         body,
         description="Preview today’s sports page and read the previous seven editions free.",
+        canonical="/",
     )
 
 
@@ -109,6 +138,7 @@ def _archive_index(archive_dates: list[str]) -> str:
         f'<section class="free-archive"><p class="section-label">Seven days free</p>'
         f'<h2>Recent editions</h2><div class="archive-grid">{items}</div></section></main>',
         description="Read the previous seven Daily Sports Page editions free.",
+        canonical="/archive/",
     )
 
 
@@ -128,6 +158,71 @@ def _subscribe_page() -> str:
         "Subscribe — The Daily Sports Page",
         body,
         description="Subscribe to The Daily Sports Page for $2 per month.",
+        canonical="/subscribe/",
+    )
+
+
+def _apply_edition_seo(directory: Path, canonical_path: str) -> None:
+    index_path = directory / "index.html"
+    edition_path = directory / "edition.json"
+    if not index_path.exists() or not edition_path.exists():
+        return
+    document = index_path.read_text(encoding="utf-8")
+    if "</head>" not in document:
+        return
+    edition = json.loads(edition_path.read_text(encoding="utf-8"))
+    metadata = edition["edition"]
+    story = edition.get("lead_story") or {}
+    headline = story.get("headline") or f"The Daily Sports Page — {metadata['date']}"
+    description = story.get("deck") or "Daily MLB scores, standings, reporting, and analysis."
+    canonical_url = f"{SITE_URL}{canonical_path}"
+    structured_data = _json_ld(
+        {
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            "headline": headline,
+            "description": description,
+            "datePublished": metadata["date"],
+            "dateModified": metadata["date"],
+            "mainEntityOfPage": canonical_url,
+            "author": {"@type": "Organization", "name": "The Daily Sports Page"},
+            "publisher": {"@type": "Organization", "name": "The Daily Sports Page", "url": f"{SITE_URL}/"},
+        }
+    )
+    document = re.sub(r"\n?\s*<!-- route-seo:start -->.*?<!-- route-seo:end -->", "", document, flags=re.S)
+    document = re.sub(r"\n?\s*<link\s+rel=[\"']canonical[\"'][^>]*>", "", document, flags=re.I)
+    block = f"""
+  <!-- route-seo:start -->
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <link rel="canonical" href="{canonical_url}">
+  <meta property="og:site_name" content="The Daily Sports Page">
+  <meta property="og:url" content="{canonical_url}">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary">
+  <script type="application/ld+json">{structured_data}</script>
+  <!-- route-seo:end -->
+"""
+    index_path.write_text(document.replace("</head>", f"{block}</head>", 1), encoding="utf-8")
+
+
+def _write_discovery_files(output: Path, archive_dates: list[str], current_date: str) -> None:
+    paths = [("/", current_date), ("/archive/", current_date), ("/subscribe/", current_date)]
+    paths.extend([("/subscriber/current/", current_date), ("/football/", current_date)])
+    paths.extend((f"/archive/{day}/", day) for day in archive_dates)
+    urls = "".join(
+        f"  <url><loc>{xml_escape(SITE_URL + path)}</loc><lastmod>{last_modified}</lastmod></url>\n"
+        for path, last_modified in paths
+    )
+    (output / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{urls}</urlset>\n",
+        encoding="utf-8",
+    )
+    (output / "robots.txt").write_text(
+        "User-agent: *\nAllow: /\nDisallow: /delivery/\n"
+        f"Sitemap: {SITE_URL}/sitemap.xml\n",
+        encoding="utf-8",
     )
 
 
@@ -212,6 +307,10 @@ def assemble(build_dir: Path, football_dir: Path, static_dir: Path, previous: Pa
     subscribe = output / "subscribe"
     subscribe.mkdir()
     (subscribe / "index.html").write_text(_subscribe_page(), encoding="utf-8")
+    _apply_edition_seo(current, "/subscriber/current/")
+    for day in archive_dates:
+        _apply_edition_seo(archive_root / day, f"/archive/{day}/")
+    _write_discovery_files(output, archive_dates, current_date)
 
 
 def main() -> None:

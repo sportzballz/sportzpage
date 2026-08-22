@@ -18,7 +18,11 @@ def _write_edition(directory: Path, day: str, marker: str = "full-story-marker")
         },
     }
     (directory / "edition.json").write_text(json.dumps(payload), encoding="utf-8")
-    (directory / "index.html").write_text(f"<html>{marker}</html>", encoding="utf-8")
+    (directory / "index.html").write_text(
+        f'<html><head><link rel="canonical" href="https://thedailysportspage.com/"></head>'
+        f"<body>{marker}</body></html>",
+        encoding="utf-8",
+    )
 
 
 def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None:
@@ -46,6 +50,11 @@ def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None
     assert delivery["protected_url"].endswith("/subscriber/current/")
     assert set(delivery["formats"]) == {"digest_html", "full_html", "print_html"}
     assert json.loads((output / "archive/manifest.json").read_text()) == {"editions": []}
+    current_html = (output / "subscriber/current/index.html").read_text()
+    assert 'rel="canonical" href="https://thedailysportspage.com/subscriber/current/"' in current_html
+    assert '"@type":"NewsArticle"' in current_html
+    assert "Sitemap: https://thedailysportspage.com/sitemap.xml" in (output / "robots.txt").read_text()
+    assert "https://thedailysportspage.com/subscriber/current/" in (output / "sitemap.xml").read_text()
 
 
 def test_promotes_previous_current_and_keeps_seven_free_editions(tmp_path: Path) -> None:
@@ -74,6 +83,11 @@ def test_promotes_previous_current_and_keeps_seven_free_editions(tmp_path: Path)
     assert not (output / "archive/2026-08-13").exists()
     assert not (output / "archive/2026-08-21").exists()
     assert "/archive/2026-08-20/" in (output / "index.html").read_text()
+    archived_html = (output / "archive/2026-08-20/index.html").read_text()
+    assert 'rel="canonical" href="https://thedailysportspage.com/archive/2026-08-20/"' in archived_html
+    assert 'property="og:type" content="article"' in archived_html
+    sitemap = (output / "sitemap.xml").read_text()
+    assert "https://thedailysportspage.com/archive/2026-08-20/" in sitemap
 
 
 def test_accepts_legacy_dated_archive_without_edition_json(tmp_path: Path) -> None:

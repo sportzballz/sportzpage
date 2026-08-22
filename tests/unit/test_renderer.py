@@ -157,7 +157,7 @@ def test_edition_id_meta_tag():
 def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
-    assert 'href="https://thedailysportspage.com/"' in html
+    assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
     assert 'href="static/css/daily-sports-page.css?v=20260822-blackletter-masthead"' in html
     assert 'src="static/js/daily-sports-page.js"' in html
 
