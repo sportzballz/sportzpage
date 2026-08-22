@@ -1,5 +1,9 @@
 from datetime import date
+from pathlib import Path
 
+import pytest
+
+from src.football.ai_recap import FootballLeadStoryService
 from src.football.generator import FootballEditionGenerator
 
 
@@ -45,3 +49,30 @@ def test_generator_accepts_explicit_edition_date() -> None:
     generator = FootballEditionGenerator(date(2026, 8, 20))
 
     assert generator.edition_date.isoformat() == "2026-08-20"
+
+
+@pytest.mark.asyncio
+async def test_football_lead_reuses_daily_cache_without_api_call(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    game = FootballEditionGenerator._games({"events": [_event("401", "NYG", "PHI")]})[0]
+    service = FootballLeadStoryService(api_key="unused", cache_dir=tmp_path)
+    cached = {
+        "headline": "Cached Eagles Lead",
+        "deck": "The published copy stays put.",
+        "paragraphs": ["One.", "Two.", "Three."],
+        "url": game["recap_url"],
+        "ai_generated": True,
+        "espn_game_id": "401",
+        "edition_date": "2026-08-20",
+    }
+    service._save_cached(game, "2026-08-20", cached)
+
+    async def should_not_fetch(_game_id: str) -> str | None:
+        raise AssertionError("ESPN and OpenAI must not be called for a cached NFL lead")
+
+    monkeypatch.setattr(service, "_fetch_recap", should_not_fetch)
+    result = await service.generate(game, "2026-08-20")
+
+    assert result == cached
+    assert service.cache_path(game, "2026-08-20").name == "nfl-2026-08-20-401.json"

@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from scripts.seed_lead_cache import seed, seed_short_recaps
+from scripts.seed_lead_cache import seed, seed_football, seed_short_recaps
 from src.models.story import GameRecap
 
 
@@ -80,3 +80,28 @@ def test_seeds_published_short_recaps(tmp_path: Path) -> None:
 
     assert [path.name for path in seeded] == ["2026-08-21-secondary-short.json"]
     assert GameRecap.model_validate_json(seeded[0].read_text()).ai_generated is True
+
+
+def test_seeds_published_football_lead(tmp_path: Path) -> None:
+    edition = tmp_path / "football-edition.json"
+    edition.write_text(
+        json.dumps(
+            {
+                "edition_date": "2026-08-20",
+                "lead": {
+                    "headline": "Cached Eagles lead",
+                    "deck": "Cached deck",
+                    "paragraphs": ["One.", "Two.", "Three."],
+                    "ai_generated": True,
+                    "espn_game_id": "401",
+                    "edition_date": "2026-08-20",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    cached = seed_football(edition, tmp_path / "cache")
+
+    assert cached == tmp_path / "cache" / "nfl-2026-08-20-401.json"
+    assert json.loads(cached.read_text())["headline"] == "Cached Eagles lead"

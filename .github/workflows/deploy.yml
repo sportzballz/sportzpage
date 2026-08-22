@@ -49,9 +49,13 @@ jobs:
           curl -fsS \
             https://thedailysportspage.com/subscriber/current/edition.json \
             -o /tmp/current-edition.json || true
+          curl -fsS \
+            https://thedailysportspage.com/subscriber/current/football/edition.json \
+            -o /tmp/current-football-edition.json || true
           python scripts/seed_lead_cache.py \
             /tmp/current-edition.json \
-            --game-date "${{ steps.edition.outputs.date }}"
+            --game-date "${{ steps.edition.outputs.date }}" \
+            --football-edition /tmp/current-football-edition.json
 
       - name: Install generator
         run: python -m pip install .

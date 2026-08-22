@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -11,6 +12,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from src.football.ai_recap import FootballLeadStoryService
 
 EASTERN = ZoneInfo("America/New_York")
 SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
@@ -23,6 +26,11 @@ NFC_EAST = {"PHI", "DAL", "NYG", "WSH"}
 class FootballEditionGenerator:
     edition_date: date
     timeout: float = 20.0
+    lead_story_service: FootballLeadStoryService | None = None
+
+    def __post_init__(self) -> None:
+        if self.lead_story_service is None and os.getenv("AI_PROVIDER") == "openai":
+            self.lead_story_service = FootballLeadStoryService(timeout=self.timeout + 25)
 
     async def collect(self) -> dict[str, Any]:
         today = datetime.now(EASTERN).date()
@@ -35,7 +43,12 @@ class FootballEditionGenerator:
             )
         previous_games = self._games(previous)
         today_games = self._games(current)
-        lead = self._select_lead(previous_games)
+        lead_game = self._select_lead_game(previous_games)
+        lead = self._lead_story(lead_game) if lead_game else None
+        if lead_game and self.lead_story_service:
+            lead = await self.lead_story_service.generate(
+                lead_game, self.edition_date.isoformat()
+            ) or lead
         return {
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.edition_date,
@@ -102,12 +115,17 @@ class FootballEditionGenerator:
 
     @staticmethod
     def _select_lead(games: list[dict[str, Any]]) -> dict[str, Any] | None:
+        game = FootballEditionGenerator._select_lead_game(games)
+        return FootballEditionGenerator._lead_story(game) if game else None
+
+    @staticmethod
+    def _select_lead_game(games: list[dict[str, Any]]) -> dict[str, Any] | None:
         completed = [game for game in games if game["completed"]]
         for teams in ({"PHI"}, NFC_EAST):
             match = next((game for game in completed if {game["away"]["abbr"], game["home"]["abbr"]} & teams), None)
             if match:
-                return FootballEditionGenerator._lead_story(match)
-        return FootballEditionGenerator._lead_story(completed[0]) if completed else None
+                return match
+        return completed[0] if completed else None
 
     @staticmethod
     def _lead_story(game: dict[str, Any]) -> dict[str, Any]:
@@ -123,6 +141,9 @@ class FootballEditionGenerator:
                 "The football page will follow the Eagles first when Philadelphia plays, turn next to the NFC East, and still keep the full league slate in view.",
             ],
             "url": game["recap_url"],
+            "ai_generated": False,
+            "espn_game_id": str(game["id"]),
+            "edition_date": "",
         }
 
     @staticmethod

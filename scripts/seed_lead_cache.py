@@ -94,19 +94,45 @@ def seed_short_recaps(edition_path: Path, game_date: str, cache_dir: Path) -> li
     return seeded
 
 
+def seed_football(edition_path: Path, cache_dir: Path) -> Path | None:
+    """Restore the already-published AI football lead for a fresh runner."""
+    if not edition_path.exists():
+        return None
+    edition = json.loads(edition_path.read_text(encoding="utf-8"))
+    lead = edition.get("lead") or {}
+    if not lead.get("ai_generated") or not lead.get("espn_game_id"):
+        return None
+    edition_date = str(lead.get("edition_date") or edition.get("edition_date") or "")[:10]
+    if not edition_date:
+        return None
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    destination = cache_dir / f"nfl-{edition_date}-{lead['espn_game_id']}.json"
+    if not destination.exists():
+        destination.write_text(json.dumps(lead, indent=2) + "\n", encoding="utf-8")
+    return destination
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("edition", type=Path)
     parser.add_argument("--game-date", required=True)
     parser.add_argument("--cache-dir", type=Path, default=Path("build/ai-cache"))
+    parser.add_argument("--football-edition", type=Path)
     args = parser.parse_args()
     lead = seed(args.edition, args.game_date, args.cache_dir)
     recaps = seed_short_recaps(args.edition, args.game_date, args.cache_dir)
+    football = (
+        seed_football(args.football_edition, args.cache_dir)
+        if args.football_edition
+        else None
+    )
     if lead:
         print(f"Seeded {lead}")
     for recap in recaps:
         print(f"Seeded {recap}")
-    if not lead and not recaps:
+    if football:
+        print(f"Seeded {football}")
+    if not lead and not recaps and not football:
         print("No reusable AI stories found")
 
 
