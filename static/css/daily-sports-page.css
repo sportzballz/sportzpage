@@ -23,8 +23,10 @@
   --color-stripe: #f2f0e8;
   --color-positive: #1a4d1a;
   --color-negative: #6b1a1a;
-  --font-serif: Georgia, "Times New Roman", Times, serif;
-  --font-sans: "Helvetica Neue", Arial, Helvetica, sans-serif;
+  --font-body: Georgia, "Times New Roman", Times, serif;
+  --font-headline: "Times New Roman", Times, Georgia, serif;
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-serif: var(--font-body);
   --max-width: 1280px;
   --section-gap: 3rem;
 }
@@ -109,7 +111,7 @@ body {
 }
 
 .masthead-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-headline);
   font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -253,7 +255,7 @@ body {
 }
 
 .section-heading {
-  font-family: var(--font-serif);
+  font-family: var(--font-headline);
   font-size: 1.1rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -307,7 +309,7 @@ body {
 }
 
 .lead-headline {
-  font-family: var(--font-serif);
+  font-family: var(--font-headline);
   font-size: clamp(1.6rem, 3.5vw, 2.5rem);
   font-weight: 700;
   line-height: 1.15;
@@ -374,7 +376,7 @@ body {
 }
 
 .secondary-headline {
-  font-family: var(--font-serif);
+  font-family: var(--font-headline);
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
@@ -685,7 +687,7 @@ body {
 }
 
 .standings-wc-heading {
-  font-family: var(--font-serif);
+  font-family: var(--font-headline);
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -1357,7 +1359,9 @@ body {
   --color-border-dark: #111;
   --color-accent: #111;
   --color-stripe: rgba(0, 0, 0, 0.035);
-  --font-serif: "Times New Roman", Times, Georgia, serif;
+  --font-body: Georgia, "Times New Roman", Times, serif;
+  --font-headline: "Times New Roman", Times, Georgia, serif;
+  --font-serif: var(--font-body);
   --font-sans: Arial, Helvetica, sans-serif;
   --max-width: 1500px;
   --section-gap: 0.85rem;
@@ -1375,6 +1379,16 @@ body {
   font-size: 13px;
   line-height: 1.18;
   padding: 0 0.6rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+caption {
+  font-family: var(--font-headline);
 }
 
 .masthead {
