@@ -1,5 +1,13 @@
 /* static/css/daily-sports-page.css */
 
+@font-face {
+  font-family: "Daily Sports Blackletter";
+  src: url("../fonts/UnifrakturCook-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 /* =========================================================
    BASE & RESET
    ========================================================= */
@@ -25,7 +33,7 @@
   --color-negative: #6b1a1a;
   --font-body: Georgia, "Times New Roman", Times, serif;
   --font-headline: "Times New Roman", Times, Georgia, serif;
-  --font-masthead: Clarendon, "Clarendon LT Std", Rockwell, "Rockwell Extra Bold", "Courier New", Georgia, serif;
+  --font-masthead: "Daily Sports Blackletter", "Old English Text MT", "Engravers Old English", Georgia, serif;
   --font-sans: Arial, Helvetica, sans-serif;
   --font-serif: var(--font-body);
   --max-width: 1280px;
@@ -1417,7 +1425,7 @@ caption {
   margin: 0.16rem 0 0.08rem;
   font-size: clamp(2.35rem, 6vw, 5.5rem);
   line-height: 0.92;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.015em;
 }
 
 .masthead-meta {
