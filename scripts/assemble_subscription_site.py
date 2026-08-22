@@ -191,11 +191,41 @@ def _apply_edition_seo(directory: Path, canonical_path: str) -> None:
     )
     document = re.sub(r"\n?\s*<!-- route-seo:start -->.*?<!-- route-seo:end -->", "", document, flags=re.S)
     document = re.sub(r"\n?\s*<link\s+rel=[\"']canonical[\"'][^>]*>", "", document, flags=re.I)
+    document = re.sub(
+        r"\n?\s*<meta\s+(?:name=[\"'](?:robots|twitter:card)[\"']|property=[\"']og:(?:site_name|title|description|type|url)[\"'])[^>]*>",
+        "",
+        document,
+        flags=re.I,
+    )
+    document = re.sub(
+        r"<title>.*?</title>",
+        f"<title>{html.escape(headline, quote=False)} — The Daily Sports Page</title>",
+        document,
+        count=1,
+        flags=re.I | re.S,
+    )
+    if not re.search(r"<title>.*?</title>", document, flags=re.I | re.S):
+        document = document.replace(
+            "<head>", f"<head><title>{html.escape(headline, quote=False)} — The Daily Sports Page</title>", 1
+        )
+    document = re.sub(
+        r"<meta\s+name=[\"']description[\"'][^>]*>",
+        f'<meta name="description" content="{html.escape(description)}">',
+        document,
+        count=1,
+        flags=re.I,
+    )
+    if not re.search(r"<meta\s+name=[\"']description[\"']", document, flags=re.I):
+        document = document.replace(
+            "</head>", f'<meta name="description" content="{html.escape(description)}">\n</head>', 1
+        )
     block = f"""
   <!-- route-seo:start -->
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <link rel="canonical" href="{canonical_url}">
   <meta property="og:site_name" content="The Daily Sports Page">
+  <meta property="og:title" content="{html.escape(headline)}">
+  <meta property="og:description" content="{html.escape(description)}">
   <meta property="og:url" content="{canonical_url}">
   <meta property="og:type" content="article">
   <meta name="twitter:card" content="summary">

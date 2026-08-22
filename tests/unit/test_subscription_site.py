@@ -53,6 +53,8 @@ def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None
     current_html = (output / "subscriber/current/index.html").read_text()
     assert 'rel="canonical" href="https://thedailysportspage.com/subscriber/current/"' in current_html
     assert '"@type":"NewsArticle"' in current_html
+    assert current_html.count('property="og:type"') == 1
+    assert "Headline for 2026-08-21 — The Daily Sports Page" in current_html
     assert "Sitemap: https://thedailysportspage.com/sitemap.xml" in (output / "robots.txt").read_text()
     assert "https://thedailysportspage.com/subscriber/current/" in (output / "sitemap.xml").read_text()
 
