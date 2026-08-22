@@ -68,7 +68,7 @@ def _page(title: str, body: str, *, description: str, canonical: str) -> str:
   <meta name="twitter:card" content="summary">
   <script type="application/ld+json">{structured_data}</script>
   <link rel="icon" href="/static/icons/favicon.ico" sizes="any">
-  <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260822-blackletter-masthead">
+  <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260822-chomsky-masthead">
   <link rel="stylesheet" href="/static/css/subscription.css?v=20260821-layout-fix">
 </head>
 <body class="subscription-page">

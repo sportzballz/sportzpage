@@ -1,8 +1,8 @@
 /* static/css/daily-sports-page.css */
 
 @font-face {
-  font-family: "Daily Sports Blackletter";
-  src: url("../fonts/UnifrakturCook-Bold.ttf") format("truetype");
+  font-family: "Daily Sports Chomsky";
+  src: url("../fonts/Chomsky.woff2") format("woff2");
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -33,7 +33,7 @@
   --color-negative: #6b1a1a;
   --font-body: Georgia, "Times New Roman", Times, serif;
   --font-headline: "Times New Roman", Times, Georgia, serif;
-  --font-masthead: "Daily Sports Blackletter", "Old English Text MT", "Engravers Old English", Georgia, serif;
+  --font-masthead: "Daily Sports Chomsky", "Old English Text MT", "Engravers Old English", Georgia, serif;
   --font-sans: Arial, Helvetica, sans-serif;
   --font-serif: var(--font-body);
   --max-width: 1280px;
