@@ -34,7 +34,7 @@
   <nav class="section-nav" aria-label="Football page sections">
     <ul>
       <li><a href="#scoreboard">Scoreboard</a></li><li><a href="#todays-games">Today's Games</a></li>
-      <li><a href="#standings">Standings</a></li><li><a href="#around-the-league">Around the NFL</a></li>
+      <li><a href="#standings">Standings</a></li><li><a href="#league-leaders">League Leaders</a></li><li><a href="#around-the-league">Around the NFL</a></li>
     </ul>
     <button class="print-btn" type="button" onclick="window.print()">Print</button>
   </nav>
@@ -68,7 +68,13 @@
       {% if page.standings %}<div class="standings-grid">{% for division in page.standings %}<div class="standings-division"><h3>{{ division.name }}</h3>
         <table><thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th><th>Pct</th><th>Diff</th></tr></thead><tbody>
         {% for row in division.rows %}<tr{% if row.abbr == 'PHI' %} class="is-primary-team"{% endif %}><td>{{ row.abbr }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.ties }}</td><td>{{ row.pct }}</td><td>{{ row.diff }}</td></tr>{% endfor %}
-        </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL standings are not available yet.</p>{% endif %}
+      </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL standings are not available yet.</p>{% endif %}
+    </section>
+    <section id="league-leaders" class="section standings"><h2 class="section-heading">NFL League Leaders{% if page.leaders_season_label %} — {{ page.leaders_season_label }}{% endif %}</h2>
+      {% if page.league_leaders %}<div class="standings-grid league-leaders-grid">{% for category in page.league_leaders %}<div class="standings-division league-leader-category"><h3>{{ category.label }}</h3>
+        <table><thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>{{ category.abbreviation or 'Stat' }}</th></tr></thead><tbody>
+        {% for row in category.rows %}<tr{% if row.team == 'PHI' %} class="is-primary-team"{% endif %}><td>{{ row.rank }}</td><td>{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}{% if row.position %} <small>{{ row.position }}</small>{% endif %}</td><td>{{ row.team }}</td><td><strong>{{ row.value }}</strong></td></tr>{% endfor %}
+        </tbody></table></div>{% endfor %}</div><p class="source-link"><a href="https://www.espn.com/nfl/stats">Full NFL statistics on ESPN</a></p>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
     </section>
     <section id="around-the-league" class="section around-the-league"><h2 class="section-heading">Around the NFL</h2>
       {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{% if story.url %}<a href="{{ story.url }}">{{ story.headline }}</a>{% else %}{{ story.headline }}{% endif %}</h3><p>{{ story.description }}</p></article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}

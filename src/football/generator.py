@@ -19,7 +19,16 @@ EASTERN = ZoneInfo("America/New_York")
 SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
 STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/football/nfl/standings"
 NEWS_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/news"
+LEADERS_URL = "https://site.api.espn.com/apis/site/v3/sports/football/nfl/leaders"
 NFC_EAST = {"PHI", "DAL", "NYG", "WSH"}
+LEADER_CATEGORIES = (
+    "passingYards",
+    "rushingYards",
+    "receivingYards",
+    "totalTackles",
+    "sacks",
+    "interceptions",
+)
 
 
 @dataclass
@@ -35,11 +44,12 @@ class FootballEditionGenerator:
     async def collect(self) -> dict[str, Any]:
         today = datetime.now(EASTERN).date()
         async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
-            previous, current, standings, news = await asyncio.gather(
+            previous, current, standings, news, leaders = await asyncio.gather(
                 self._get(client, SCOREBOARD_URL, {"dates": self.edition_date.strftime("%Y%m%d")}),
                 self._get(client, SCOREBOARD_URL, {"dates": today.strftime("%Y%m%d")}),
                 self._get(client, STANDINGS_URL, {"region": "us", "lang": "en", "contentorigin": "espn", "type": "0", "level": "3"}),
                 self._get(client, NEWS_URL, {"limit": "10"}),
+                self._get_optional(client, LEADERS_URL, {}),
             )
         previous_games = self._games(previous)
         today_games = self._games(current)
@@ -57,6 +67,8 @@ class FootballEditionGenerator:
             "scoreboard": previous_games,
             "today_games": today_games,
             "standings": self._standings(standings),
+            "league_leaders": self._league_leaders(leaders),
+            "leaders_season_label": self._leaders_season_label(leaders),
             "news": self._news(news),
         }
 
@@ -71,6 +83,14 @@ class FootballEditionGenerator:
         )
         response.raise_for_status()
         return response.json()
+
+    async def _get_optional(
+        self, client: httpx.AsyncClient, url: str, params: dict[str, str]
+    ) -> dict[str, Any]:
+        try:
+            return await self._get(client, url, params)
+        except (httpx.HTTPError, ValueError):
+            return {}
 
     @staticmethod
     def _games(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -176,6 +196,65 @@ class FootballEditionGenerator:
             link = (article.get("links", {}).get("web", {}) or {}).get("href", "")
             stories.append({"headline": article.get("headline", "NFL notebook"), "description": article.get("description", ""), "url": link})
         return stories[:8]
+
+    @staticmethod
+    def _league_leaders(payload: dict[str, Any]) -> list[dict[str, Any]]:
+        categories = {
+            category.get("name"): category
+            for category in (payload.get("leaders") or {}).get("categories", [])
+        }
+        result: list[dict[str, Any]] = []
+        for category_name in LEADER_CATEGORIES:
+            category = categories.get(category_name)
+            if not category:
+                continue
+            rows = []
+            for rank, leader in enumerate(category.get("leaders") or [], start=1):
+                athlete = leader.get("athlete") or {}
+                team = leader.get("team") or {}
+                if not athlete.get("displayName"):
+                    continue
+                player_url = next(
+                    (
+                        link.get("href", "")
+                        for link in athlete.get("links") or []
+                        if "playercard" in (link.get("rel") or [])
+                        and str(link.get("href", "")).startswith("https://")
+                    ),
+                    "",
+                )
+                rows.append(
+                    {
+                        "rank": rank,
+                        "name": athlete["displayName"],
+                        "position": (athlete.get("position") or {}).get("abbreviation", ""),
+                        "team": team.get("abbreviation", ""),
+                        "value": leader.get("displayValue", ""),
+                        "url": player_url,
+                    }
+                )
+                if len(rows) == 5:
+                    break
+            if rows:
+                result.append(
+                    {
+                        "name": category_name,
+                        "label": category.get("displayName", category_name),
+                        "abbreviation": category.get("abbreviation", ""),
+                        "rows": rows,
+                    }
+                )
+        return result
+
+    @staticmethod
+    def _leaders_season_label(payload: dict[str, Any]) -> str:
+        season = payload.get("requestedSeason") or payload.get("currentSeason") or {}
+        season_type = season.get("type") or {}
+        return " ".join(
+            part
+            for part in (str(season.get("year") or ""), season_type.get("name", ""))
+            if part
+        )
 
     async def generate(self, output_dir: Path) -> Path:
         data = await self.collect()
