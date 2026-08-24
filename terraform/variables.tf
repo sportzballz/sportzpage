@@ -27,3 +27,14 @@ variable "force_destroy_bucket" {
   type        = bool
   default     = false
 }
+
+variable "access_log_retention_days" {
+  description = "Number of days to retain CloudFront access logs in S3."
+  type        = number
+  default     = 90
+
+  validation {
+    condition     = var.access_log_retention_days >= 30
+    error_message = "Access logs must be retained for at least 30 days."
+  }
+}

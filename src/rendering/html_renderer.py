@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 import logging
+import os
 import re
 from datetime import date, datetime
 from pathlib import Path
@@ -27,6 +28,9 @@ class HTMLRenderer:
         self._manifest = static_asset_manifest or {}
         self._env.globals["asset"] = self._asset_url
         self._env.globals["format_edition_date"] = self._format_edition_date
+        self._env.globals["cloudflare_web_analytics_token"] = os.getenv(
+            "CLOUDFLARE_WEB_ANALYTICS_TOKEN", ""
+        )
 
     @classmethod
     def from_config(cls, templates_dir: Path | None = None) -> "HTMLRenderer":

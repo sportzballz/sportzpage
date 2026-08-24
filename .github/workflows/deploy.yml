@@ -26,6 +26,7 @@ jobs:
       AI_PROVIDER: openai
       AI_MODEL: gpt-5-mini
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 

@@ -1,12 +1,63 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  bucket_name = "thedailysportspage-com-${data.aws_caller_identity.current.account_id}"
+  bucket_name             = "thedailysportspage-com-${data.aws_caller_identity.current.account_id}"
+  access_logs_bucket_name = "${local.bucket_name}-access-logs"
   tags = {
     Application = "The Daily Sportz Page"
     Environment = "production"
     ManagedBy   = "Terraform"
     Repository  = var.github_repository
+  }
+}
+
+resource "aws_s3_bucket" "access_logs" {
+  bucket        = local.access_logs_bucket_name
+  force_destroy = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "access_logs" {
+  bucket                  = aws_s3_bucket.access_logs.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "access_logs" {
+  bucket = aws_s3_bucket.access_logs.id
+
+  rule {
+    id     = "expire-access-logs"
+    status = "Enabled"
+
+    filter {}
+
+    expiration {
+      days = var.access_log_retention_days
+    }
   }
 }
 
@@ -205,6 +256,32 @@ resource "aws_cloudfront_distribution" "site" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+resource "aws_cloudwatch_log_delivery_source" "cloudfront_access" {
+  name         = "thedailysportspage-cloudfront-access"
+  resource_arn = aws_cloudfront_distribution.site.arn
+  log_type     = "ACCESS_LOGS"
+}
+
+resource "aws_cloudwatch_log_delivery_destination" "cloudfront_access" {
+  name          = "thedailysportspage-cloudfront-access-s3"
+  output_format = "json"
+
+  delivery_destination_configuration {
+    destination_resource_arn = aws_s3_bucket.access_logs.arn
+  }
+
+  depends_on = [
+    aws_s3_bucket_ownership_controls.access_logs,
+    aws_s3_bucket_public_access_block.access_logs,
+    aws_s3_bucket_server_side_encryption_configuration.access_logs,
+  ]
+}
+
+resource "aws_cloudwatch_log_delivery" "cloudfront_access" {
+  delivery_source_name     = aws_cloudwatch_log_delivery_source.cloudfront_access.name
+  delivery_destination_arn = aws_cloudwatch_log_delivery_destination.cloudfront_access.arn
 }
 
 data "aws_iam_policy_document" "origin" {

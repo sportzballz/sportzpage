@@ -264,6 +264,9 @@ class FootballEditionGenerator:
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        env.globals["cloudflare_web_analytics_token"] = os.getenv(
+            "CLOUDFLARE_WEB_ANALYTICS_TOKEN", ""
+        )
         html = env.get_template("football.html.j2").render(page=data)
         output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / "edition.json").write_text(json.dumps(data, default=str, indent=2))

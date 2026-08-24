@@ -7,6 +7,8 @@ This stack owns the production infrastructure for `thedailysportspage.com`:
 - ACM certificate for the apex and `www` names;
 - Route 53 hosted zone and alias records;
 - GitHub Actions OIDC provider and a repository-scoped deployment role.
+- CloudFront standard access logs (v2) in JSON in a private, encrypted S3 bucket
+  and retained for 90 days by default.
 
 Resources are created in the SportzBallz AWS account through the `openclaw-agent`
 profile. State is stored separately in the existing protected backend at
@@ -29,6 +31,11 @@ edition to `sportzballz.io/sportzpage/`.
 
 The S3 bucket and CloudFront distribution use `prevent_destroy`. Removing the stack
 therefore requires an explicit reviewed code change rather than an accidental destroy.
+
+For browser-level page views and referrers, create a Cloudflare Web Analytics site
+for `thedailysportspage.com` and set its public token as the GitHub Actions variable
+`CLOUDFLARE_WEB_ANALYTICS_TOKEN`. The generated baseball and football pages include
+the beacon only when that variable is populated.
 
 ## Subscription-ready publication layout
 
