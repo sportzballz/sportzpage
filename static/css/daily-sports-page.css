@@ -1831,6 +1831,13 @@ video { max-width: 100%; height: auto; }
     width: 100%;
     table-layout: fixed;
   }
+
+  .box-batting-table .batter-name-col,
+  .box-pitching-table .pitcher-name-col {
+    width: 30%;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
 }
 
 .story-source-link {
