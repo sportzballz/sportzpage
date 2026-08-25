@@ -8,6 +8,18 @@ from src.football.ai_recap import FootballLeadStoryService
 from src.football.generator import FootballEditionGenerator
 
 
+def test_support_link_is_first_football_menu_item() -> None:
+    template = Path("templates/football.html.j2").read_text()
+    support_link = (
+        '<li><a href="https://buymeacoffee.com/thedailysportspage" '
+        'target="_blank" rel="noopener noreferrer">Buy me a beer 🍻</a></li>'
+    )
+
+    assert template.index(support_link) < template.index(
+        '<li><a href="#scoreboard">Scoreboard</a></li>'
+    )
+
+
 def _event(event_id: str, away: str, home: str, completed: bool = True) -> dict:
     return {
         "id": event_id,

@@ -162,10 +162,14 @@ def test_production_urls_use_sportzpage_path():
     assert 'src="static/js/daily-sports-page.js"' in html
 
 
-def test_support_link_is_not_in_daily_edition():
+def test_support_link_is_first_daily_edition_menu_item():
     html = make_renderer().render(make_minimal_edition())
-    assert "buymeacoffee.com/thedailysportspage" not in html
-    assert "Buy me a beer" not in html
+    support_link = (
+        '<li><a href="https://buymeacoffee.com/thedailysportspage" '
+        'target="_blank" rel="noopener noreferrer">Buy me a beer 🍻</a></li>'
+    )
+    assert support_link in html
+    assert html.index(support_link) < html.index('<li><a href="#scoreboard">Scoreboard</a></li>')
 
 
 def test_todays_games_renders_moneylines_and_run_total_only():
