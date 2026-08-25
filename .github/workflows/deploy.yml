@@ -72,13 +72,13 @@ jobs:
           role-to-assume: arn:aws:iam::716418748259:role/thedailysportspage-github-deploy
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Restore previous current edition and free archive
+      - name: Restore previous current edition and archive
         run: |
           mkdir -p previous-site/subscriber/current previous-site/archive
           aws s3 sync "s3://${SITE_BUCKET}/subscriber/current" previous-site/subscriber/current
           aws s3 sync "s3://${SITE_BUCKET}/archive" previous-site/archive
 
-      - name: Assemble subscription-ready site artifact
+      - name: Assemble honor-supported site artifact
         run: |
           python scripts/assemble_subscription_site.py \
             --previous-site previous-site \

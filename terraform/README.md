@@ -37,14 +37,13 @@ for `thedailysportspage.com` and set its public token as the GitHub Actions vari
 `CLOUDFLARE_WEB_ANALYTICS_TOKEN`. The generated baseball and football pages include
 the beacon only when that variable is populated.
 
-## Subscription-ready publication layout
+## Publication layout
 
-The standalone domain publishes a public teaser at `/`, a rolling seven-edition
-free archive under `/archive/`, and today’s complete edition under
-`/subscriber/current/`. The subscriber and delivery prefixes are temporarily public
-for output monitoring. Restore the CloudFront gate when Stripe-backed authentication
-is connected.
+The standalone domain publishes an honor-supported homepage at `/`, a rolling
+seven-edition archive under `/archive/`, and today’s complete edition under the
+legacy `/subscriber/current/` publication path. All reader-facing editions are open;
+support is optional through the Buy Me a Coffee link on the homepage.
 
-Each run also creates protected delivery artifacts under `/delivery/current/` for
-a concise HTML digest, full HTML, print-ready HTML, and the protected web URL.
-The separate macOS LaunchAgent continues to publish the free SportzBallz edition.
+Each run also creates internal delivery artifacts under `/delivery/current/` for
+a concise HTML digest, full HTML, print-ready HTML, and the public edition URL.
+The separate macOS LaunchAgent continues to publish the SportzBallz edition.

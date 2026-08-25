@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assemble the public teaser, rolling archive, and private current edition."""
+"""Assemble the honor-supported homepage, rolling archive, and current edition."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ import shutil
 from datetime import date
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
-
 
 ARCHIVE_LIMIT = 7
 SITE_URL = "https://thedailysportspage.com"
@@ -68,8 +67,8 @@ def _page(title: str, body: str, *, description: str, canonical: str) -> str:
   <meta name="twitter:card" content="summary">
   <script type="application/ld+json">{structured_data}</script>
   <link rel="icon" href="/static/icons/favicon.ico" sizes="any">
-  <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260822-chomsky-masthead">
-  <link rel="stylesheet" href="/static/css/subscription.css?v=20260821-layout-fix">
+  <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260825-honor-system">
+  <link rel="stylesheet" href="/static/css/subscription.css?v=20260825-honor-system">
 </head>
 <body class="subscription-page">
   <header class="masthead">
@@ -92,73 +91,60 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
     archive = "".join(
         f'<li><a href="/archive/{day}/">{date.fromisoformat(day).strftime("%A, %B %-d, %Y")}</a></li>'
         for day in archive_dates
-    ) or "<li>The first free archive edition will appear tomorrow.</li>"
+    ) or "<li>The first archive edition will appear tomorrow.</li>"
     body = f"""
   <main class="subscription-shell" id="main-content">
     <section class="subscription-hero">
       <p class="edition-label">Today’s edition &bull; {html.escape(metadata['date'])}</p>
       <h2>{html.escape(headline)}</h2>
       <p class="subscription-deck">{html.escape(deck)}</p>
-      <div class="teaser-fade" aria-hidden="true"></div>
-      <a class="subscribe-button" href="/subscriber/current/">Read today’s complete edition — free preview</a>
-      <p class="delivery-note">The subscription gate is temporarily disabled while editions are monitored.</p>
+      <a class="subscribe-button" href="/subscriber/current/">Read today’s complete edition</a>
+      <p class="delivery-note">
+        The Daily Sports Page is open to everyone and supported on the honor system.
+      </p>
+      <a class="support-button" href="https://buymeacoffee.com/thedailysportspage"
+         target="_blank" rel="noopener noreferrer"
+         aria-label="Buy The Daily Sports Page a beer, once or monthly (opens in a new tab)">
+        Buy me a beer 🍻
+      </a>
     </section>
     <section class="subscription-benefits">
-      <h2>One daily sports page. Your choice of delivery.</h2>
+      <h2>Independent daily coverage, open to everyone.</h2>
       <ul>
         <li>Full baseball and football editions</li>
-        <li>Protected web access from any device</li>
-        <li>Full email edition or concise inbox digest</li>
+        <li>Open web access from any device</li>
+        <li>Support only when the coverage earns it</li>
         <li>Print-ready edition for reading offline</li>
+        <li>One-time or monthly tips through Buy Me a Coffee</li>
       </ul>
     </section>
     <section class="free-archive">
-      <p class="section-label">Read before you subscribe</p>
-      <h2>Previous seven editions — free</h2>
+      <p class="section-label">Recent coverage</p>
+      <h2>Previous seven editions</h2>
       <ul>{archive}</ul>
     </section>
   </main>"""
     return _page(
         "The Daily Sports Page — Today’s Edition",
         body,
-        description="Preview today’s sports page and read the previous seven editions free.",
+        description="Read today’s complete sports page and the previous seven editions.",
         canonical="/",
     )
 
 
 def _archive_index(archive_dates: list[str]) -> str:
     items = "".join(
-        f'<article class="archive-card"><p>Free edition</p><h2><a href="/archive/{day}/">'
+        f'<article class="archive-card"><p>Daily edition</p><h2><a href="/archive/{day}/">'
         f'{date.fromisoformat(day).strftime("%A, %B %-d, %Y")}</a></h2></article>'
         for day in archive_dates
     ) or '<p class="no-content">The rolling archive begins with the next daily publication.</p>'
     return _page(
-        "Free Archive — The Daily Sports Page",
-        f'<main class="subscription-shell"><p><a href="/">&larr; Today’s preview</a></p>'
-        f'<section class="free-archive"><p class="section-label">Seven days free</p>'
+        "Archive — The Daily Sports Page",
+        f'<main class="subscription-shell"><p><a href="/">&larr; Today’s edition</a></p>'
+        f'<section class="free-archive"><p class="section-label">Recent coverage</p>'
         f'<h2>Recent editions</h2><div class="archive-grid">{items}</div></section></main>',
-        description="Read the previous seven Daily Sports Page editions free.",
+        description="Read the previous seven Daily Sports Page editions.",
         canonical="/archive/",
-    )
-
-
-def _subscribe_page() -> str:
-    body = """
-  <main class="subscription-shell">
-    <section class="subscription-hero subscribe-panel">
-      <p class="edition-label">Founding subscription</p>
-      <h2>The complete daily edition for $2/month</h2>
-      <p class="subscription-deck">Secure checkout is being connected. Today’s edition is temporarily available as a free preview.</p>
-      <p>Subscribers will be able to read through a protected URL or choose a full HTML edition, concise digest, or print-ready delivery in their inbox.</p>
-      <a class="subscribe-button" href="/subscriber/current/">Read today’s free preview</a>
-      <p><a href="/archive/">Read the previous seven editions free</a></p>
-    </section>
-  </main>"""
-    return _page(
-        "Subscribe — The Daily Sports Page",
-        body,
-        description="Subscribe to The Daily Sports Page for $2 per month.",
-        canonical="/subscribe/",
     )
 
 
@@ -235,8 +221,23 @@ def _apply_edition_seo(directory: Path, canonical_path: str) -> None:
     index_path.write_text(document.replace("</head>", f"{block}</head>", 1), encoding="utf-8")
 
 
+def _remove_legacy_edition_support_link(directory: Path) -> None:
+    """Keep support calls to action on the homepage, including for archived editions."""
+    index_path = directory / "index.html"
+    if not index_path.exists():
+        return
+    document = index_path.read_text(encoding="utf-8")
+    document = re.sub(
+        r"\s*<li\s+class=[\"']support-item[\"']>.*?</li>",
+        "",
+        document,
+        flags=re.I | re.S,
+    )
+    index_path.write_text(document, encoding="utf-8")
+
+
 def _write_discovery_files(output: Path, archive_dates: list[str], current_date: str) -> None:
-    paths = [("/", current_date), ("/archive/", current_date), ("/subscribe/", current_date)]
+    paths = [("/", current_date), ("/archive/", current_date)]
     paths.extend([("/subscriber/current/", current_date), ("/football/", current_date)])
     paths.extend((f"/archive/{day}/", day) for day in archive_dates)
     urls = "".join(
@@ -265,7 +266,7 @@ def _email_digest(edition: dict) -> str:
 <div style="max-width:640px;margin:auto"><p style="font:700 12px Arial;color:#8b1e2d;text-transform:uppercase">{metadata['date']}</p>
 <h1 style="border-bottom:4px double #444">The Daily Sports Page</h1><h2>{headline}</h2><p>{deck}</p>
 <p><a href="https://thedailysportspage.com/subscriber/current/" style="background:#8b1e2d;color:white;padding:12px 18px;text-decoration:none">Read the complete edition</a></p>
-<p style="font:12px Arial;color:#666">Subscriber access is required. Delivery preferences will be available after account activation.</p></div>
+<p style="font:12px Arial;color:#666">The Daily Sports Page is open to everyone and supported on the honor system.</p></div>
 </body></html>"""
 
 
@@ -314,7 +315,7 @@ def assemble(build_dir: Path, football_dir: Path, static_dir: Path, previous: Pa
         json.dumps(
             {
                 "edition_date": current_date,
-                "protected_url": "https://thedailysportspage.com/subscriber/current/",
+                "edition_url": "https://thedailysportspage.com/subscriber/current/",
                 "formats": {
                     "digest_html": "email.html",
                     "full_html": "full.html",
@@ -334,11 +335,10 @@ def assemble(build_dir: Path, football_dir: Path, static_dir: Path, previous: Pa
     (archive_root / "manifest.json").write_text(
         json.dumps({"editions": archive_dates}, indent=2) + "\n", encoding="utf-8"
     )
-    subscribe = output / "subscribe"
-    subscribe.mkdir()
-    (subscribe / "index.html").write_text(_subscribe_page(), encoding="utf-8")
+    _remove_legacy_edition_support_link(current)
     _apply_edition_seo(current, "/subscriber/current/")
     for day in archive_dates:
+        _remove_legacy_edition_support_link(archive_root / day)
         _apply_edition_seo(archive_root / day, f"/archive/{day}/")
     _write_discovery_files(output, archive_dates, current_date)
 

@@ -27,6 +27,9 @@
 .subscribe-button { display: inline-block; margin: 1rem auto .5rem; padding: .9rem 1.2rem; color: #fff; background: #8b1e2d; font: 800 .9rem/1 var(--font-sans); text-decoration: none; text-transform: uppercase; letter-spacing: .04em; }
 .subscribe-button:hover { background: #651421; }
 .subscribe-button.is-disabled { background: #777; cursor: not-allowed; }
+.support-button { display: inline-block; margin: .5rem auto 1rem; padding: .9rem 1.2rem; color: #fff; background: #111; border: 2px solid #111; font: 800 .9rem/1 var(--font-sans); text-decoration: none; text-transform: uppercase; letter-spacing: .04em; }
+.support-button:hover,
+.support-button:focus-visible { background: #8b1e2d; border-color: #8b1e2d; }
 .delivery-note { color: #555; font: .82rem var(--font-sans); }
 .subscription-benefits { margin-top: 1rem; columns: 2; column-gap: 3rem; }
 .subscription-benefits h2 { column-span: all; margin-bottom: 1rem; }
@@ -52,7 +55,8 @@
   .free-archive { padding: 1.1rem .9rem; }
   .subscription-hero h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); }
   .subscription-deck { font-size: 1rem; }
-  .subscribe-button { display: block; width: 100%; line-height: 1.2; }
+  .subscribe-button,
+  .support-button { display: block; width: 100%; line-height: 1.2; }
   .subscription-benefits { columns: 1; }
   .archive-grid { grid-template-columns: 1fr; }
 }

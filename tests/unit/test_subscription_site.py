@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -25,7 +26,7 @@ def _write_edition(directory: Path, day: str, marker: str = "full-story-marker")
     )
 
 
-def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None:
+def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path) -> None:
     build = tmp_path / "build"
     football = tmp_path / "football"
     static = tmp_path / "static"
@@ -40,14 +41,19 @@ def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None
     landing = (output / "index.html").read_text(encoding="utf-8")
     assert "Headline for 2026-08-21" in landing
     assert "full-story-marker" not in landing
-    assert "free preview" in landing
-    assert 'subscription.css?v=20260821-layout-fix' in landing
+    assert "open to everyone and supported on the honor system" in landing
+    assert "Buy me a beer 🍻" in landing
+    assert "https://buymeacoffee.com/thedailysportspage" in landing
+    landing_text = re.sub(r"<[^>]+>", " ", landing).lower()
+    assert "free" not in landing_text
+    assert "subscribe" not in landing_text
+    assert 'subscription.css?v=20260825-honor-system' in landing
     assert 'href="/subscriber/current/"' in landing
     assert "full-story-marker" in (output / "subscriber/current/index.html").read_text()
     assert "football-full-marker" in (output / "subscriber/current/football/index.html").read_text()
     assert "Read the complete edition" in (output / "delivery/current/email.html").read_text()
     delivery = json.loads((output / "delivery/current/manifest.json").read_text())
-    assert delivery["protected_url"].endswith("/subscriber/current/")
+    assert delivery["edition_url"].endswith("/subscriber/current/")
     assert set(delivery["formats"]) == {"digest_html", "full_html", "print_html"}
     assert json.loads((output / "archive/manifest.json").read_text()) == {"editions": []}
     current_html = (output / "subscriber/current/index.html").read_text()
@@ -59,7 +65,7 @@ def test_assembles_teaser_protected_current_and_delivery(tmp_path: Path) -> None
     assert "https://thedailysportspage.com/subscriber/current/" in (output / "sitemap.xml").read_text()
 
 
-def test_promotes_previous_current_and_keeps_seven_free_editions(tmp_path: Path) -> None:
+def test_promotes_previous_current_and_keeps_seven_editions(tmp_path: Path) -> None:
     build = tmp_path / "build"
     football = tmp_path / "football"
     static = tmp_path / "static"
@@ -69,6 +75,15 @@ def test_promotes_previous_current_and_keeps_seven_free_editions(tmp_path: Path)
 
     previous = tmp_path / "previous"
     _write_edition(previous / "subscriber/current", "2026-08-20", "yesterday-full")
+    previous_index = previous / "subscriber/current/index.html"
+    previous_index.write_text(
+        previous_index.read_text().replace(
+            "</body>",
+            '<ul><li class="support-item">'
+            '<a href="https://buymeacoffee.com/thedailysportspage">'
+            "Buy me a beer 🍻</a></li></ul></body>",
+        )
+    )
     for offset in range(2, 10):
         day = (date(2026, 8, 21) - timedelta(days=offset)).isoformat()
         _write_edition(previous / "archive" / day, day)
@@ -86,10 +101,14 @@ def test_promotes_previous_current_and_keeps_seven_free_editions(tmp_path: Path)
     assert not (output / "archive/2026-08-21").exists()
     assert "/archive/2026-08-20/" in (output / "index.html").read_text()
     archived_html = (output / "archive/2026-08-20/index.html").read_text()
+    assert "buymeacoffee.com" not in archived_html
+    assert "Buy me a beer" not in archived_html
     assert 'rel="canonical" href="https://thedailysportspage.com/archive/2026-08-20/"' in archived_html
     assert 'property="og:type" content="article"' in archived_html
     sitemap = (output / "sitemap.xml").read_text()
     assert "https://thedailysportspage.com/archive/2026-08-20/" in sitemap
+    assert "https://thedailysportspage.com/support/" not in sitemap
+    assert "https://thedailysportspage.com/subscribe/" not in sitemap
 
 
 def test_accepts_legacy_dated_archive_without_edition_json(tmp_path: Path) -> None:
@@ -110,7 +129,7 @@ def test_accepts_legacy_dated_archive_without_edition_json(tmp_path: Path) -> No
     assert (output / "archive/2026-08-20/index.html").read_text() == "legacy newspaper"
 
 
-def test_cloudfront_function_exposes_preview_and_routes_football_to_it() -> None:
+def test_cloudfront_function_routes_football_to_current_edition() -> None:
     code = Path("terraform/functions/directory-index.js").read_text(encoding="utf-8")
     assert "uri === '/football'" in code
     assert "location: { value: '/subscriber/current/football/' }" in code
