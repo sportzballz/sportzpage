@@ -158,8 +158,18 @@ def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
     assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
-    assert 'href="static/css/daily-sports-page.css?v=20260825-boxscore-columns"' in html
+    assert 'href="static/css/daily-sports-page.css?v=20260825-support-button"' in html
     assert 'src="static/js/daily-sports-page.js"' in html
+
+
+def test_support_link_is_safe_and_prominent():
+    html = make_renderer().render(make_minimal_edition())
+    assert 'href="https://buymeacoffee.com/thedailysportspage"' in html
+    assert 'class="support-btn"' in html
+    assert 'target="_blank"' in html
+    assert 'rel="noopener noreferrer"' in html
+    assert "once or monthly" in html
+    assert "Buy me a beer 🍻" in html
 
 
 def test_todays_games_renders_moneylines_and_run_total_only():
@@ -312,4 +322,4 @@ def test_lead_story_renders():
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
     assert "Daily Sports Page Staff" in html
-    assert "daily-sports-page.css?v=20260825-boxscore-columns" in html
+    assert "daily-sports-page.css?v=20260825-support-button" in html

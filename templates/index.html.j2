@@ -20,7 +20,7 @@
   <link rel="icon" href="{{ asset('icons/favicon.ico') }}" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32.png') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
-  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260825-boxscore-columns">
+  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260825-support-button">
 </head>
 <body>
   <a href="#front-page" class="skip-link">Skip to content</a>
@@ -38,6 +38,7 @@
       <li><a href="#team-leaders">Team Leaders</a></li>
       <li><a href="#around-the-league">Around the League</a></li>
       <li><a href="#transactions">Transactions</a></li>
+      {% include "sections/support-link.html.j2" %}
     </ul>
     <button class="print-btn" type="button" onclick="window.print()">Print</button>
   </nav>
