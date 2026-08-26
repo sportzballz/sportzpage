@@ -115,7 +115,6 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
         <li>Open web access from any device</li>
         <li>Support only when the coverage earns it</li>
         <li>Print-ready edition for reading offline</li>
-        <li>One-time or monthly tips through Buy Me a Coffee</li>
       </ul>
     </section>
     <section class="free-archive">
