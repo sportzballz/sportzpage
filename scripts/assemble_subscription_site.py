@@ -120,7 +120,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
     </section>
     <section class="free-archive">
       <p class="section-label">Recent coverage</p>
-      <h2>Previous seven editions</h2>
+      <h2>Last Week in Sports</h2>
       <ul>{archive}</ul>
     </section>
   </main>"""

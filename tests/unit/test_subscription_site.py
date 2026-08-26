@@ -42,6 +42,8 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     assert "Headline for 2026-08-21" in landing
     assert "full-story-marker" not in landing
     assert "open to everyone and supported on the honor system" in landing
+    assert "Last Week in Sports" in landing
+    assert "Previous seven editions" not in landing
     assert "Buy me a beer 🍻" in landing
     assert "https://buymeacoffee.com/thedailysportspage" in landing
     landing_text = re.sub(r"<[^>]+>", " ", landing).lower()
