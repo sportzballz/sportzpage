@@ -1926,6 +1926,10 @@ video { max-width: 100%; height: auto; }
    the available width before columns are removed; phones retain the core race
    columns and omit only secondary split/detail columns. */
 @media screen and (max-width: 1199px) {
+  .postseason-standings .standings-table-wrapper {
+    overflow-x: hidden;
+  }
+
   .postseason-table {
     width: 100%;
     min-width: 0;
