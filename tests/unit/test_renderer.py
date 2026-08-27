@@ -189,7 +189,7 @@ def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
     assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
-    assert 'href="static/css/daily-sports-page.css?v=20260827-responsive-tables"' in html
+    assert 'href="static/css/daily-sports-page.css?v=20260827-responsive-tables-2"' in html
     assert 'src="static/js/daily-sports-page.js"' in html
 
 
@@ -353,4 +353,4 @@ def test_lead_story_renders():
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
     assert "Daily Sports Page Staff" in html
-    assert "daily-sports-page.css?v=20260827-responsive-tables" in html
+    assert "daily-sports-page.css?v=20260827-responsive-tables-2" in html
