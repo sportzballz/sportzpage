@@ -4,7 +4,8 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "15 10 * * *"
+    - cron: "17 3-23 * * *"
+      timezone: "America/New_York"
   workflow_dispatch:
 
 permissions:
@@ -16,8 +17,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  publication-check:
     if: vars.DAILY_SPORTS_PAGE_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.publication.outputs.should_publish }}
+    steps:
+      - name: Check whether today's edition is already live
+        id: publication
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [[ "$EVENT_NAME" != "schedule" ]]; then
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          TODAY="$(TZ=America/New_York date +%F)"
+          curl -fsS \
+            https://thedailysportspage.com/subscriber/current/edition.json \
+            -o /tmp/current-edition.json || true
+          PUBLISHED_DATE="$(jq -r '.edition.date // empty' /tmp/current-edition.json 2>/dev/null || true)"
+
+          if [[ "$PUBLISHED_DATE" == "$TODAY" ]]; then
+            echo "Today's edition ($TODAY) is already live; no retry needed."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Today's edition is missing (live: ${PUBLISHED_DATE:-unavailable}); publishing now."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    needs: publication-check
+    if: needs.publication-check.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     env:
       AWS_REGION: us-east-1
