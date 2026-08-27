@@ -7,7 +7,13 @@ from pydantic import BaseModel, Field
 from src.models.game import BettingLine, Game, GameStatus, LinescoreInning, Pitcher, TeamBoxLine, TeamGameLine
 from src.models.history import HistoricalItem
 from src.history_text import split_sentences
-from src.models.standings import StandingsRow, DivisionStandings, WildCardStandings, Standings
+from src.models.standings import (
+    DivisionStandings,
+    PlayoffStandings,
+    Standings,
+    StandingsRow,
+    WildCardStandings,
+)
 from src.models.leaders import LeaderEntry, LeagueLeaders, TeamSeasonLeaders, TeamStatLeader
 from src.models.transactions import Transaction, TransactionType
 from src.models.story import Story, StoryType
@@ -480,7 +486,46 @@ class Normalizer:
                 )
                 seen_division_ids.add(div_id)
 
-        return Standings(divisions=divisions, wild_cards=[])
+        playoff_pictures: list[PlayoffStandings] = []
+        wild_cards: list[WildCardStandings] = []
+        for league in ("AL", "NL"):
+            league_rows = [
+                row
+                for division in divisions
+                if division.division_name.startswith(league)
+                for row in division.rows
+            ]
+            division_leaders = sorted(
+                (row for row in league_rows if row.division_leader),
+                key=lambda row: row.league_rank or 99,
+            )
+            wild_card_rows = sorted(
+                (
+                    row
+                    for row in league_rows
+                    if not row.division_leader and row.wild_card_rank is not None
+                ),
+                key=lambda row: row.wild_card_rank or 99,
+            )
+            if wild_card_rows:
+                wild_cards.append(WildCardStandings(league=league, rows=wild_card_rows))
+
+            playoff_rows = [
+                row.model_copy(update={"playoff_seed": seed})
+                for seed, row in enumerate(
+                    [*division_leaders, *wild_card_rows[:3]], start=1
+                )
+            ]
+            if playoff_rows:
+                playoff_pictures.append(
+                    PlayoffStandings(league=league, rows=playoff_rows)
+                )
+
+        return Standings(
+            divisions=divisions,
+            playoff_pictures=playoff_pictures,
+            wild_cards=wild_cards,
+        )
 
     def _parse_standings_row(
         self, tr: dict[str, Any], teams_map: dict[int, str] = {}
@@ -493,6 +538,7 @@ class Normalizer:
         away = split_records.get("away", {})
         last_10 = split_records.get("lastTen", {})
         streak = tr.get("streak", {}).get("streakCode", "")
+        division_rank = self._optional_rank(tr.get("divisionRank"))
         return StandingsRow(
             team_id=team_id,
             team_abbr=abbr or "UNK",
@@ -506,7 +552,19 @@ class Normalizer:
             home_record=f"{home.get('wins', 0)}-{home.get('losses', 0)}",
             away_record=f"{away.get('wins', 0)}-{away.get('losses', 0)}",
             run_differential=tr.get("runDifferential", 0),
+            wild_card_gb=tr.get("wildCardGamesBack"),
+            division_rank=division_rank,
+            league_rank=self._optional_rank(tr.get("leagueRank")),
+            wild_card_rank=self._optional_rank(tr.get("wildCardRank")),
+            division_leader=division_rank == 1,
         )
+
+    @staticmethod
+    def _optional_rank(value: Any) -> int | None:
+        try:
+            return int(value) if value not in (None, "") else None
+        except (TypeError, ValueError):
+            return None
 
     def _normalize_transactions(
         self, raw: dict[str, Any], teams_map: dict[int, str] | None = None

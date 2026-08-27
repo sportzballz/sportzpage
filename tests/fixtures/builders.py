@@ -10,7 +10,13 @@ from src.models.game import Game, GameStatus, LinescoreInning, Pitcher, TeamBoxL
 from src.models.history import HistoricalItem
 from src.models.injuries import Injury, InjuryConfidence, RosterStatus
 from src.models.leaders import LeaderEntry, LeagueLeaders, TeamGameLeaders, TeamPerformer
-from src.models.standings import DivisionStandings, Standings, StandingsRow, WildCardStandings
+from src.models.standings import (
+    DivisionStandings,
+    PlayoffStandings,
+    Standings,
+    StandingsRow,
+    WildCardStandings,
+)
 from src.models.story import GameRecap, Story, StoryType
 from src.models.transactions import Transaction, TransactionType
 
@@ -168,21 +174,58 @@ def _make_standings() -> Standings:
     al_wc = WildCardStandings(
         league="AL",
         rows=[
-            _standings_row(111, "BOS", "Boston Red Sox", 50, 40, 0.0),
-            _standings_row(145, "CWS", "Chicago White Sox", 52, 38, 0.0),
-            _standings_row(142, "MIN", "Minnesota Twins", 50, 40, 2.0),
+            _standings_row(111, "BOS", "Boston Red Sox", 50, 40, 0.0).model_copy(
+                update={"wild_card_rank": 1, "wild_card_gb": "+2.0"}
+            ),
+            _standings_row(142, "MIN", "Minnesota Twins", 50, 40, 2.0).model_copy(
+                update={"wild_card_rank": 2, "wild_card_gb": "+2.0"}
+            ),
+            _standings_row(133, "OAK", "Oakland Athletics", 48, 42, 4.0).model_copy(
+                update={"wild_card_rank": 3, "wild_card_gb": "-"}
+            ),
         ],
     )
     nl_wc = WildCardStandings(
         league="NL",
         rows=[
-            _standings_row(144, "ATL", "Atlanta Braves", 50, 40, 0.0),
-            _standings_row(121, "NYM", "New York Mets", 52, 38, 0.0),
-            _standings_row(112, "CHC", "Chicago Cubs", 53, 37, 0.0),
+            _standings_row(121, "NYM", "New York Mets", 52, 38, 0.0).model_copy(
+                update={"wild_card_rank": 1, "wild_card_gb": "+2.0"}
+            ),
+            _standings_row(144, "ATL", "Atlanta Braves", 50, 40, 2.0).model_copy(
+                update={"wild_card_rank": 2, "wild_card_gb": "+1.0"}
+            ),
+            _standings_row(137, "SF", "San Francisco Giants", 52, 38, 2.0).model_copy(
+                update={"wild_card_rank": 3, "wild_card_gb": "-"}
+            ),
+        ],
+    )
+    al_playoffs = PlayoffStandings(
+        league="AL",
+        rows=[
+            al_west.rows[0].model_copy(update={"playoff_seed": 1, "division_leader": True}),
+            al_east.rows[0].model_copy(update={"playoff_seed": 2, "division_leader": True}),
+            al_central.rows[0].model_copy(update={"playoff_seed": 3, "division_leader": True}),
+            *[
+                row.model_copy(update={"playoff_seed": seed})
+                for seed, row in enumerate(al_wc.rows, start=4)
+            ],
+        ],
+    )
+    nl_playoffs = PlayoffStandings(
+        league="NL",
+        rows=[
+            nl_west.rows[0].model_copy(update={"playoff_seed": 1, "division_leader": True}),
+            nl_east.rows[0].model_copy(update={"playoff_seed": 2, "division_leader": True}),
+            nl_central.rows[0].model_copy(update={"playoff_seed": 3, "division_leader": True}),
+            *[
+                row.model_copy(update={"playoff_seed": seed})
+                for seed, row in enumerate(nl_wc.rows, start=4)
+            ],
         ],
     )
     return Standings(
         divisions=[al_east, al_central, al_west, nl_east, nl_central, nl_west],
+        playoff_pictures=[al_playoffs, nl_playoffs],
         wild_cards=[al_wc, nl_wc],
     )
 

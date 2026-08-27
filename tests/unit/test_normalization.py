@@ -286,7 +286,61 @@ class TestNormalizeStandings:
     def test_empty_records(self) -> None:
         standings = self.normalizer._normalize_standings({"records": []})
         assert standings.divisions == []
+        assert standings.playoff_pictures == []
         assert standings.wild_cards == []
+
+    def test_builds_each_leagues_playoff_picture_and_wild_card_race(self) -> None:
+        records = []
+        team_id = 100
+        for league, division_ids in (("AL", (201, 202, 200)), ("NL", (204, 205, 203))):
+            for division_index, division_id in enumerate(division_ids, start=1):
+                leader = {
+                    "team": {"id": team_id, "name": f"{league} Leader {division_index}"},
+                    "wins": 80 - division_index,
+                    "losses": 50 + division_index,
+                    "winningPercentage": ".600",
+                    "gamesBack": "-",
+                    "wildCardGamesBack": "-",
+                    "divisionRank": "1",
+                    "leagueRank": str(division_index),
+                    "records": {"splitRecords": []},
+                }
+                contender = {
+                    "team": {"id": team_id + 1, "name": f"{league} Wild Card {division_index}"},
+                    "wins": 74 - division_index,
+                    "losses": 56 + division_index,
+                    "winningPercentage": ".560",
+                    "gamesBack": "5.0",
+                    "wildCardGamesBack": "-" if division_index == 3 else f"+{4 - division_index}.0",
+                    "divisionRank": "2",
+                    "leagueRank": str(division_index + 3),
+                    "wildCardRank": str(division_index),
+                    "records": {"splitRecords": []},
+                }
+                records.append(
+                    {
+                        "division": {
+                            "id": division_id,
+                            "nameShort": f"{league} Division {division_index}",
+                        },
+                        "teamRecords": [leader, contender],
+                    }
+                )
+                team_id += 2
+
+        standings = self.normalizer._normalize_standings({"records": records})
+
+        assert [picture.league for picture in standings.playoff_pictures] == ["AL", "NL"]
+        assert [row.playoff_seed for row in standings.playoff_pictures[0].rows] == [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+        ]
+        assert [row.wild_card_rank for row in standings.wild_cards[0].rows] == [1, 2, 3]
+        assert standings.wild_cards[0].rows[2].wild_card_gb == "-"
 
 
 # ---------------------------------------------------------------------------

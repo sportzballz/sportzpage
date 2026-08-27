@@ -52,6 +52,68 @@
   </div>
   {% endmacro %}
 
+  {% macro playoff_table(rows, caption) %}
+  <div class="standings-table-wrapper postseason-table-wrapper">
+    <table class="standings-table postseason-table">
+      <caption>{{ caption }}</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="num-col">Seed</th>
+          <th scope="col" class="team-col">Team</th>
+          <th scope="col" class="num-col">W</th>
+          <th scope="col" class="num-col">L</th>
+          <th scope="col" class="num-col">PCT</th>
+          <th scope="col" class="status-col">Position</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="num-col">{{ row.playoff_seed }}</td>
+          <td class="team-col">{{ row.team_name }}</td>
+          <td class="num-col">{{ row.wins }}</td>
+          <td class="num-col">{{ row.losses }}</td>
+          <td class="num-col">{{ "%.3f"|format(row.pct) | replace('0.', '.') }}</td>
+          <td class="status-col">
+            {% if row.division_leader %}Division leader{% else %}Wild Card {{ row.wild_card_rank }}{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endmacro %}
+
+  {% macro wild_card_table(rows, caption) %}
+  <div class="standings-table-wrapper postseason-table-wrapper">
+    <table class="standings-table postseason-table wild-card-table">
+      <caption>{{ caption }}</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="num-col">WC</th>
+          <th scope="col" class="team-col">Team</th>
+          <th scope="col" class="num-col">W</th>
+          <th scope="col" class="num-col">L</th>
+          <th scope="col" class="num-col">PCT</th>
+          <th scope="col" class="num-col">GB</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr class="{% if row.wild_card_rank and row.wild_card_rank <= 3 %}playoff-position{% elif row.wild_card_rank == 4 %}wild-card-cutline{% endif %}">
+          <td class="num-col">{{ row.wild_card_rank }}</td>
+          <td class="team-col">{{ row.team_name }}</td>
+          <td class="num-col">{{ row.wins }}</td>
+          <td class="num-col">{{ row.losses }}</td>
+          <td class="num-col">{{ "%.3f"|format(row.pct) | replace('0.', '.') }}</td>
+          <td class="num-col">{{ row.wild_card_gb if row.wild_card_gb not in (none, '0', '0.0') else '&mdash;' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endmacro %}
+
   {% for league_code, league_name in [('AL', 'American League'), ('NL', 'National League')] %}
   <section class="standings-league" aria-labelledby="standings-{{ league_code | lower }}">
     <h3 id="standings-{{ league_code | lower }}" class="standings-league-heading">{{ league_name }}</h3>
@@ -62,17 +124,21 @@
         {% endif %}
       {% endfor %}
     </div>
+
+    <div class="postseason-standings">
+      {% for picture in edition.standings.playoff_pictures %}
+        {% if picture.league == league_code %}
+        {{ playoff_table(picture.rows, league_code ~ ' Playoff Picture') }}
+        {% endif %}
+      {% endfor %}
+      {% for wc in edition.standings.wild_cards %}
+        {% if wc.league == league_code %}
+        {{ wild_card_table(wc.rows, league_code ~ ' Wild Card Standings') }}
+        {% endif %}
+      {% endfor %}
+    </div>
   </section>
   {% endfor %}
-
-  {% if edition.standings.wild_cards %}
-  <div class="standings-wildcards">
-    <h3 class="standings-wc-heading">Wild Card Races</h3>
-    {% for wc in edition.standings.wild_cards %}
-    {{ standings_table(wc.rows, wc.league ~ ' Wild Card') }}
-    {% endfor %}
-  </div>
-  {% endif %}
 
   {% else %}
   <p class="no-content">Standings are not available for this edition.</p>

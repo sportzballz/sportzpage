@@ -695,6 +695,30 @@ body {
   margin-top: 2rem;
 }
 
+.postseason-standings {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.postseason-table {
+  min-width: 420px;
+}
+
+.postseason-table .status-col {
+  text-align: left;
+  white-space: nowrap;
+}
+
+.wild-card-table .playoff-position {
+  background: #edf5e7;
+}
+
+.wild-card-table .wild-card-cutline {
+  border-top: 3px double var(--color-accent);
+}
+
 .standings-wc-heading {
   font-family: var(--font-headline);
   font-size: 1rem;
@@ -1231,6 +1255,10 @@ body {
 
   .standings-divisions {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .postseason-standings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .games-list {

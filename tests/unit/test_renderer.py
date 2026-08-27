@@ -81,6 +81,17 @@ def test_standings_have_league_and_division_labels():
     assert "West Division" in html
 
 
+def test_standings_render_playoff_and_wild_card_tables_for_each_league():
+    html = make_renderer().render(build_full_slate_edition())
+
+    assert "AL Playoff Picture" in html
+    assert "NL Playoff Picture" in html
+    assert "AL Wild Card Standings" in html
+    assert "NL Wild Card Standings" in html
+    assert "Division leader" in html
+    assert "Wild Card 1" in html
+
+
 def test_box_scores_follow_standings():
     html = make_renderer().render(build_full_slate_edition())
 
