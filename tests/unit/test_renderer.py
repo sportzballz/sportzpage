@@ -76,9 +76,8 @@ def test_standings_have_league_and_division_labels():
 
     assert "American League" in html
     assert "National League" in html
-    assert "East Division" in html
-    assert "Central Division" in html
-    assert "West Division" in html
+    for caption in ("AL East", "AL Central", "AL West", "NL East", "NL Central", "NL West"):
+        assert caption in html
 
 
 def test_standings_render_playoff_and_wild_card_tables_for_each_league():
@@ -86,8 +85,8 @@ def test_standings_render_playoff_and_wild_card_tables_for_each_league():
 
     assert "AL Playoff Picture" in html
     assert "NL Playoff Picture" in html
-    assert "AL Wild Card Standings" in html
-    assert "NL Wild Card Standings" in html
+    assert "AL Wildcard Hunt" in html
+    assert "NL Wildcard Hunt" in html
     assert "Division leader" in html
     assert "Wild Card 1" in html
 

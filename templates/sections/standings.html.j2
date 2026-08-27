@@ -120,7 +120,7 @@
     <div class="standings-divisions">
       {% for division in edition.standings.divisions %}
         {% if division.division_name.startswith(league_code) %}
-        {{ standings_table(division.rows, division.division_name | replace(league_code ~ ' ', '') ~ ' Division') }}
+        {{ standings_table(division.rows, division.division_name) }}
         {% endif %}
       {% endfor %}
     </div>
@@ -133,7 +133,7 @@
       {% endfor %}
       {% for wc in edition.standings.wild_cards %}
         {% if wc.league == league_code %}
-        {{ wild_card_table(wc.rows, league_code ~ ' Wild Card Standings') }}
+        {{ wild_card_table(wc.rows, league_code ~ ' Wildcard Hunt') }}
         {% endif %}
       {% endfor %}
     </div>
