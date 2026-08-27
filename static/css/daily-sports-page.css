@@ -442,6 +442,44 @@ body {
   background: var(--color-stripe);
 }
 
+.weekly-football-scoreboard { grid-column: 1 / -1; }
+.football-top-news-grid { display: block; }
+
+.football-week-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.football-week-table th:nth-child(1) { width: 16%; }
+.football-week-table th:nth-child(2) { width: 42%; }
+.football-week-table th:nth-child(3) { width: 20%; }
+.football-week-table th:nth-child(4) { width: 22%; }
+
+.football-week-table td { overflow-wrap: anywhere; }
+
+.football-week-table tr.is-today {
+  background: #fff4c2;
+  box-shadow: inset 0.28rem 0 #8b1e2d;
+}
+
+.section-heading small {
+  font: 600 0.65em/1 var(--font-sans);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+@media screen and (max-width: 599px) {
+  .football-week-table { font-size: 0.68rem; }
+  .football-week-table th,
+  .football-week-table td { padding: 0.28rem 0.2rem; }
+  .football-week-table th:nth-child(1) { width: 22%; }
+  .football-week-table th:nth-child(2) { width: 36%; }
+  .football-week-table th:nth-child(3) { width: 22%; }
+  .football-week-table th:nth-child(4) { width: 20%; }
+  .football-week-table td small { font-size: 0.82em; }
+}
+
 .scoreboard-schedule {
   margin-bottom: 0.5rem;
 }

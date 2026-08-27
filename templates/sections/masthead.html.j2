@@ -12,24 +12,14 @@
         {{ format_edition_date(edition.edition.date) }}
       </span>
       <span class="masthead-sep">&bull;</span>
-      <span class="masthead-edition-type">{{ edition.edition.type | title }} Edition</span>
+      <span class="masthead-edition-type">{{ daypart_edition(edition.edition.generated_at) }}</span>
       <span class="masthead-sep">&bull;</span>
       <span class="masthead-generated">
-        Generated at
-        {% if edition.edition.generated_at %}
-          {{ edition.edition.generated_at.strftime('%I:%M %p %Z') }}
-        {% else %}
-          &mdash;
-        {% endif %}
+        Written at {{ format_eastern_time(edition.edition.generated_at) }}
       </span>
       <span class="masthead-sep">&bull;</span>
       <span class="masthead-freshness">
-        Data current through
-        {% if edition.edition.data_current_through %}
-          {{ edition.edition.data_current_through.strftime('%I:%M %p %Z') }}
-        {% else %}
-          &mdash;
-        {% endif %}
+        Volume {{ volume_number(edition.edition.date) }}
       </span>
     </div>
   </div>

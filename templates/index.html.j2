@@ -20,7 +20,7 @@
   <link rel="icon" href="{{ asset('icons/favicon.ico') }}" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32.png') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
-  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260827-responsive-tables-2">
+  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260827-football-weekly">
 </head>
 <body>
   <a href="#front-page" class="skip-link">Skip to content</a>
@@ -60,9 +60,7 @@
   </main>
   <footer class="site-footer">
     <p>The Daily Sports Page &mdash; {{ edition.edition.date }} &mdash;
-    {% if edition.edition.generated_at %}
-      Generated at {{ edition.edition.generated_at.strftime('%I:%M %p %Z') }}
-    {% endif %}
+    {% if edition.edition.generated_at %}Written at {{ format_eastern_time(edition.edition.generated_at) }}{% endif %}
     </p>
   </footer>
   <script src="{{ asset('js/daily-sports-page.js') }}"></script>

@@ -189,7 +189,7 @@ def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
     assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
-    assert 'href="static/css/daily-sports-page.css?v=20260827-responsive-tables-2"' in html
+    assert 'href="static/css/daily-sports-page.css?v=20260827-football-weekly"' in html
     assert 'src="static/js/daily-sports-page.js"' in html
 
 
@@ -228,7 +228,7 @@ def test_todays_games_renders_moneylines_and_run_total_only():
 
 
 # ---------------------------------------------------------------------------
-# Test 4: Masthead has generated_at and data_current_through separately
+# Test 4: Masthead shows Eastern written time and Roman-numeral volume
 # ---------------------------------------------------------------------------
 
 
@@ -236,12 +236,11 @@ def test_masthead_timestamps():
     edition = make_minimal_edition()
     renderer = make_renderer()
     html = renderer.render(edition)
-    # generated_at: 6:00 AM UTC
-    assert "Generated at" in html
-    # data_current_through: 5:55 AM UTC
-    assert "Data current through" in html
-    # The two times should appear in the masthead and be distinct
-    assert "06:00" in html or "06:00" in html or "AM" in html
+    assert "Written at 2:00 AM EDT" in html
+    assert "Morning Edition" in html
+    assert "Volume CIII" in html
+    assert "Generated at" not in html
+    assert "Data current through" not in html
 
 
 # ---------------------------------------------------------------------------
@@ -353,4 +352,4 @@ def test_lead_story_renders():
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
     assert "Daily Sports Page Staff" in html
-    assert "daily-sports-page.css?v=20260827-responsive-tables-2" in html
+    assert "daily-sports-page.css?v=20260827-football-weekly" in html

@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://thedailysportspage.com/football/">
   <meta name="twitter:card" content="summary">
   <link rel="icon" href="../static/icons/favicon.ico" sizes="any">
-  <link rel="stylesheet" href="../static/css/daily-sports-page.css?v=20260827-responsive-tables-2">
+  <link rel="stylesheet" href="../static/css/daily-sports-page.css?v=20260827-football-weekly">
 </head>
 <body>
   <a href="#front-page" class="skip-link">Skip to content</a>
@@ -25,8 +25,9 @@
       <h1 class="masthead-title">The Daily Sports Page</h1>
       <div class="masthead-meta">
         <span class="masthead-date">{{ page.edition_date.strftime('%A, %B %-d, %Y') }}</span>
-        <span class="masthead-sep">&bull;</span><span>{{ page.season_label }} Football Edition</span>
-        <span class="masthead-sep">&bull;</span><span>Generated at {{ page.generated_at.strftime('%-I:%M %p %Z') }}</span>
+        <span class="masthead-sep">&bull;</span><span>{{ daypart_edition(page.generated_at) }}</span>
+        <span class="masthead-sep">&bull;</span><span>Written at {{ format_eastern_time(page.generated_at) }}</span>
+        <span class="masthead-sep">&bull;</span><span>Volume {{ volume_number(page.edition_date) }}</span>
       </div>
     </div>
   </header>
@@ -34,13 +35,13 @@
   <nav class="section-nav" aria-label="Football page sections">
     <ul>
       <li><a href="https://buymeacoffee.com/thedailysportspage" target="_blank" rel="noopener noreferrer">Buy me a beer 🍻</a></li>
-      <li><a href="#scoreboard">Scoreboard</a></li><li><a href="#todays-games">Today's Games</a></li>
+      <li><a href="#scoreboard">Weekly Scoreboard &amp; Schedule</a></li>
       <li><a href="#standings">Standings</a></li><li><a href="#league-leaders">League Leaders</a></li><li><a href="#around-the-league">Around the NFL</a></li>
     </ul>
     <button class="print-btn" type="button" onclick="window.print()">Print</button>
   </nav>
   <main>
-    <div class="top-news-grid">
+    <div class="top-news-grid football-top-news-grid">
       <section id="front-page" class="front-page section">
         {% if page.lead %}
         <article class="lead-story">
@@ -51,19 +52,12 @@
         </article>
         {% else %}<p class="no-content">The next NFL game story will appear after play is complete.</p>{% endif %}
       </section>
-      <div class="top-news-rail">
-        <section id="scoreboard" class="scoreboard section"><h2 class="section-heading">Scoreboard</h2>
-          {% if page.scoreboard %}<table class="scoreboard-table" aria-label="NFL scores"><tbody>
-          {% for game in page.scoreboard %}<tr><td><strong>{{ game.away.abbr }}</strong><br><strong>{{ game.home.abbr }}</strong></td><td class="score"><strong>{{ game.away.score }}</strong><br><strong>{{ game.home.score }}</strong></td><td>{{ game.status }}</td></tr>{% endfor %}
-          </tbody></table>{% else %}<p class="no-content">No NFL games were played in this edition window.</p>{% endif %}
-        </section>
-      </div>
     </div>
-    <section id="todays-games" class="section"><h2 class="section-heading">Today's NFL Games</h2>
-      {% if page.today_games %}<div class="games-grid">{% for game in page.today_games %}<article class="game-card">
-        <h3>{{ game.away.abbr }} at {{ game.home.abbr }}</h3><p class="game-time">{{ game.time }} &bull; {{ game.venue }}</p>
-        {% if game.broadcast %}<p>{{ game.broadcast }}</p>{% endif %}{% if game.odds %}<p class="betting-line">Line: {{ game.odds }}{% if game.over_under %} &bull; O/U {{ game.over_under }}{% endif %}</p>{% endif %}
-      </article>{% endfor %}</div>{% else %}<p class="no-content">No NFL games are scheduled today.</p>{% endif %}
+    <section id="scoreboard" class="scoreboard section weekly-football-scoreboard"><h2 class="section-heading">{{ page.week_label }} Scoreboard &amp; Schedule{% if page.week_detail %} <small>{{ page.week_detail }}</small>{% endif %}</h2>
+      {% if page.scoreboard %}<div class="standings-table-wrapper"><table class="scoreboard-table football-week-table" aria-label="{{ page.week_label }} NFL scores and schedule">
+        <thead><tr><th>Date</th><th>Matchup</th><th>Score / Time</th><th>Status / TV</th></tr></thead><tbody>
+        {% for game in page.scoreboard %}<tr{% if game.is_today %} class="is-today"{% endif %}><td>{% if game.is_today %}<strong>Today</strong><br>{% endif %}{{ game.date_label }}</td><td><strong>{{ game.away.abbr }} at {{ game.home.abbr }}</strong><br><small>{{ game.venue }}</small></td><td>{% if game.completed %}<strong>{{ game.away.score }}–{{ game.home.score }}</strong>{% else %}<strong>{{ game.time }}</strong>{% endif %}</td><td>{{ game.status }}{% if game.broadcast %}<br><small>{{ game.broadcast }}</small>{% endif %}</td></tr>{% endfor %}
+        </tbody></table></div>{% else %}<p class="no-content">No NFL games are available for {{ page.week_label }}.</p>{% endif %}
     </section>
     <section id="standings" class="section standings"><h2 class="section-heading">NFL Standings</h2>
       {% if page.standings %}<div class="standings-grid">{% for division in page.standings %}<div class="standings-division"><h3>{{ division.name }}</h3>

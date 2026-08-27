@@ -14,6 +14,7 @@ import httpx
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.football.ai_recap import FootballLeadStoryService
+from src.rendering.edition_meta import daypart_edition, format_eastern_time, volume_number
 
 EASTERN = ZoneInfo("America/New_York")
 SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
@@ -44,15 +45,25 @@ class FootballEditionGenerator:
     async def collect(self) -> dict[str, Any]:
         today = datetime.now(EASTERN).date()
         async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
-            previous, current, standings, news, leaders = await asyncio.gather(
-                self._get(client, SCOREBOARD_URL, {"dates": self.edition_date.strftime("%Y%m%d")}),
-                self._get(client, SCOREBOARD_URL, {"dates": today.strftime("%Y%m%d")}),
+            edition_scoreboard = await self._get(
+                client, SCOREBOARD_URL, {"dates": self.edition_date.strftime("%Y%m%d")}
+            )
+            week = self._week_context(edition_scoreboard)
+            weekly_params = {"dates": str(week["season_year"])}
+            if week["season_type"] and week["number"]:
+                weekly_params.update(
+                    {"seasontype": str(week["season_type"]), "week": str(week["number"])}
+                )
+            weekly, standings, news, leaders = await asyncio.gather(
+                self._get(client, SCOREBOARD_URL, weekly_params),
                 self._get(client, STANDINGS_URL, {"region": "us", "lang": "en", "contentorigin": "espn", "type": "0", "level": "3"}),
                 self._get(client, NEWS_URL, {"limit": "10"}),
                 self._get_optional(client, LEADERS_URL, {}),
             )
-        previous_games = self._games(previous)
-        today_games = self._games(current)
+        previous_games = self._games(edition_scoreboard)
+        weekly_games = self._games(weekly)
+        for game in weekly_games:
+            game["is_today"] = game["date"] == today.isoformat()
         lead_game = self._select_lead_game(previous_games)
         lead = self._lead_story(lead_game) if lead_game else None
         if lead_game and self.lead_story_service:
@@ -62,10 +73,11 @@ class FootballEditionGenerator:
         return {
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.edition_date,
-            "season_label": ((current.get("leagues") or [{}])[0].get("season") or {}).get("type", {}).get("name", "NFL"),
+            "season_label": week["season_label"],
+            "week_label": week["label"],
+            "week_detail": week["detail"],
             "lead": lead,
-            "scoreboard": previous_games,
-            "today_games": today_games,
+            "scoreboard": weekly_games,
             "standings": self._standings(standings),
             "league_leaders": self._league_leaders(leaders),
             "leaders_season_label": self._leaders_season_label(leaders),
@@ -113,6 +125,8 @@ class FootballEditionGenerator:
                 "status": status.get("description", "Scheduled"),
                 "completed": bool(status.get("completed")),
                 "detail": status.get("shortDetail") or status.get("detail") or "",
+                "date": start_et.date().isoformat() if start_et else "",
+                "date_label": start_et.strftime("%a, %b %-d") if start_et else "Date TBA",
                 "time": start_et.strftime("%-I:%M %p ET") if start_et else "TBA",
                 "venue": venue,
                 "broadcast": ", ".join(competition.get("broadcasts", [{}])[0].get("names", [])) if competition.get("broadcasts") else "",
@@ -121,6 +135,31 @@ class FootballEditionGenerator:
                 "recap_url": f"https://www.espn.com/nfl/recap/_/gameId/{event.get('id')}",
             })
         return games
+
+    @staticmethod
+    def _week_context(payload: dict[str, Any]) -> dict[str, Any]:
+        league = (payload.get("leagues") or [{}])[0]
+        season = league.get("season") or {}
+        season_type = season.get("type") or {}
+        number = (payload.get("week") or {}).get("number")
+        label = f"Week {number}" if number else "NFL Schedule"
+        detail = ""
+        for period in league.get("calendar") or []:
+            if str(period.get("value")) != str(season_type.get("id")):
+                continue
+            for entry in period.get("entries") or []:
+                if str(entry.get("value")) == str(number):
+                    label = entry.get("label") or label
+                    detail = entry.get("detail") or ""
+                    break
+        return {
+            "season_year": season.get("year") or datetime.now(EASTERN).year,
+            "season_type": season_type.get("id"),
+            "season_label": season_type.get("name", "NFL"),
+            "number": number,
+            "label": label,
+            "detail": detail,
+        }
 
     @staticmethod
     def _team(competitor: dict[str, Any]) -> dict[str, Any]:
@@ -267,6 +306,9 @@ class FootballEditionGenerator:
         env.globals["cloudflare_web_analytics_token"] = os.getenv(
             "CLOUDFLARE_WEB_ANALYTICS_TOKEN", ""
         )
+        env.globals["format_eastern_time"] = format_eastern_time
+        env.globals["daypart_edition"] = daypart_edition
+        env.globals["volume_number"] = volume_number
         html = env.get_template("football.html.j2").render(page=data)
         output_dir.mkdir(parents=True, exist_ok=True)
         (output_dir / "edition.json").write_text(json.dumps(data, default=str, indent=2))
