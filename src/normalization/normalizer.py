@@ -669,15 +669,20 @@ class Normalizer:
         batting: dict[str, list[LeaderEntry]] = {}
         pitching: dict[str, list[LeaderEntry]] = {}
 
-        for api_category, data in raw.items():
+        for raw_category, data in raw.items():
             if data is None:
                 continue
-            short_key = (
-                self._BATTING_CATEGORY_MAP.get(api_category)
-                or self._PITCHING_CATEGORY_MAP.get(api_category)
-                or api_category
+            stat_group, separator, api_category = raw_category.partition(":")
+            if not separator:
+                api_category = raw_category
+                stat_group = ""
+            is_pitching = stat_group == "pitching" or (
+                not stat_group and api_category in self._PITCHING_CATEGORY_MAP
             )
-            is_pitching = api_category in self._PITCHING_CATEGORY_MAP
+            category_map = (
+                self._PITCHING_CATEGORY_MAP if is_pitching else self._BATTING_CATEGORY_MAP
+            )
+            short_key = category_map.get(api_category, api_category)
             entries: list[LeaderEntry] = []
             for leader_block in data.get("leagueLeaders", []):
                 for rank_idx, leader in enumerate(leader_block.get("leaders", []), start=1):

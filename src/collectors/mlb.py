@@ -159,7 +159,7 @@ class MLBCollector(Collector):
 
     async def get_all_leaders(self, season: int) -> dict[str, Any]:
         """Fetch all batting and pitching leader categories concurrently."""
-        key = f"all_leaders_{season}"
+        key = f"all_leaders_v2_{season}"
         if self._cache:
             cached = self._cache.get(key, self._max_ages["stats_leaders"])
             if cached is not None:
@@ -168,19 +168,19 @@ class MLBCollector(Collector):
         async def _fetch(stat_group: str, category: str) -> tuple[str, Any]:
             try:
                 data = await self.get_stats_leaders(stat_group, category, season)
-                return (category, data)
+                return (f"{stat_group}:{category}", data)
             except Exception as exc:
                 logger.warning("leaders %s/%s unavailable: %s", stat_group, category, exc)
-                return (category, None)
+                return (f"{stat_group}:{category}", None)
 
         batting_tasks = [_fetch("hitting", cat) for cat in BATTING_CATEGORIES]
         pitching_tasks = [_fetch("pitching", cat) for cat in PITCHING_CATEGORIES]
         results = await asyncio.gather(*batting_tasks, *pitching_tasks)
 
         leaders: dict[str, Any] = {}
-        for category, data in results:
+        for grouped_category, data in results:
             if data is not None:
-                leaders[category] = data
+                leaders[grouped_category] = data
 
         if self._cache:
             self._cache.set(key, leaders)

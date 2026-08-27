@@ -112,6 +112,13 @@ def test_standings_tables_have_responsive_no_overlap_rules():
     assert "overflow-wrap: anywhere;" in css
 
 
+def test_pitching_leaders_include_strikeouts():
+    html = make_renderer().render(build_full_slate_edition())
+
+    assert 'data-category="k"' in html
+    assert "Strikeouts Leaders" in html
+
+
 def test_box_scores_follow_standings():
     html = make_renderer().render(build_full_slate_edition())
 

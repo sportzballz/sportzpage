@@ -456,6 +456,30 @@ class TestNormalize:
         assert result.transactions == []
         assert result.injuries == []
 
+    def test_normalize_distinguishes_hitter_and_pitcher_strikeouts(self) -> None:
+        def leaders(player: str, value: int) -> dict:
+            return {
+                "leagueLeaders": [{
+                    "leaders": [{
+                        "rank": 1,
+                        "value": value,
+                        "person": {"id": value, "fullName": player},
+                        "team": {"abbreviation": "PHI"},
+                    }]
+                }]
+            }
+
+        result = self.normalizer.normalize({
+            "leaders": {
+                "hitting:strikeOuts": leaders("Hitter", 120),
+                "pitching:strikeOuts": leaders("Pitcher", 180),
+            }
+        })
+
+        assert result.league_leaders is not None
+        assert result.league_leaders.batting["so"][0].player_name == "Hitter"
+        assert result.league_leaders.pitching["k"][0].player_name == "Pitcher"
+
     def test_normalize_transactions(self) -> None:
         raw = {"transactions": {"transactions": [_make_transaction("T100", "Trade")]}}
         result = self.normalizer.normalize(raw)
