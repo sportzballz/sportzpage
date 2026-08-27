@@ -1929,6 +1929,7 @@ video { max-width: 100%; height: auto; }
   .postseason-table {
     width: 100%;
     min-width: 0;
+    box-sizing: border-box;
     table-layout: fixed;
   }
 }
