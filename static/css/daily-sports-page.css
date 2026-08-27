@@ -742,6 +742,8 @@ body {
 }
 
 .standings-table caption {
+  background: #111;
+  color: var(--color-bg);
   text-align: left;
   font-family: var(--font-sans);
   font-size: 0.8rem;
@@ -749,7 +751,6 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding-bottom: 0.3rem;
-  color: var(--color-text);
 }
 
 .standings-table th,

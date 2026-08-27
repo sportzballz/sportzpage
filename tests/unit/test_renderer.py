@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -89,6 +90,15 @@ def test_standings_render_playoff_and_wild_card_tables_for_each_league():
     assert "NL Wildcard Hunt" in html
     assert "Division leader" in html
     assert "Wild Card 1" in html
+
+
+def test_standings_table_captions_have_contrasting_colors():
+    css = (Path(__file__).parents[2] / "static/css/daily-sports-page.css").read_text()
+    caption_rule = re.search(r"\.standings-table caption \{(?P<body>[^}]*)\}", css)
+
+    assert caption_rule is not None
+    assert "background: #111;" in caption_rule.group("body")
+    assert "color: var(--color-bg);" in caption_rule.group("body")
 
 
 def test_box_scores_follow_standings():
