@@ -50,7 +50,7 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     landing_text = re.sub(r"<[^>]+>", " ", landing).lower()
     assert "free" not in landing_text
     assert "subscribe" not in landing_text
-    assert 'subscription.css?v=20260827-standings-contrast' in landing
+    assert 'subscription.css?v=20260827-responsive-tables' in landing
     assert 'href="/subscriber/current/"' in landing
     assert "full-story-marker" in (output / "subscriber/current/index.html").read_text()
     assert "football-full-marker" in (output / "subscriber/current/football/index.html").read_text()

@@ -101,6 +101,17 @@ def test_standings_table_captions_have_contrasting_colors():
     assert "color: var(--color-bg);" in caption_rule.group("body")
 
 
+def test_standings_tables_have_responsive_no_overlap_rules():
+    css = (Path(__file__).parents[2] / "static/css/daily-sports-page.css").read_text()
+
+    assert "@media screen and (min-width: 600px) and (max-width: 899px)" in css
+    assert "grid-template-columns: minmax(0, 1fr);" in css
+    assert "@media screen and (max-width: 599px)" in css
+    assert ".standings-table .collapsible" in css
+    assert "table-layout: fixed;" in css
+    assert "overflow-wrap: anywhere;" in css
+
+
 def test_box_scores_follow_standings():
     html = make_renderer().render(build_full_slate_edition())
 
@@ -178,7 +189,7 @@ def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
     assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
-    assert 'href="static/css/daily-sports-page.css?v=20260827-standings-contrast"' in html
+    assert 'href="static/css/daily-sports-page.css?v=20260827-responsive-tables"' in html
     assert 'src="static/js/daily-sports-page.js"' in html
 
 
@@ -342,4 +353,4 @@ def test_lead_story_renders():
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
     assert "Daily Sports Page Staff" in html
-    assert "daily-sports-page.css?v=20260827-standings-contrast" in html
+    assert "daily-sports-page.css?v=20260827-responsive-tables" in html

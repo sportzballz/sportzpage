@@ -1922,6 +1922,68 @@ video { max-width: 100%; height: auto; }
   .team-leaders-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
+/* Responsive standings prioritize complete, non-overlapping rows. Tablets use
+   the available width before columns are removed; phones retain the core race
+   columns and omit only secondary split/detail columns. */
+@media screen and (max-width: 1199px) {
+  .postseason-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+}
+
+@media screen and (min-width: 600px) and (max-width: 899px) {
+  .standings-divisions,
+  .postseason-standings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .standings-table {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media screen and (max-width: 599px) {
+  .standings-table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 0.68rem;
+  }
+
+  .standings-table th,
+  .standings-table td {
+    padding: 0.24rem 0.16rem;
+  }
+
+  .standings-table .team-col {
+    width: 44%;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .standings-table .num-col {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .standings-table .collapsible {
+    display: none;
+  }
+
+  .postseason-table .team-col {
+    width: 34%;
+  }
+
+  .postseason-table .status-col {
+    width: 29%;
+    white-space: normal;
+    line-height: 1.05;
+  }
+}
+
 /* Print is a separate, paginated newspaper edition. Keep this block last so
    screen-oriented broadsheet rules cannot override it in the print cascade. */
 @page {
