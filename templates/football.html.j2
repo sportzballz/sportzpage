@@ -27,7 +27,7 @@
         <span class="masthead-date">{{ page.edition_date.strftime('%A, %B %-d, %Y') }}</span>
         <span class="masthead-sep">&bull;</span><span>{{ daypart_edition(page.generated_at) }}</span>
         <span class="masthead-sep">&bull;</span><span>Written at {{ format_eastern_time(page.generated_at) }}</span>
-        <span class="masthead-sep">&bull;</span><span>Volume {{ volume_number(page.edition_date) }}</span>
+        <span class="masthead-sep">&bull;</span><span>Volume {{ volume_number(page.generated_at) }}</span>
       </div>
     </div>
   </header>

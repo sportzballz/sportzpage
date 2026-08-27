@@ -28,8 +28,13 @@ def daypart_edition(value: datetime | None) -> str:
     return "Evening Edition"
 
 
-def volume_number(value: str | date) -> str:
-    edition_date = value if isinstance(value, date) else date.fromisoformat(value)
+def volume_number(value: str | date | datetime) -> str:
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=EASTERN)
+        edition_date = value.astimezone(EASTERN).date()
+    else:
+        edition_date = value if isinstance(value, date) else date.fromisoformat(value)
     number = max(1, (edition_date - VOLUME_EPOCH).days)
     numerals = (
         (1000, "M"), (900, "CM"), (500, "D"), (400, "CD"),
