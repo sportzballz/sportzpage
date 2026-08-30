@@ -11,6 +11,7 @@
 }
 .subscription-hero,
 .subscription-benefits,
+.feedback-panel,
 .free-archive {
   grid-column: 1 / -1;
   min-width: 0;
@@ -36,6 +37,20 @@
 .subscription-benefits ul { padding-left: 1.2rem; }
 .subscription-benefits li { margin-bottom: .65rem; break-inside: avoid; }
 .free-archive { margin-top: 1rem; }
+.feedback-panel { margin-top: 1rem; }
+.feedback-panel > h2 { margin: .35rem 0 .5rem; }
+.feedback-panel > p:not(.section-label) { max-width: 680px; }
+.feedback-panel form { display: grid; grid-template-columns: minmax(10rem, .45fr) minmax(16rem, 1fr); gap: .65rem 1rem; margin-top: 1.25rem; }
+.feedback-panel label { align-self: start; padding-top: .7rem; font: 800 .78rem/1.2 var(--font-sans); text-transform: uppercase; letter-spacing: .04em; }
+.feedback-panel select,
+.feedback-panel textarea { width: 100%; min-width: 0; padding: .7rem; border: 1px solid #777; border-radius: 0; background: #fff; color: #1a1a1a; font: 1rem/1.4 var(--font-sans); }
+.feedback-panel textarea { resize: vertical; }
+.feedback-button { grid-column: 2; justify-self: start; padding: .8rem 1.1rem; border: 2px solid #111; background: #111; color: #fff; font: 800 .82rem/1 var(--font-sans); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; }
+.feedback-button:hover,
+.feedback-button:focus-visible { background: #8b1e2d; border-color: #8b1e2d; }
+.feedback-button:disabled { cursor: wait; opacity: .65; }
+.feedback-status { grid-column: 2; min-height: 1.3em; margin: 0; color: #555; font: .86rem/1.4 var(--font-sans); }
+.feedback-honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .free-archive > h2 { margin: .35rem 0 1rem; }
 .free-archive ul { list-style: none; border-top: 3px double #444; }
 .free-archive li { padding: .7rem .2rem; border-bottom: 1px solid #bbb; }
@@ -52,12 +67,18 @@
   .subscription-shell { margin-top: .75rem; }
   .subscription-hero,
   .subscription-benefits,
+  .feedback-panel,
   .free-archive { padding: 1.1rem .9rem; }
   .subscription-hero h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); }
   .subscription-deck { font-size: 1rem; }
   .subscribe-button,
   .support-button { display: block; width: 100%; line-height: 1.2; }
   .subscription-benefits { columns: 1; }
+  .feedback-panel form { grid-template-columns: 1fr; }
+  .feedback-panel label { padding-top: .25rem; }
+  .feedback-button,
+  .feedback-status { grid-column: 1; }
+  .feedback-button { width: 100%; }
   .archive-grid { grid-template-columns: 1fr; }
 }
 
@@ -65,6 +86,7 @@
   .subscription-shell { width: min(100%, 900px); }
   .subscription-hero,
   .subscription-benefits,
+  .feedback-panel,
   .free-archive { padding: clamp(1.5rem, 4vw, 2.4rem); }
 }
 

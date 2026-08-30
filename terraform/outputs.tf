@@ -29,3 +29,8 @@ output "site_urls" {
     football = "https://${var.domain_name}/football/"
   }
 }
+
+output "feedback_table_name" {
+  description = "DynamoDB table containing anonymous reader feedback."
+  value       = aws_dynamodb_table.feedback.name
+}

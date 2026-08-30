@@ -119,6 +119,28 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
         <li>Print-ready edition for reading offline</li>
       </ul>
     </section>
+    <section class="feedback-panel" id="feedback">
+      <p class="section-label">Reader feedback</p>
+      <h2>Help shape the next edition</h2>
+      <p>Spot an error, have a feature idea, or want to tell us what works? Send a note directly to the editor.</p>
+      <form data-feedback-form>
+        <label for="feedback-category">What is this about?</label>
+        <select id="feedback-category" name="category">
+          <option value="correction">Correction</option>
+          <option value="feature">Feature request</option>
+          <option value="design">Design or readability</option>
+          <option value="general" selected>General feedback</option>
+        </select>
+        <label for="feedback-message">Your feedback</label>
+        <textarea id="feedback-message" name="message" minlength="3" maxlength="3000" rows="5" required></textarea>
+        <div class="feedback-honeypot" aria-hidden="true">
+          <label for="feedback-website">Website</label>
+          <input id="feedback-website" name="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <button class="feedback-button" type="submit">Send feedback</button>
+        <p class="feedback-status" data-feedback-status role="status" aria-live="polite"></p>
+      </form>
+    </section>
     <section class="free-archive">
       <p class="section-label">Recent coverage</p>
       <h2>Last Week in Sports</h2>
@@ -133,6 +155,38 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
       document.querySelector('[data-current-edition-link]').href = `/editions/${{market}}/`;
     }}
   }} catch (_error) {{}}
+
+  const feedbackForm = document.querySelector('[data-feedback-form]');
+  if (feedbackForm) {{
+    feedbackForm.addEventListener('submit', async (event) => {{
+      event.preventDefault();
+      const button = feedbackForm.querySelector('button[type="submit"]');
+      const status = feedbackForm.querySelector('[data-feedback-status]');
+      const fields = new FormData(feedbackForm);
+      button.disabled = true;
+      status.textContent = 'Sending…';
+      try {{
+        const response = await fetch('/api/feedback', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/json'}},
+          body: JSON.stringify({{
+            category: fields.get('category'),
+            message: fields.get('message'),
+            website: fields.get('website'),
+            page: window.location.pathname,
+          }}),
+        }});
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || 'Unable to send feedback.');
+        feedbackForm.reset();
+        status.textContent = 'Thanks — your feedback was sent.';
+      }} catch (error) {{
+        status.textContent = error.message || 'Unable to send feedback right now. Please try again.';
+      }} finally {{
+        button.disabled = false;
+      }}
+    }});
+  }}
   </script>"""
     return _page(
         "The Daily Sports Page — Today’s Edition",
