@@ -24,14 +24,8 @@ resource "aws_dynamodb_table" "feedback" {
   }
 }
 
-resource "aws_sns_topic" "feedback" {
-  name = "thedailysportspage-feedback"
-}
-
-resource "aws_sns_topic_subscription" "feedback_email" {
-  topic_arn = aws_sns_topic.feedback.arn
-  protocol  = "email"
-  endpoint  = "agsmith11@gmail.com"
+resource "aws_sesv2_email_identity" "feedback" {
+  email_identity = "agsmith11@gmail.com"
 }
 
 resource "aws_iam_role" "feedback" {
@@ -64,8 +58,8 @@ resource "aws_iam_role_policy" "feedback" {
       },
       {
         Effect   = "Allow"
-        Action   = ["sns:Publish"]
-        Resource = aws_sns_topic.feedback.arn
+        Action   = ["ses:SendEmail"]
+        Resource = aws_sesv2_email_identity.feedback.arn
       }
     ]
   })
@@ -88,8 +82,8 @@ resource "aws_lambda_function" "feedback" {
 
   environment {
     variables = {
-      FEEDBACK_TABLE     = aws_dynamodb_table.feedback.name
-      FEEDBACK_TOPIC_ARN = aws_sns_topic.feedback.arn
+      FEEDBACK_TABLE = aws_dynamodb_table.feedback.name
+      FEEDBACK_EMAIL = aws_sesv2_email_identity.feedback.email_identity
     }
   }
 

@@ -11,8 +11,8 @@ import boto3
 
 
 TABLE = boto3.resource("dynamodb").Table(os.environ["FEEDBACK_TABLE"])
-SNS = boto3.client("sns")
-FEEDBACK_TOPIC_ARN = os.environ["FEEDBACK_TOPIC_ARN"]
+SES = boto3.client("sesv2")
+FEEDBACK_EMAIL = os.environ["FEEDBACK_EMAIL"]
 LOGGER = logging.getLogger(__name__)
 EASTERN = ZoneInfo("America/New_York")
 DAILY_LIMIT = 3
@@ -92,18 +92,27 @@ def handler(event, _context):
         }
     )
     try:
-        SNS.publish(
-            TopicArn=FEEDBACK_TOPIC_ARN,
-            Subject=f"TDSP feedback: {category}",
-            Message=(
-                f"New feedback was submitted to The Daily Sports Page.\n\n"
-                f"Category: {category}\n"
-                f"Page: {page}\n"
-                f"Feedback ID: {feedback_id}\n\n"
-                f"{message}"
-            ),
+        SES.send_email(
+            FromEmailAddress=FEEDBACK_EMAIL,
+            Destination={"ToAddresses": [FEEDBACK_EMAIL]},
+            Content={
+                "Simple": {
+                    "Subject": {"Data": f"TDSP feedback: {category}"},
+                    "Body": {
+                        "Text": {
+                            "Data": (
+                                "New feedback was submitted to The Daily Sports Page.\n\n"
+                                f"Category: {category}\n"
+                                f"Page: {page}\n"
+                                f"Feedback ID: {feedback_id}\n\n"
+                                f"{message}"
+                            )
+                        }
+                    },
+                }
+            },
         )
     except Exception:
         # Notification delivery must never discard an otherwise valid submission.
-        LOGGER.exception("feedback stored but notification publish failed")
+        LOGGER.exception("feedback stored but email notification failed")
     return response(201, {"ok": True, "message": "Thanks for helping improve the page."})
