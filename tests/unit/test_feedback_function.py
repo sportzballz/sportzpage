@@ -7,22 +7,30 @@ from pathlib import Path
 from unittest.mock import Mock
 
 
+class ConditionalCheckFailedException(Exception):
+    pass
+
+
 def _load_handler(monkeypatch):
     table = Mock()
+    table.meta.client.exceptions.ConditionalCheckFailedException = ConditionalCheckFailedException
+    sns = Mock()
     boto3 = Mock()
     boto3.resource.return_value.Table.return_value = table
+    boto3.client.return_value = sns
     monkeypatch.setitem(sys.modules, "boto3", boto3)
     monkeypatch.setenv("FEEDBACK_TABLE", "feedback-test")
+    monkeypatch.setenv("FEEDBACK_TOPIC_ARN", "arn:aws:sns:us-east-1:123456789012:feedback-test")
     spec = importlib.util.spec_from_file_location(
         "feedback_function", Path("terraform/functions/feedback.py")
     )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module, table
+    return module, table, sns
 
 
 def test_feedback_handler_stores_valid_submission(monkeypatch) -> None:
-    module, table = _load_handler(monkeypatch)
+    module, table, sns = _load_handler(monkeypatch)
     result = module.handler(
         {
             "headers": {"origin": "https://thedailysportspage.com"},
@@ -38,10 +46,16 @@ def test_feedback_handler_stores_valid_submission(monkeypatch) -> None:
     item = table.put_item.call_args.kwargs["Item"]
     assert item["message"] == "The score is reversed."
     assert item["expires_at"] > item["submitted_at"]
+    notification = sns.publish.call_args.kwargs
+    assert notification["Subject"] == "TDSP feedback: correction"
+    assert "The score is reversed." in notification["Message"]
+    rate = table.update_item.call_args.kwargs
+    assert rate["ExpressionAttributeValues"][":limit"] == 3
+    assert rate["Key"]["id"].startswith("rate#")
 
 
 def test_feedback_handler_rejects_wrong_origin_and_invalid_message(monkeypatch) -> None:
-    module, table = _load_handler(monkeypatch)
+    module, table, sns = _load_handler(monkeypatch)
     wrong_origin = module.handler(
         {"headers": {"origin": "https://example.com"}, "body": '{"message":"hello"}'}, None
     )
@@ -53,3 +67,25 @@ def test_feedback_handler_rejects_wrong_origin_and_invalid_message(monkeypatch) 
     assert wrong_origin["statusCode"] == 403
     assert too_short["statusCode"] == 400
     table.put_item.assert_not_called()
+    sns.publish.assert_not_called()
+
+
+def test_feedback_handler_limits_source_to_three_per_day(monkeypatch) -> None:
+    module, table, sns = _load_handler(monkeypatch)
+    table.update_item.side_effect = ConditionalCheckFailedException
+
+    result = module.handler(
+        {
+            "headers": {
+                "origin": "https://thedailysportspage.com",
+                "cloudfront-viewer-address": "203.0.113.7:44321",
+            },
+            "body": '{"message":"One too many submissions"}',
+        },
+        None,
+    )
+
+    assert result["statusCode"] == 429
+    assert "tomorrow" in json.loads(result["body"])["error"]
+    table.put_item.assert_not_called()
+    sns.publish.assert_not_called()

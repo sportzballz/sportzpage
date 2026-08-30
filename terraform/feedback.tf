@@ -24,6 +24,16 @@ resource "aws_dynamodb_table" "feedback" {
   }
 }
 
+resource "aws_sns_topic" "feedback" {
+  name = "thedailysportspage-feedback"
+}
+
+resource "aws_sns_topic_subscription" "feedback_email" {
+  topic_arn = aws_sns_topic.feedback.arn
+  protocol  = "email"
+  endpoint  = "agsmith11@gmail.com"
+}
+
 resource "aws_iam_role" "feedback" {
   name = "thedailysportspage-feedback-lambda"
   assume_role_policy = jsonencode({
@@ -44,13 +54,18 @@ resource "aws_iam_role_policy" "feedback" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:PutItem"]
+        Action   = ["dynamodb:PutItem", "dynamodb:UpdateItem"]
         Resource = aws_dynamodb_table.feedback.arn
       },
       {
         Effect   = "Allow"
         Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "${aws_cloudwatch_log_group.feedback.arn}:*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = ["sns:Publish"]
+        Resource = aws_sns_topic.feedback.arn
       }
     ]
   })
@@ -72,7 +87,10 @@ resource "aws_lambda_function" "feedback" {
   memory_size      = 128
 
   environment {
-    variables = { FEEDBACK_TABLE = aws_dynamodb_table.feedback.name }
+    variables = {
+      FEEDBACK_TABLE     = aws_dynamodb_table.feedback.name
+      FEEDBACK_TOPIC_ARN = aws_sns_topic.feedback.arn
+    }
   }
 
   depends_on = [aws_cloudwatch_log_group.feedback]
