@@ -24,7 +24,7 @@
       </thead>
       <tbody>
         {% for row in rows %}
-        <tr class="{% if row.eliminated %}eliminated-row{% endif %}">
+        <tr class="{% if row.team_abbr in edition.edition.market_teams %}is-primary-team {% endif %}{% if row.eliminated %}eliminated-row{% endif %}">
           <td class="team-col">
             {{ row.team_name }}
             {% if row.magic_number is not none %}
@@ -68,7 +68,7 @@
       </thead>
       <tbody>
         {% for row in rows %}
-        <tr>
+        <tr{% if row.team_abbr in edition.edition.market_teams %} class="is-primary-team"{% endif %}>
           <td class="num-col">{{ row.playoff_seed }}</td>
           <td class="team-col">{{ row.team_name }}</td>
           <td class="num-col">{{ row.wins }}</td>
@@ -100,7 +100,7 @@
       </thead>
       <tbody>
         {% for row in rows %}
-        <tr class="{% if row.wild_card_rank and row.wild_card_rank <= 3 %}playoff-position{% elif row.wild_card_rank == 4 %}wild-card-cutline{% endif %}">
+        <tr class="{% if row.team_abbr in edition.edition.market_teams %}is-primary-team {% endif %}{% if row.wild_card_rank and row.wild_card_rank <= 3 %}playoff-position{% elif row.wild_card_rank == 4 %}wild-card-cutline{% endif %}">
           <td class="num-col">{{ row.wild_card_rank }}</td>
           <td class="team-col">{{ row.team_name }}</td>
           <td class="num-col">{{ row.wins }}</td>

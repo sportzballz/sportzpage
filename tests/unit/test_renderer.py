@@ -119,6 +119,20 @@ def test_pitching_leaders_include_strikeouts():
     assert "SO Leaders" in html
 
 
+def test_market_selector_lists_and_persists_local_editions():
+    html = make_renderer().render(build_full_slate_edition())
+    script = (Path(__file__).parents[2] / "static/js/daily-sports-page.js").read_text()
+
+    assert 'data-market="philadelphia"' in html
+    assert 'data-market-selector' in html
+    assert '<option value="boston">Boston</option>' in html
+    assert '<option value="new-york">New York</option>' in html
+    assert '<option value="los-angeles">Los Angeles</option>' in html
+    assert '<option value="chicago">Chicago</option>' in html
+    assert 'localStorage.setItem("tdsp-market", market)' in script
+    assert '`/editions/${market}/${isFootball ? "football/" : ""}`' in script
+
+
 def test_box_scores_follow_standings():
     html = make_renderer().render(build_full_slate_edition())
 
@@ -196,8 +210,8 @@ def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
     assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
-    assert 'href="static/css/daily-sports-page.css?v=20260827-football-weekly"' in html
-    assert 'src="static/js/daily-sports-page.js"' in html
+    assert 'href="static/css/daily-sports-page.css?v=20260830-market-editions"' in html
+    assert 'src="static/js/daily-sports-page.js?v=20260830-market-editions"' in html
 
 
 def test_support_link_is_first_daily_edition_menu_item():
@@ -359,4 +373,4 @@ def test_lead_story_renders():
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
     assert "Daily Sports Page Staff" in html
-    assert "daily-sports-page.css?v=20260827-football-weekly" in html
+    assert "daily-sports-page.css?v=20260830-market-editions" in html

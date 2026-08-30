@@ -8,6 +8,7 @@ from datetime import date, datetime
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape, StrictUndefined
 from src.models.edition import Edition
+from src.markets import MARKETS
 from src.rendering.edition_meta import daypart_edition, format_eastern_time, volume_number
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ class HTMLRenderer:
         self._env.globals["format_eastern_time"] = format_eastern_time
         self._env.globals["daypart_edition"] = daypart_edition
         self._env.globals["volume_number"] = volume_number
+        self._env.globals["markets"] = MARKETS
         self._env.globals["cloudflare_web_analytics_token"] = os.getenv(
             "CLOUDFLARE_WEB_ANALYTICS_TOKEN", ""
         )

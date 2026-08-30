@@ -16,11 +16,67 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    initMarketSelector();
     initLeadersTabs();
     initSectionCollapse();
     initCopyLinkButtons();
     initPrintButton();
   });
+
+  /* =========================================================
+     0. LOCAL EDITION SELECTOR
+     ========================================================= */
+
+  function initMarketSelector() {
+    const supportedMarkets = new Set([
+      "philadelphia",
+      "boston",
+      "new-york",
+      "los-angeles",
+      "chicago",
+    ]);
+    const selector = document.querySelector("[data-market-selector]");
+    const currentMarket = document.body.dataset.market || "philadelphia";
+    const isFootball = window.location.pathname.includes("/football/");
+
+    let savedMarket = null;
+    try {
+      const storedValue = window.localStorage.getItem("tdsp-market");
+      savedMarket = supportedMarkets.has(storedValue) ? storedValue : null;
+    } catch (_error) {
+      // Storage can be disabled; the permanent market URL still works.
+    }
+
+    const isLegacyCurrent = window.location.pathname.startsWith(
+      "/subscriber/current/",
+    );
+    if (
+      isLegacyCurrent &&
+      savedMarket &&
+      savedMarket !== "philadelphia" &&
+      savedMarket !== currentMarket
+    ) {
+      window.location.replace(
+        `/editions/${savedMarket}/${isFootball ? "football/" : ""}`,
+      );
+      return;
+    }
+
+    if (!selector) return;
+    selector.value = currentMarket;
+    selector.addEventListener("change", () => {
+      const market = selector.value;
+      if (!supportedMarkets.has(market)) return;
+      try {
+        window.localStorage.setItem("tdsp-market", market);
+      } catch (_error) {
+        // Navigation remains functional without persistent storage.
+      }
+      window.location.assign(
+        `/editions/${market}/${isFootball ? "football/" : ""}`,
+      );
+    });
+  }
 
   /* =========================================================
      1. LEAGUE LEADER TABS

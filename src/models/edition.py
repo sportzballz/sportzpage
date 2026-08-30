@@ -36,6 +36,9 @@ class EditionMetadata(BaseModel):
         default="America/New_York", description="Display timezone for all times on the page."
     )
     status: EditionStatus = Field(description="Current lifecycle status of this edition.")
+    market_slug: str = Field(default="philadelphia")
+    market_label: str = Field(default="Philadelphia")
+    market_teams: List[str] = Field(default_factory=lambda: ["PHI"])
 
 
 class GenerationMetadata(BaseModel):

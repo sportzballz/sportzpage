@@ -6,7 +6,7 @@
   {% if todays %}
   <div class="games-list">
     {% for game in todays %}
-    <article class="game-preview" aria-labelledby="preview-{{ game.game_id }}">
+    <article class="game-preview{% if game.home.team_abbr in edition.edition.market_teams or game.away.team_abbr in edition.edition.market_teams %} is-market-game{% endif %}" aria-labelledby="preview-{{ game.game_id }}">
       <header class="game-preview-header">
         <h3 id="preview-{{ game.game_id }}" class="game-preview-matchup">
           {{ game.away.team_name }} <span class="at-symbol">@</span> {{ game.home.team_name }}

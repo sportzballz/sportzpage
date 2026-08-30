@@ -98,6 +98,7 @@ jobs:
           EDITION_DATE="${{ steps.edition.outputs.date }}"
           daily-sports-page run --date "$EDITION_DATE" --build-dir build
           python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
+          python scripts/generate_market_editions.py
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -114,6 +115,8 @@ jobs:
         run: |
           python scripts/assemble_subscription_site.py \
             --previous-site previous-site \
+            --market-build-dir build/markets \
+            --football-market-dir build/football-markets \
             --output dist
 
       - name: Publish versioned site artifact

@@ -1,0 +1,8 @@
+<div class="market-selector">
+  <label for="market-selector">Local edition</label>
+  <select id="market-selector" data-market-selector aria-label="Select local sports edition">
+    {% for market in markets %}
+    <option value="{{ market.slug }}"{% if market.slug == active_market_slug %} selected{% endif %}>{{ market.label }}</option>
+    {% endfor %}
+  </select>
+</div>

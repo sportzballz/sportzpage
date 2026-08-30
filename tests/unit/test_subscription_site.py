@@ -50,7 +50,7 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     landing_text = re.sub(r"<[^>]+>", " ", landing).lower()
     assert "free" not in landing_text
     assert "subscribe" not in landing_text
-    assert 'subscription.css?v=20260827-football-weekly' in landing
+    assert 'subscription.css?v=20260830-market-editions' in landing
     assert 'href="/subscriber/current/"' in landing
     assert "full-story-marker" in (output / "subscriber/current/index.html").read_text()
     assert "football-full-marker" in (output / "subscriber/current/football/index.html").read_text()
@@ -66,6 +66,13 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     assert "Headline for 2026-08-21 — The Daily Sports Page" in current_html
     assert "Sitemap: https://thedailysportspage.com/sitemap.xml" in (output / "robots.txt").read_text()
     assert "https://thedailysportspage.com/subscriber/current/" in (output / "sitemap.xml").read_text()
+    assert "localStorage.getItem('tdsp-market')" in landing
+    for market in ("philadelphia", "boston", "new-york", "los-angeles", "chicago"):
+        assert (output / "editions" / market / "index.html").exists()
+        assert (output / "editions" / market / "football/index.html").exists()
+        assert f"https://thedailysportspage.com/editions/{market}/" in (
+            output / "sitemap.xml"
+        ).read_text()
 
 
 def test_promotes_previous_current_and_keeps_seven_editions(tmp_path: Path) -> None:

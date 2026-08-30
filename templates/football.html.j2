@@ -5,23 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8b1e2d">
   <title>The Daily Sports Page — Football</title>
-  <meta name="description" content="Philadelphia-first NFL scores, schedules, standings, and stories.">
-  <link rel="canonical" href="https://thedailysportspage.com/football/">
+  <meta name="description" content="{{ page.market_label }}-focused NFL scores, schedules, standings, and stories.">
+  <link rel="canonical" href="https://thedailysportspage.com{{ page.canonical_path }}">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <meta property="og:site_name" content="The Daily Sports Page">
   <meta property="og:title" content="The Daily Sports Page — Football">
-  <meta property="og:description" content="Philadelphia-first NFL scores, schedules, standings, and stories.">
+  <meta property="og:description" content="{{ page.market_label }}-focused NFL scores, schedules, standings, and stories.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://thedailysportspage.com/football/">
+  <meta property="og:url" content="https://thedailysportspage.com{{ page.canonical_path }}">
   <meta name="twitter:card" content="summary">
   <link rel="icon" href="../static/icons/favicon.ico" sizes="any">
-  <link rel="stylesheet" href="../static/css/daily-sports-page.css?v=20260827-football-weekly">
+  <link rel="stylesheet" href="../static/css/daily-sports-page.css?v=20260830-market-editions">
 </head>
-<body>
+<body data-market="{{ page.market_slug }}">
   <a href="#front-page" class="skip-link">Skip to content</a>
   <header class="masthead" role="banner">
     <div class="masthead-inner">
-      <div class="masthead-kicker"><span>Independent Daily Coverage</span><strong>National Football League</strong><span>Daily Sports Page</span></div>
+      <div class="masthead-kicker"><span>Independent Daily Coverage</span><strong>National Football League</strong><span>{{ page.market_label }} Edition</span></div>
       <h1 class="masthead-title">The Daily Sports Page</h1>
       <div class="masthead-meta">
         <span class="masthead-date">{{ page.edition_date.strftime('%A, %B %-d, %Y') }}</span>
@@ -31,6 +31,7 @@
       </div>
     </div>
   </header>
+  {% set active_market_slug = page.market_slug %}{% include "sections/market-selector.html.j2" %}
   {% set active_sport = "football" %}{% include "sections/sport-tabs.html.j2" %}
   <nav class="section-nav" aria-label="Football page sections">
     <ul>
@@ -62,13 +63,13 @@
     <section id="standings" class="section standings"><h2 class="section-heading">NFL Standings</h2>
       {% if page.standings %}<div class="standings-grid">{% for division in page.standings %}<div class="standings-division"><h3>{{ division.name }}</h3>
         <table><thead><tr><th>Team</th><th>W</th><th>L</th><th>T</th><th>Pct</th><th>Diff</th></tr></thead><tbody>
-        {% for row in division.rows %}<tr{% if row.abbr == 'PHI' %} class="is-primary-team"{% endif %}><td>{{ row.abbr }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.ties }}</td><td>{{ row.pct }}</td><td>{{ row.diff }}</td></tr>{% endfor %}
+        {% for row in division.rows %}<tr{% if row.abbr in page.market_teams %} class="is-primary-team"{% endif %}><td>{{ row.abbr }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.ties }}</td><td>{{ row.pct }}</td><td>{{ row.diff }}</td></tr>{% endfor %}
       </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL standings are not available yet.</p>{% endif %}
     </section>
     <section id="league-leaders" class="section standings"><h2 class="section-heading">NFL League Leaders{% if page.leaders_season_label %} — {{ page.leaders_season_label }}{% endif %}</h2>
       {% if page.league_leaders %}<div class="standings-grid league-leaders-grid">{% for category in page.league_leaders %}<div class="standings-division league-leader-category"><h3>{{ category.label }}</h3>
         <table><thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>{{ category.abbreviation or 'Stat' }}</th></tr></thead><tbody>
-        {% for row in category.rows %}<tr{% if row.team == 'PHI' %} class="is-primary-team"{% endif %}><td>{{ row.rank }}</td><td>{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}{% if row.position %} <small>{{ row.position }}</small>{% endif %}</td><td>{{ row.team }}</td><td><strong>{{ row.value }}</strong></td></tr>{% endfor %}
+        {% for row in category.rows %}<tr{% if row.team in page.market_teams %} class="is-primary-team"{% endif %}><td>{{ row.rank }}</td><td>{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}{% if row.position %} <small>{{ row.position }}</small>{% endif %}</td><td>{{ row.team }}</td><td><strong>{{ row.value }}</strong></td></tr>{% endfor %}
         </tbody></table></div>{% endfor %}</div><p class="source-link"><a href="https://www.espn.com/nfl/stats">Full NFL statistics on ESPN</a></p>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
     </section>
     <section id="around-the-league" class="section around-the-league"><h2 class="section-heading">Around the NFL</h2>
@@ -76,6 +77,7 @@
     </section>
   </main>
   <footer class="site-footer"><p>The Daily Sports Page — Football Edition — {{ page.edition_date }}</p></footer>
+  <script src="../static/js/daily-sports-page.js?v=20260830-market-editions"></script>
   {% include "sections/web-analytics.html.j2" %}
 </body>
 </html>

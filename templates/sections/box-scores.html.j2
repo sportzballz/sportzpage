@@ -7,7 +7,7 @@
   <div class="box-scores-flow">
   {% for game in final_games %}
   {% if game.linescore %}
-  <div class="box-score" id="box-{{ game.game_id }}">
+  <div class="box-score{% if game.home.team_abbr in edition.edition.market_teams or game.away.team_abbr in edition.edition.market_teams %} is-market-game{% endif %}" id="box-{{ game.game_id }}">
     <h3 class="box-score-matchup">
       {{ game.away.team_abbr }} {{ game.away.runs if game.away.runs is not none else '' }}
       &nbsp;at&nbsp;

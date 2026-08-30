@@ -12,6 +12,8 @@ from datetime import date
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
 
+from src.markets import MARKETS
+
 ARCHIVE_LIMIT = 7
 SITE_URL = "https://thedailysportspage.com"
 
@@ -67,8 +69,8 @@ def _page(title: str, body: str, *, description: str, canonical: str) -> str:
   <meta name="twitter:card" content="summary">
   <script type="application/ld+json">{structured_data}</script>
   <link rel="icon" href="/static/icons/favicon.ico" sizes="any">
-  <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260827-football-weekly">
-  <link rel="stylesheet" href="/static/css/subscription.css?v=20260827-football-weekly">
+  <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260830-market-editions">
+  <link rel="stylesheet" href="/static/css/subscription.css?v=20260830-market-editions">
 </head>
 <body class="subscription-page">
   <header class="masthead">
@@ -98,7 +100,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
       <p class="edition-label">Today’s edition &bull; {html.escape(metadata['date'])}</p>
       <h2>{html.escape(headline)}</h2>
       <p class="subscription-deck">{html.escape(deck)}</p>
-      <a class="subscribe-button" href="/subscriber/current/">Read today’s complete edition</a>
+      <a class="subscribe-button" data-current-edition-link href="/subscriber/current/">Read today’s complete edition</a>
       <p class="delivery-note">
         The Daily Sports Page is open to everyone and supported on the honor system.
       </p>
@@ -122,7 +124,16 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
       <h2>Last Week in Sports</h2>
       <ul>{archive}</ul>
     </section>
-  </main>"""
+  </main>
+  <script>
+  try {{
+    const market = localStorage.getItem('tdsp-market');
+    const supported = ['philadelphia', 'boston', 'new-york', 'los-angeles', 'chicago'];
+    if (supported.includes(market) && market !== 'philadelphia') {{
+      document.querySelector('[data-current-edition-link]').href = `/editions/${{market}}/`;
+    }}
+  }} catch (_error) {{}}
+  </script>"""
     return _page(
         "The Daily Sports Page — Today’s Edition",
         body,
@@ -239,6 +250,13 @@ def _write_discovery_files(output: Path, archive_dates: list[str], current_date:
     paths = [("/", current_date), ("/archive/", current_date)]
     paths.extend([("/subscriber/current/", current_date), ("/football/", current_date)])
     paths.extend((f"/archive/{day}/", day) for day in archive_dates)
+    for market in MARKETS:
+        paths.extend(
+            [
+                (f"/editions/{market.slug}/", current_date),
+                (f"/editions/{market.slug}/football/", current_date),
+            ]
+        )
     urls = "".join(
         f"  <url><loc>{xml_escape(SITE_URL + path)}</loc><lastmod>{last_modified}</lastmod></url>\n"
         for path, last_modified in paths
@@ -269,7 +287,15 @@ def _email_digest(edition: dict) -> str:
 </body></html>"""
 
 
-def assemble(build_dir: Path, football_dir: Path, static_dir: Path, previous: Path, output: Path) -> None:
+def assemble(
+    build_dir: Path,
+    football_dir: Path,
+    static_dir: Path,
+    previous: Path,
+    output: Path,
+    market_build_dir: Path | None = None,
+    football_market_dir: Path | None = None,
+) -> None:
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
@@ -328,6 +354,20 @@ def assemble(build_dir: Path, football_dir: Path, static_dir: Path, previous: Pa
     )
 
     _copy_tree(static_dir, output / "static")
+    editions_root = output / "editions"
+    for market in MARKETS:
+        market_source = market_build_dir / market.slug if market_build_dir else build_dir
+        football_source = (
+            football_market_dir / market.slug if football_market_dir else football_dir
+        )
+        if not (market_source / "index.html").exists():
+            raise FileNotFoundError(f"missing generated market edition: {market_source}")
+        market_route = editions_root / market.slug
+        _copy_tree(market_source, market_route)
+        _copy_tree(football_source, market_route / "football")
+        _copy_tree(static_dir, market_route / "static")
+        _remove_legacy_edition_support_link(market_route)
+        _apply_edition_seo(market_route, f"/editions/{market.slug}/")
     (output / "index.html").write_text(_landing(edition, archive_dates), encoding="utf-8")
     archive_root.mkdir(exist_ok=True)
     (archive_root / "index.html").write_text(_archive_index(archive_dates), encoding="utf-8")
@@ -346,11 +386,23 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--build-dir", type=Path, default=Path("build"))
     parser.add_argument("--football-dir", type=Path, default=Path("build/football"))
+    parser.add_argument("--market-build-dir", type=Path, default=Path("build/markets"))
+    parser.add_argument(
+        "--football-market-dir", type=Path, default=Path("build/football-markets")
+    )
     parser.add_argument("--static-dir", type=Path, default=Path("static"))
     parser.add_argument("--previous-site", type=Path, default=Path("previous-site"))
     parser.add_argument("--output", type=Path, default=Path("dist"))
     args = parser.parse_args()
-    assemble(args.build_dir, args.football_dir, args.static_dir, args.previous_site, args.output)
+    assemble(
+        args.build_dir,
+        args.football_dir,
+        args.static_dir,
+        args.previous_site,
+        args.output,
+        market_build_dir=args.market_build_dir,
+        football_market_dir=args.football_market_dir,
+    )
 
 
 if __name__ == "__main__":

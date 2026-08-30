@@ -41,7 +41,7 @@
       </thead>
       <tbody>
         {% for entry in entries %}
-        <tr {% if not entry.qualified %}class="unqualified-row" title="Does not meet qualification threshold"{% endif %}>
+        <tr class="{% if entry.team_abbr in edition.edition.market_teams %}is-primary-team {% endif %}{% if not entry.qualified %}unqualified-row{% endif %}"{% if not entry.qualified %} title="Does not meet qualification threshold"{% endif %}>
           <td class="rank-col">{{ entry.rank }}</td>
           <td class="player-col">{{ entry.player_name }}<span class="player-pos">, {{ entry.position }}</span></td>
           <td class="team-col">{{ entry.team_abbr }}</td>

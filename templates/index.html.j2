@@ -6,12 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8b1e2d">
   <title>The Daily Sports Page &mdash; {{ edition.edition.date }}</title>
-  <meta name="description" content="Philadelphia-first MLB scores, standings, league leaders, game recaps, and analysis.">
+  <meta name="description" content="{{ edition.edition.market_label }}-focused MLB scores, standings, league leaders, game recaps, and analysis.">
   <link rel="canonical" href="https://thedailysportspage.com/subscriber/current/">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <meta property="og:site_name" content="The Daily Sports Page">
   <meta property="og:title" content="The Daily Sports Page &mdash; {{ edition.edition.date }}">
-  <meta property="og:description" content="Philadelphia-first MLB scores, standings, and analysis.">
+  <meta property="og:description" content="{{ edition.edition.market_label }}-focused MLB scores, standings, and analysis.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://thedailysportspage.com/subscriber/current/">
   <meta name="twitter:card" content="summary">
@@ -20,11 +20,12 @@
   <link rel="icon" href="{{ asset('icons/favicon.ico') }}" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32.png') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
-  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260827-football-weekly">
+  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260830-market-editions">
 </head>
-<body>
+<body data-market="{{ edition.edition.market_slug }}">
   <a href="#front-page" class="skip-link">Skip to content</a>
   {% include "sections/masthead.html.j2" %}
+  {% set active_market_slug = edition.edition.market_slug %}{% include "sections/market-selector.html.j2" %}
   {% set active_sport = "baseball" %}
   {% include "sections/sport-tabs.html.j2" %}
   <nav class="section-nav" aria-label="Page sections">
@@ -63,7 +64,7 @@
     {% if edition.edition.generated_at %}Written at {{ format_eastern_time(edition.edition.generated_at) }}{% endif %}
     </p>
   </footer>
-  <script src="{{ asset('js/daily-sports-page.js') }}"></script>
+  <script src="{{ asset('js/daily-sports-page.js') }}?v=20260830-market-editions"></script>
   {% include "sections/web-analytics.html.j2" %}
 </body>
 </html>

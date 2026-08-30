@@ -14,6 +14,7 @@ import httpx
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.football.ai_recap import FootballLeadStoryService
+from src.markets import DEFAULT_MARKET, MARKETS
 from src.rendering.edition_meta import daypart_edition, format_eastern_time, volume_number
 
 EASTERN = ZoneInfo("America/New_York")
@@ -30,6 +31,28 @@ LEADER_CATEGORIES = (
     "sacks",
     "interceptions",
 )
+
+
+def render_football_page(data: dict[str, Any], output_dir: Path) -> Path:
+    env = Environment(
+        loader=FileSystemLoader("templates"),
+        autoescape=select_autoescape(["html", "j2"]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    env.globals["cloudflare_web_analytics_token"] = os.getenv(
+        "CLOUDFLARE_WEB_ANALYTICS_TOKEN", ""
+    )
+    env.globals["format_eastern_time"] = format_eastern_time
+    env.globals["daypart_edition"] = daypart_edition
+    env.globals["volume_number"] = volume_number
+    env.globals["markets"] = MARKETS
+    html = env.get_template("football.html.j2").render(page=data)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "edition.json").write_text(json.dumps(data, default=str, indent=2))
+    path = output_dir / "index.html"
+    path.write_text(html)
+    return path
 
 
 @dataclass
@@ -76,6 +99,10 @@ class FootballEditionGenerator:
             "season_label": week["season_label"],
             "week_label": week["label"],
             "week_detail": week["detail"],
+            "market_slug": DEFAULT_MARKET.slug,
+            "market_label": DEFAULT_MARKET.label,
+            "market_teams": list(DEFAULT_MARKET.football_teams),
+            "canonical_path": "/football/",
             "lead": lead,
             "scoreboard": weekly_games,
             "standings": self._standings(standings),
@@ -187,7 +214,9 @@ class FootballEditionGenerator:
         return completed[0] if completed else None
 
     @staticmethod
-    def _lead_story(game: dict[str, Any]) -> dict[str, Any]:
+    def _lead_story(
+        game: dict[str, Any], market_label: str = "Philadelphia"
+    ) -> dict[str, Any]:
         away, home = game["away"], game["home"]
         winner = away if away["winner"] else home
         loser = home if winner is away else away
@@ -197,7 +226,7 @@ class FootballEditionGenerator:
             "paragraphs": [
                 f"The {winner['name']} came away with a {winner['score']}-{loser['score']} result over the {loser['name']}, putting the defining score of the day at the top of The Daily Sports Page's football edition.",
                 f"The game was played at {game['venue']}. The result offers an early checkpoint for both clubs as the NFL calendar moves toward the regular season.",
-                "The football page will follow the Eagles first when Philadelphia plays, turn next to the NFC East, and still keep the full league slate in view.",
+                f"The {market_label} edition follows its local clubs first while keeping the full NFL slate in view.",
             ],
             "url": game["recap_url"],
             "ai_generated": False,
@@ -297,24 +326,7 @@ class FootballEditionGenerator:
 
     async def generate(self, output_dir: Path) -> Path:
         data = await self.collect()
-        env = Environment(
-            loader=FileSystemLoader("templates"),
-            autoescape=select_autoescape(["html", "j2"]),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-        env.globals["cloudflare_web_analytics_token"] = os.getenv(
-            "CLOUDFLARE_WEB_ANALYTICS_TOKEN", ""
-        )
-        env.globals["format_eastern_time"] = format_eastern_time
-        env.globals["daypart_edition"] = daypart_edition
-        env.globals["volume_number"] = volume_number
-        html = env.get_template("football.html.j2").render(page=data)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        (output_dir / "edition.json").write_text(json.dumps(data, default=str, indent=2))
-        path = output_dir / "index.html"
-        path.write_text(html)
-        return path
+        return render_football_page(data, output_dir)
 
 
 def main() -> None:
