@@ -66,6 +66,24 @@ class ESPNLeadStoryService:
             self._save_cached(game, generated, short=short)
         return generated
 
+    async def generate_from_existing_recap(
+        self, game: Game, existing: GameRecap
+    ) -> GameRecap | None:
+        """Expand an already-grounded brief when ESPN has no usable full article."""
+        if not game.espn_game_id or not self._api_key:
+            return None
+        source = ESPNRecap(
+            game_id=game.espn_game_id,
+            headline=existing.headline,
+            body="\n".join([existing.deck, *existing.paragraphs]),
+            source_url=existing.source_url
+            or ESPN_RECAP_URL.format(game_id=game.espn_game_id),
+        )
+        generated = await self.rewrite(source, game)
+        if generated:
+            self._save_cached(game, generated)
+        return generated
+
     def _cache_path(self, game: Game, *, short: bool = False) -> Path:
         suffix = "-short" if short else ""
         return self._cache_dir / f"{game.game_date}-{game.espn_game_id}{suffix}.json"

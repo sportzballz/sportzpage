@@ -162,6 +162,26 @@ async def test_reuses_daily_cached_short_recap_without_fetch_or_llm(
     assert service._cache_path(game, short=True).name.endswith("-short.json")
 
 
+@pytest.mark.asyncio
+async def test_expands_existing_grounded_brief_when_full_article_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = ESPNLeadStoryService(provider="openai", api_key="unused", cache_dir=tmp_path)
+    source = _recap().model_copy(update={"paragraphs": ["A grounded short brief."]})
+
+    async def rewrite(recap: ESPNRecap, game: Game, *, short: bool = False) -> GameRecap:
+        assert "A grounded short brief." in recap.body
+        assert short is False
+        return _recap()
+
+    monkeypatch.setattr(service, "rewrite", rewrite)
+    result = await service.generate_from_existing_recap(_game(), source)
+
+    assert result is not None
+    assert result.ai_generated is True
+    assert service._cache_path(_game()).exists()
+
+
 def test_short_recap_prompt_and_output_are_concise() -> None:
     service = ESPNLeadStoryService()
     source = ESPNRecap(

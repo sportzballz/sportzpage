@@ -44,11 +44,25 @@ async def generate(
 
     for market in MARKETS:
         baseball_game = baseball_headline_game(base, market)
+        existing_recap = next(
+            (
+                recap
+                for recap in base.game_recaps
+                if baseball_game and recap.game_id == baseball_game.game_id
+            ),
+            None,
+        )
         baseball_lead = (
             await baseball_service.generate(baseball_game)
             if baseball_service and baseball_game
             else None
         )
+        if baseball_service and baseball_game and existing_recap and not baseball_lead:
+            baseball_lead = await baseball_service.generate_from_existing_recap(
+                baseball_game, existing_recap
+            )
+        if baseball_service and baseball_game and not baseball_lead:
+            raise RuntimeError(f"OpenAI baseball headline failed for {market.label}")
         localized = marketize_baseball(base, market, baseball_lead)
         baseball_dir = baseball_output / market.slug
         baseball_dir.mkdir(parents=True, exist_ok=True)
@@ -61,6 +75,16 @@ async def generate(
             if football_service and football_game
             else None
         )
+        if football_service and football_game and not football_lead:
+            deterministic = marketize_football(football, market)["lead"]
+            facts = "\n".join(
+                [deterministic.get("deck", ""), *deterministic.get("paragraphs", [])]
+            )
+            football_lead = await football_service.generate_from_game_facts(
+                football_game, football["edition_date"].isoformat(), facts
+            )
+        if football_service and football_game and not football_lead:
+            raise RuntimeError(f"OpenAI football headline failed for {market.label}")
         football_dir = football_output / market.slug
         render_football_page(marketize_football(football, market, football_lead), football_dir)
 

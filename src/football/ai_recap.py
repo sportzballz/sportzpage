@@ -51,6 +51,20 @@ class FootballLeadStoryService:
         self._save_cached(game, edition_date, generated)
         return generated
 
+    async def generate_from_game_facts(
+        self, game: dict[str, Any], edition_date: str, facts: str
+    ) -> dict[str, Any] | None:
+        """Rewrite collected scoreboard facts when ESPN has no recap article."""
+        if not self._api_key:
+            return None
+        try:
+            generated = await self._rewrite(facts, game, edition_date)
+        except (ValueError, httpx.HTTPError, json.JSONDecodeError) as exc:
+            logger.warning("NFL fact rewrite unavailable for game %s: %s", game["id"], exc)
+            return None
+        self._save_cached(game, edition_date, generated)
+        return generated
+
     def _load_cached(self, game: dict[str, Any], edition_date: str) -> dict[str, Any] | None:
         try:
             payload = json.loads(self.cache_path(game, edition_date).read_text(encoding="utf-8"))

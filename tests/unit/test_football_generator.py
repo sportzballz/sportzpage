@@ -255,6 +255,37 @@ async def test_football_lead_reuses_daily_cache_without_api_call(
 
 
 @pytest.mark.asyncio
+async def test_football_lead_rewrites_collected_facts_when_article_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    game = FootballEditionGenerator._games({"events": [_event("401", "NYG", "PHI")]})[0]
+    service = FootballLeadStoryService(api_key="unused", cache_dir=tmp_path)
+    rewritten = {
+        "headline": "Facts become a full lead",
+        "deck": "A grounded deck.",
+        "paragraphs": ["One.", "Two.", "Three."],
+        "url": game["recap_url"],
+        "ai_generated": True,
+        "espn_game_id": "401",
+        "edition_date": "2026-08-20",
+    }
+
+    async def rewrite(source: str, selected_game: dict, edition_date: str) -> dict:
+        assert "Philadelphia" in source
+        assert selected_game == game
+        assert edition_date == "2026-08-20"
+        return rewritten
+
+    monkeypatch.setattr(service, "_rewrite", rewrite)
+    result = await service.generate_from_game_facts(
+        game, "2026-08-20", "Philadelphia collected game facts"
+    )
+
+    assert result == rewritten
+    assert service.cache_path(game, "2026-08-20").exists()
+
+
+@pytest.mark.asyncio
 async def test_optional_nfl_data_failure_degrades_to_empty(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
