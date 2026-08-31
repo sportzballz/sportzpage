@@ -48,6 +48,8 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     assert "Buy me a beer 🍻" in landing
     assert "https://buymeacoffee.com/thedailysportspage" in landing
     assert "Help shape the next edition" in landing
+    assert "Letter to the Editor" in landing
+    assert "Reader feedback" not in landing
     assert 'data-feedback-form' in landing
     assert "fetch('/api/feedback'" in landing
     assert 'maxlength="3000"' in landing

@@ -120,7 +120,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
       </ul>
     </section>
     <section class="feedback-panel" id="feedback">
-      <p class="section-label">Reader feedback</p>
+      <p class="section-label">Letter to the Editor</p>
       <h2>Help shape the next edition</h2>
       <p>Spot an error, have a feature idea, or want to tell us what works? Send a note directly to the editor.</p>
       <form data-feedback-form>
