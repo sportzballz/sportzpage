@@ -10,9 +10,12 @@ def test_market_configuration_covers_requested_launch_cities() -> None:
         "new-york",
         "los-angeles",
         "chicago",
+        "dallas",
     }
     assert MARKETS_BY_SLUG["new-york"].baseball_teams == ("NYY", "NYM")
     assert MARKETS_BY_SLUG["los-angeles"].football_teams == ("LAR", "LAC")
+    assert MARKETS_BY_SLUG["dallas"].baseball_teams == ("TEX",)
+    assert MARKETS_BY_SLUG["dallas"].football_teams == ("DAL",)
 
 
 def test_baseball_market_promotes_local_recap_and_sets_metadata() -> None:

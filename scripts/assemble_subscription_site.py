@@ -150,7 +150,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
   <script>
   try {{
     const market = localStorage.getItem('tdsp-market');
-    const supported = ['philadelphia', 'boston', 'new-york', 'los-angeles', 'chicago'];
+    const supported = ['philadelphia', 'boston', 'new-york', 'los-angeles', 'chicago', 'dallas'];
     if (supported.includes(market) && market !== 'philadelphia') {{
       document.querySelector('[data-current-edition-link]').href = `/editions/${{market}}/`;
     }}

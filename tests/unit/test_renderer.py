@@ -129,6 +129,7 @@ def test_market_selector_lists_and_persists_local_editions():
     assert '<option value="new-york">New York</option>' in html
     assert '<option value="los-angeles">Los Angeles</option>' in html
     assert '<option value="chicago">Chicago</option>' in html
+    assert '<option value="dallas">Dallas</option>' in html
     assert 'localStorage.setItem("tdsp-market", market)' in script
     assert '`/editions/${market}/${isFootball ? "football/" : ""}`' in script
 

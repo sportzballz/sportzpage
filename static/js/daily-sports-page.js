@@ -34,6 +34,7 @@
       "new-york",
       "los-angeles",
       "chicago",
+      "dallas",
     ]);
     const selector = document.querySelector("[data-market-selector]");
     const currentMarket = document.body.dataset.market || "philadelphia";

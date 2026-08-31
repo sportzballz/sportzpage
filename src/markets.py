@@ -17,6 +17,7 @@ MARKETS: tuple[Market, ...] = (
     Market("new-york", "New York", ("NYY", "NYM"), ("NYG", "NYJ")),
     Market("los-angeles", "Los Angeles", ("LAD", "LAA"), ("LAR", "LAC")),
     Market("chicago", "Chicago", ("CHC", "CWS"), ("CHI",)),
+    Market("dallas", "Dallas", ("TEX",), ("DAL",)),
 )
 
 MARKETS_BY_SLUG = {market.slug: market for market in MARKETS}

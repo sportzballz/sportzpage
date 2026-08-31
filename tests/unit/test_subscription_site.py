@@ -71,7 +71,14 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     assert "Sitemap: https://thedailysportspage.com/sitemap.xml" in (output / "robots.txt").read_text()
     assert "https://thedailysportspage.com/subscriber/current/" in (output / "sitemap.xml").read_text()
     assert "localStorage.getItem('tdsp-market')" in landing
-    for market in ("philadelphia", "boston", "new-york", "los-angeles", "chicago"):
+    for market in (
+        "philadelphia",
+        "boston",
+        "new-york",
+        "los-angeles",
+        "chicago",
+        "dallas",
+    ):
         assert (output / "editions" / market / "index.html").exists()
         assert (output / "editions" / market / "football/index.html").exists()
         assert f"https://thedailysportspage.com/editions/{market}/" in (

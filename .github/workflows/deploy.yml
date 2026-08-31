@@ -89,7 +89,7 @@ jobs:
             /tmp/current-edition.json \
             --game-date "${{ steps.edition.outputs.date }}" \
             --football-edition /tmp/current-football-edition.json
-          for market in philadelphia boston new-york los-angeles chicago; do
+          for market in philadelphia boston new-york los-angeles chicago dallas; do
             curl -fsS \
               "https://thedailysportspage.com/editions/${market}/edition.json" \
               -o "/tmp/${market}-edition.json" || true
