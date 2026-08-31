@@ -89,6 +89,18 @@ jobs:
             /tmp/current-edition.json \
             --game-date "${{ steps.edition.outputs.date }}" \
             --football-edition /tmp/current-football-edition.json
+          for market in philadelphia boston new-york los-angeles chicago; do
+            curl -fsS \
+              "https://thedailysportspage.com/editions/${market}/edition.json" \
+              -o "/tmp/${market}-edition.json" || true
+            curl -fsS \
+              "https://thedailysportspage.com/editions/${market}/football/edition.json" \
+              -o "/tmp/${market}-football-edition.json" || true
+            python scripts/seed_lead_cache.py \
+              "/tmp/${market}-edition.json" \
+              --game-date "${{ steps.edition.outputs.date }}" \
+              --football-edition "/tmp/${market}-football-edition.json"
+          done
 
       - name: Install generator
         run: python -m pip install .

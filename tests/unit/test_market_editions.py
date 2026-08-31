@@ -28,6 +28,25 @@ def test_baseball_market_promotes_local_recap_and_sets_metadata() -> None:
     assert edition.edition.market_slug == "philadelphia"
 
 
+def test_baseball_market_uses_full_ai_headline_rewrite() -> None:
+    edition = build_full_slate_edition()
+    local_recap = next(recap for recap in edition.game_recaps if "CHC" in recap.teams)
+    rewritten = local_recap.model_copy(
+        update={
+            "headline": "OpenAI rewrites the Chicago headline",
+            "paragraphs": ["First.", "Second.", "Third."],
+            "ai_generated": True,
+        }
+    )
+
+    chicago = marketize_baseball(edition, MARKETS_BY_SLUG["chicago"], rewritten)
+
+    assert chicago.lead_story is not None
+    assert chicago.lead_story.headline == "OpenAI rewrites the Chicago headline"
+    assert chicago.lead_story.paragraphs == ["First.", "Second.", "Third."]
+    assert chicago.lead_story.ai_generated is True
+
+
 def test_football_market_promotes_completed_local_game() -> None:
     page = {
         "lead": {"headline": "National lead"},
@@ -51,3 +70,28 @@ def test_football_market_promotes_completed_local_game() -> None:
     assert localized["canonical_path"] == "/editions/new-york/football/"
     assert localized["lead"]["headline"].startswith("New York Giants")
     assert "New York edition" in localized["lead"]["paragraphs"][2]
+
+
+def test_football_market_uses_full_ai_headline_rewrite() -> None:
+    page = {
+        "lead": {"headline": "National lead"},
+        "scoreboard": [
+            {
+                "id": "1",
+                "completed": True,
+                "away": {"abbr": "DAL"},
+                "home": {"abbr": "NYG"},
+            }
+        ],
+    }
+    rewritten = {
+        "headline": "OpenAI rewrites the New York headline",
+        "deck": "A rewritten deck.",
+        "paragraphs": ["First.", "Second.", "Third."],
+        "ai_generated": True,
+    }
+
+    localized = marketize_football(page, MARKETS_BY_SLUG["new-york"], rewritten)
+
+    assert localized["lead"] == rewritten
+    assert localized["lead"] is not rewritten

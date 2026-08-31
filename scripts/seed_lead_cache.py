@@ -20,6 +20,10 @@ def seed(edition_path: Path, game_date: str, cache_dir: Path) -> Path | None:
     story = edition.get("lead_story") or {}
     if not story.get("ai_generated"):
         return None
+    # Market pages formerly promoted one-paragraph briefs to the headline slot.
+    # Do not let those short recaps satisfy the full lead-story cache.
+    if not 3 <= len(story.get("paragraphs") or []) <= 5:
+        return None
     references = story.get("source_data_references") or []
     game_reference = next((value for value in references if value.startswith("game:")), None)
     facts = {

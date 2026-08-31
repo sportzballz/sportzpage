@@ -6,6 +6,7 @@ from typing import Any
 from src.football.generator import FootballEditionGenerator
 from src.markets import Market
 from src.models.edition import Edition
+from src.models.game import Game
 from src.models.story import GameRecap, Story, StoryType
 
 
@@ -26,12 +27,29 @@ def _story_from_recap(recap: GameRecap) -> Story:
     )
 
 
-def marketize_baseball(edition: Edition, market: Market) -> Edition:
+def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
+    recap = next(
+        (
+            recap
+            for team in market.baseball_teams
+            for recap in edition.game_recaps
+            if team in recap.teams
+        ),
+        None,
+    )
+    if not recap:
+        return None
+    return next((game for game in edition.games if game.game_id == recap.game_id), None)
+
+
+def marketize_baseball(
+    edition: Edition, market: Market, lead_recap: GameRecap | None = None
+) -> Edition:
     localized = edition.model_copy(deep=True)
     localized.edition.market_slug = market.slug
     localized.edition.market_label = market.label
     localized.edition.market_teams = list(market.baseball_teams)
-    local_recap = next(
+    local_recap = lead_recap or next(
         (
             recap
             for team in market.baseball_teams
@@ -45,17 +63,12 @@ def marketize_baseball(edition: Edition, market: Market) -> Edition:
     return localized
 
 
-def marketize_football(page: dict[str, Any], market: Market) -> dict[str, Any]:
-    localized = deepcopy(page)
-    localized["market_slug"] = market.slug
-    localized["market_label"] = market.label
-    localized["market_teams"] = list(market.football_teams)
-    localized["canonical_path"] = f"/editions/{market.slug}/football/"
-    local_game = next(
+def football_headline_game(page: dict[str, Any], market: Market) -> dict[str, Any] | None:
+    return next(
         (
             game
             for team in market.football_teams
-            for game in localized.get("scoreboard", [])
+            for game in page.get("scoreboard", [])
             if game.get("completed")
             and team
             in {
@@ -65,7 +78,20 @@ def marketize_football(page: dict[str, Any], market: Market) -> dict[str, Any]:
         ),
         None,
     )
-    if local_game:
+
+
+def marketize_football(
+    page: dict[str, Any], market: Market, lead: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    localized = deepcopy(page)
+    localized["market_slug"] = market.slug
+    localized["market_label"] = market.label
+    localized["market_teams"] = list(market.football_teams)
+    localized["canonical_path"] = f"/editions/{market.slug}/football/"
+    local_game = football_headline_game(localized, market)
+    if lead:
+        localized["lead"] = deepcopy(lead)
+    elif local_game:
         localized["lead"] = FootballEditionGenerator._lead_story(
             local_game, market_label=market.label
         )

@@ -44,6 +44,27 @@ def test_seeds_ai_lead_by_espn_game_id(tmp_path: Path) -> None:
     assert GameRecap.model_validate(saved).ai_generated is True
 
 
+def test_does_not_seed_short_market_brief_as_full_lead(tmp_path: Path) -> None:
+    edition = tmp_path / "edition.json"
+    edition.write_text(
+        json.dumps(
+            {
+                "games": [{"game_id": 123, "game_date": "2026-08-20"}],
+                "lead_story": {
+                    "headline": "Short promoted brief",
+                    "paragraphs": ["Only one paragraph."],
+                    "ai_generated": True,
+                    "source_data_references": ["game:123", "espn:401877087"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert seed(edition, "2026-08-20", tmp_path / "cache") is None
+    assert not (tmp_path / "cache/2026-08-20-401877087.json").exists()
+
+
 def test_seeds_published_short_recaps(tmp_path: Path) -> None:
     edition = tmp_path / "edition.json"
     edition.write_text(
