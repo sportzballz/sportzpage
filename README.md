@@ -21,6 +21,8 @@ Editions can be generated multiple times per day (morning, midday, evening, late
 - **Python 3.12+**
 - **Node.js** (optional — required only for asset bundling)
 
+The native iPhone and iPad reader is in [`ios/`](ios/README.md). It downloads the live daily edition feeds, so routine newspaper publishing does not require an App Store update.
+
 ---
 
 ## Quick Setup

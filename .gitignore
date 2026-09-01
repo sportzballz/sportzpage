@@ -14,3 +14,6 @@ data/history/days/download_summary.json
 .terraform.tfstate.lock.info
 terraform/tfplan
 .coverage
+ios/**/xcuserdata/
+ios/DerivedData/
+*.xcuserstate
