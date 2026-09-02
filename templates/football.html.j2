@@ -49,9 +49,8 @@
           <p class="section-label">Football Front Page</p><h2 class="lead-headline">{{ page.lead.headline }}</h2>
           <p class="story-deck">{{ page.lead.deck }}</p><p class="story-byline">By Daily Sports Page Staff</p>
           <div class="story-body">{% for paragraph in page.lead.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</div>
-          <p class="source-link"><a href="{{ page.lead.url }}">Game recap on ESPN</a></p>
         </article>
-        {% else %}<p class="no-content">The next NFL game story will appear after play is complete.</p>{% endif %}
+        {% endif %}
       </section>
     </div>
     <section id="scoreboard" class="scoreboard section weekly-football-scoreboard"><h2 class="section-heading">{{ page.week_label }} Scoreboard &amp; Schedule{% if page.week_detail %} <small>{{ page.week_detail }}</small>{% endif %}</h2>
@@ -69,11 +68,11 @@
     <section id="league-leaders" class="section standings"><h2 class="section-heading">NFL League Leaders{% if page.leaders_season_label %} — {{ page.leaders_season_label }}{% endif %}</h2>
       {% if page.league_leaders %}<div class="standings-grid league-leaders-grid">{% for category in page.league_leaders %}<div class="standings-division league-leader-category"><h3>{{ category.label }}</h3>
         <table><thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>{{ category.abbreviation or 'Stat' }}</th></tr></thead><tbody>
-        {% for row in category.rows %}<tr{% if row.team in page.market_teams %} class="is-primary-team"{% endif %}><td>{{ row.rank }}</td><td>{% if row.url %}<a href="{{ row.url }}">{{ row.name }}</a>{% else %}{{ row.name }}{% endif %}{% if row.position %} <small>{{ row.position }}</small>{% endif %}</td><td>{{ row.team }}</td><td><strong>{{ row.value }}</strong></td></tr>{% endfor %}
-        </tbody></table></div>{% endfor %}</div><p class="source-link"><a href="https://www.espn.com/nfl/stats">Full NFL statistics on ESPN</a></p>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
+        {% for row in category.rows %}<tr{% if row.team in page.market_teams %} class="is-primary-team"{% endif %}><td>{{ row.rank }}</td><td>{{ row.name }}{% if row.position %} <small>{{ row.position }}</small>{% endif %}</td><td>{{ row.team }}</td><td><strong>{{ row.value }}</strong></td></tr>{% endfor %}
+        </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
     </section>
     <section id="around-the-league" class="section around-the-league"><h2 class="section-heading">Around the NFL</h2>
-      {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{% if story.url %}<a href="{{ story.url }}">{{ story.headline }}</a>{% else %}{{ story.headline }}{% endif %}</h3><p>{{ story.description }}</p></article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}
+      {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{{ story.headline }}</h3><p>{{ story.description }}</p></article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}
     </section>
   </main>
   <footer class="site-footer"><p>The Daily Sports Page — Football Edition — {{ page.edition_date }}</p></footer>

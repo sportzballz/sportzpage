@@ -90,9 +90,21 @@ class FootballEditionGenerator:
         lead_game = self._select_lead_game(previous_games)
         lead = self._lead_story(lead_game) if lead_game else None
         if lead_game and self.lead_story_service:
-            lead = await self.lead_story_service.generate(
+            generated = await self.lead_story_service.generate(
                 lead_game, self.edition_date.isoformat()
-            ) or lead
+            )
+            if not generated:
+                facts = "\n".join([lead.get("deck", ""), *lead.get("paragraphs", [])])
+                generated = await self.lead_story_service.generate_from_game_facts(
+                    lead_game, self.edition_date.isoformat(), facts
+                )
+            lead = generated
+        elif not lead_game and self.lead_story_service:
+            headline_article = self._select_news_lead(news)
+            if headline_article:
+                lead = await self.lead_story_service.generate_from_news(
+                    headline_article, self.edition_date.isoformat()
+                )
         return {
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.edition_date,
@@ -159,7 +171,6 @@ class FootballEditionGenerator:
                 "broadcast": ", ".join(competition.get("broadcasts", [{}])[0].get("names", [])) if competition.get("broadcasts") else "",
                 "odds": odds.get("details") or odds.get("spread") or "",
                 "over_under": odds.get("overUnder"),
-                "recap_url": f"https://www.espn.com/nfl/recap/_/gameId/{event.get('id')}",
             })
         return games
 
@@ -228,7 +239,6 @@ class FootballEditionGenerator:
                 f"The game was played at {game['venue']}. The result offers an early checkpoint for both clubs as the NFL calendar moves toward the regular season.",
                 f"The {market_label} edition follows its local clubs first while keeping the full NFL slate in view.",
             ],
-            "url": game["recap_url"],
             "ai_generated": False,
             "espn_game_id": str(game["id"]),
             "edition_date": "",
@@ -261,9 +271,33 @@ class FootballEditionGenerator:
     def _news(payload: dict[str, Any]) -> list[dict[str, str]]:
         stories = []
         for article in payload.get("articles", []):
-            link = (article.get("links", {}).get("web", {}) or {}).get("href", "")
-            stories.append({"headline": article.get("headline", "NFL notebook"), "description": article.get("description", ""), "url": link})
+            stories.append({
+                "headline": article.get("headline", "NFL notebook"),
+                "description": article.get("description", ""),
+            })
         return stories[:8]
+
+    @staticmethod
+    def _select_news_lead(payload: dict[str, Any]) -> dict[str, str] | None:
+        for article in payload.get("articles", []):
+            api_url = ((article.get("links") or {}).get("api", {}).get("self") or {}).get(
+                "href", ""
+            )
+            if (
+                article.get("type") == "Media"
+                or article.get("premium") is True
+                or not article.get("id")
+                or not article.get("headline")
+                or not api_url.startswith("https://content.core.api.espn.com/")
+            ):
+                continue
+            return {
+                "id": str(article["id"]),
+                "headline": str(article["headline"]),
+                "description": str(article.get("description") or ""),
+                "api_url": api_url,
+            }
+        return None
 
     @staticmethod
     def _league_leaders(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -282,15 +316,6 @@ class FootballEditionGenerator:
                 team = leader.get("team") or {}
                 if not athlete.get("displayName"):
                     continue
-                player_url = next(
-                    (
-                        link.get("href", "")
-                        for link in athlete.get("links") or []
-                        if "playercard" in (link.get("rel") or [])
-                        and str(link.get("href", "")).startswith("https://")
-                    ),
-                    "",
-                )
                 rows.append(
                     {
                         "rank": rank,
@@ -298,7 +323,6 @@ class FootballEditionGenerator:
                         "position": (athlete.get("position") or {}).get("abbreviation", ""),
                         "team": team.get("abbreviation", ""),
                         "value": leader.get("displayValue", ""),
-                        "url": player_url,
                     }
                 )
                 if len(rows) == 5:

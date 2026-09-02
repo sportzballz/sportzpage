@@ -20,6 +20,15 @@ def test_support_link_is_first_football_menu_item() -> None:
     )
 
 
+def test_football_page_contains_stories_without_espn_links() -> None:
+    template = Path("templates/football.html.j2").read_text()
+
+    assert "espn.com" not in template
+    assert "page.lead.url" not in template
+    assert "row.url" not in template
+    assert "story.url" not in template
+
+
 def _event(event_id: str, away: str, home: str, completed: bool = True) -> dict:
     return {
         "id": event_id,
@@ -42,7 +51,7 @@ def test_parses_espn_nfl_scoreboard_event() -> None:
     assert games[0]["home"]["abbr"] == "PHI"
     assert games[0]["home"]["score"] == "24"
     assert games[0]["venue"] == "The Linc"
-    assert games[0]["recap_url"].endswith("/401")
+    assert "recap_url" not in games[0]
     assert games[0]["date"] == "2026-08-20"
     assert games[0]["date_label"] == "Thu, Aug 20"
 
@@ -190,7 +199,33 @@ def test_parses_nfl_league_leaders_in_display_order() -> None:
         "position": "QB",
         "team": "BUF",
         "value": "4,500",
-        "url": "https://www.espn.com/nfl/player/example",
+    }
+
+
+def test_selects_first_full_nfl_news_article_and_skips_media() -> None:
+    payload = {
+        "articles": [
+            {
+                "id": 1,
+                "type": "Media",
+                "headline": "Video clip",
+                "links": {"api": {"self": {"href": "https://content.core.api.espn.com/v1/video/1"}}},
+            },
+            {
+                "id": 2,
+                "type": "HeadlineNews",
+                "headline": "NFL roster news",
+                "description": "A complete news development.",
+                "links": {"api": {"self": {"href": "https://content.core.api.espn.com/v1/sports/news/2"}}},
+            },
+        ]
+    }
+
+    assert FootballEditionGenerator._select_news_lead(payload) == {
+        "id": "2",
+        "headline": "NFL roster news",
+        "description": "A complete news development.",
+        "api_url": "https://content.core.api.espn.com/v1/sports/news/2",
     }
 
 
@@ -237,7 +272,6 @@ async def test_football_lead_reuses_daily_cache_without_api_call(
         "headline": "Cached Eagles Lead",
         "deck": "The published copy stays put.",
         "paragraphs": ["One.", "Two.", "Three."],
-        "url": game["recap_url"],
         "ai_generated": True,
         "espn_game_id": "401",
         "edition_date": "2026-08-20",
@@ -264,7 +298,6 @@ async def test_football_lead_rewrites_collected_facts_when_article_is_missing(
         "headline": "Facts become a full lead",
         "deck": "A grounded deck.",
         "paragraphs": ["One.", "Two.", "Three."],
-        "url": game["recap_url"],
         "ai_generated": True,
         "espn_game_id": "401",
         "edition_date": "2026-08-20",
@@ -283,6 +316,88 @@ async def test_football_lead_rewrites_collected_facts_when_article_is_missing(
 
     assert result == rewritten
     assert service.cache_path(game, "2026-08-20").exists()
+
+
+@pytest.mark.asyncio
+async def test_football_lead_rewrites_full_news_article_and_caches_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    article = {
+        "id": "49802956",
+        "headline": "Players prepare for season opener",
+        "description": "Two veterans advanced in their injury recovery.",
+        "api_url": "https://content.core.api.espn.com/v1/sports/news/49802956",
+    }
+    service = FootballLeadStoryService(api_key="unused", cache_dir=tmp_path)
+    rewritten = {
+        "headline": "Veterans Near Return",
+        "deck": "Two players took another step toward the opener.",
+        "paragraphs": ["One.", "Two.", "Three.", "Four."],
+        "ai_generated": True,
+        "espn_news_id": "49802956",
+        "source_kind": "nfl_news",
+        "edition_date": "2026-09-02",
+    }
+
+    async def fetch(api_url: str) -> str:
+        assert api_url == article["api_url"]
+        return "Grounded source article text " * 20
+
+    async def rewrite(source: str, selected: dict, edition_date: str) -> dict:
+        assert source.startswith("Grounded source")
+        assert selected == article
+        assert edition_date == "2026-09-02"
+        return rewritten
+
+    monkeypatch.setattr(service, "_fetch_news_article", fetch)
+    monkeypatch.setattr(service, "_rewrite_news", rewrite)
+
+    assert await service.generate_from_news(article, "2026-09-02") == rewritten
+    assert service.news_cache_path(article, "2026-09-02").exists()
+
+
+@pytest.mark.asyncio
+async def test_missing_news_rewrite_publishes_empty_lead(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class EmptyNewsService:
+        async def generate_from_news(self, _article: dict, _edition_date: str) -> None:
+            return None
+
+    generator = FootballEditionGenerator(
+        date(2026, 9, 2), lead_story_service=EmptyNewsService()  # type: ignore[arg-type]
+    )
+    edition_payload = {
+        "week": {"number": 1},
+        "leagues": [{"season": {"year": 2026, "type": {"id": "2", "name": "Regular Season"}}}],
+        "events": [],
+    }
+    news_payload = {
+        "articles": [{
+            "id": 2,
+            "type": "HeadlineNews",
+            "headline": "NFL roster news",
+            "description": "A development.",
+            "links": {"api": {"self": {"href": "https://content.core.api.espn.com/v1/sports/news/2"}}},
+        }]
+    }
+
+    async def fake_get(
+        _client: httpx.AsyncClient, url: str, _params: dict[str, str]
+    ) -> dict:
+        if url.endswith("/news"):
+            return news_payload
+        return edition_payload
+
+    async def empty_optional(*_args: object, **_kwargs: object) -> dict:
+        return {}
+
+    monkeypatch.setattr(generator, "_get", fake_get)
+    monkeypatch.setattr(generator, "_get_optional", empty_optional)
+
+    page = await generator.collect()
+
+    assert page["lead"] is None
 
 
 @pytest.mark.asyncio

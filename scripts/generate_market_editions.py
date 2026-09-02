@@ -83,10 +83,16 @@ async def generate(
             football_lead = await football_service.generate_from_game_facts(
                 football_game, football["edition_date"].isoformat(), facts
             )
-        if football_service and football_game and not football_lead:
-            raise RuntimeError(f"OpenAI football headline failed for {market.label}")
         football_dir = football_output / market.slug
-        render_football_page(marketize_football(football, market, football_lead), football_dir)
+        render_football_page(
+            marketize_football(
+                football,
+                market,
+                football_lead,
+                allow_deterministic_lead=football_service is None,
+            ),
+            football_dir,
+        )
 
 
 def main() -> None:

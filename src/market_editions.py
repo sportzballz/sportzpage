@@ -81,7 +81,11 @@ def football_headline_game(page: dict[str, Any], market: Market) -> dict[str, An
 
 
 def marketize_football(
-    page: dict[str, Any], market: Market, lead: dict[str, Any] | None = None
+    page: dict[str, Any],
+    market: Market,
+    lead: dict[str, Any] | None = None,
+    *,
+    allow_deterministic_lead: bool = True,
 ) -> dict[str, Any]:
     localized = deepcopy(page)
     localized["market_slug"] = market.slug
@@ -92,7 +96,9 @@ def marketize_football(
     if lead:
         localized["lead"] = deepcopy(lead)
     elif local_game:
-        localized["lead"] = FootballEditionGenerator._lead_story(
-            local_game, market_label=market.label
+        localized["lead"] = (
+            FootballEditionGenerator._lead_story(local_game, market_label=market.label)
+            if allow_deterministic_lead
+            else None
         )
     return localized
