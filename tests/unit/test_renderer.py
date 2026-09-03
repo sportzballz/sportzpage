@@ -72,6 +72,13 @@ def test_basic_render_returns_html():
     assert "<!doctype html>" in result.lower()
 
 
+def test_around_the_league_has_no_external_source_links():
+    html = make_renderer().render(build_full_slate_edition())
+
+    assert "story-source-link" not in html
+    assert "Read at MLB.com" not in html
+
+
 def test_standings_have_league_and_division_labels():
     html = make_renderer().render(build_full_slate_edition())
 

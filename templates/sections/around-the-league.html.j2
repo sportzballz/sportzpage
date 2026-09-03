@@ -13,9 +13,6 @@
       <p>{{ para }}</p>
       {% endif %}
       {% endfor %}
-      {% if item.source_url %}
-      <p class="story-source-link"><a href="{{ item.source_url }}" target="_blank" rel="noopener">Read at {{ item.source_name or 'MLB.com' }}</a></p>
-      {% endif %}
       {% if item.teams or item.players %}
       <footer class="story-tags">
         {% for team in item.teams %}

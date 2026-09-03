@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -118,6 +119,53 @@ def seed_football(edition_path: Path, cache_dir: Path) -> Path | None:
     return destination
 
 
+def seed_news(edition_path: Path, cache_dir: Path) -> list[Path]:
+    """Restore self-contained AI league briefs without restoring outbound URLs."""
+    if not edition_path.exists():
+        return []
+    edition = json.loads(edition_path.read_text(encoding="utf-8"))
+    seeded: list[Path] = []
+    for story in edition.get("around_the_league") or []:
+        if not story.get("ai_generated") or story.get("source_url"):
+            continue
+        references = story.get("source_data_references") or []
+        reference = next(
+            (value for value in references if value.startswith("mlb-news:")),
+            None,
+        )
+        if reference:
+            digest = reference.split(":", 1)[1]
+        else:
+            digest = hashlib.sha256(story.get("headline", "").encode("utf-8")).hexdigest()[:20]
+        destination = cache_dir / f"mlb-news-{digest}.json"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        if not destination.exists():
+            story["source_url"] = None
+            destination.write_text(json.dumps(story, indent=2) + "\n", encoding="utf-8")
+        seeded.append(destination)
+    return seeded
+
+
+def seed_football_news(edition_path: Path, cache_dir: Path) -> list[Path]:
+    """Restore already-published self-contained Around the NFL briefs."""
+    if not edition_path.exists():
+        return []
+    edition = json.loads(edition_path.read_text(encoding="utf-8"))
+    seeded: list[Path] = []
+    for story in edition.get("news") or []:
+        source_id = story.get("espn_news_id")
+        if not story.get("ai_generated") or not source_id:
+            continue
+        story.pop("url", None)
+        story.pop("source_url", None)
+        destination = cache_dir / f"nfl-around-{source_id}.json"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        if not destination.exists():
+            destination.write_text(json.dumps(story, indent=2) + "\n", encoding="utf-8")
+        seeded.append(destination)
+    return seeded
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("edition", type=Path)
@@ -127,18 +175,28 @@ def main() -> None:
     args = parser.parse_args()
     lead = seed(args.edition, args.game_date, args.cache_dir)
     recaps = seed_short_recaps(args.edition, args.game_date, args.cache_dir)
+    news = seed_news(args.edition, args.cache_dir)
     football = (
         seed_football(args.football_edition, args.cache_dir)
         if args.football_edition
         else None
     )
+    football_news = (
+        seed_football_news(args.football_edition, args.cache_dir)
+        if args.football_edition
+        else []
+    )
     if lead:
         print(f"Seeded {lead}")
     for recap in recaps:
         print(f"Seeded {recap}")
+    for story in news:
+        print(f"Seeded {story}")
     if football:
         print(f"Seeded {football}")
-    if not lead and not recaps and not football:
+    for story in football_news:
+        print(f"Seeded {story}")
+    if not lead and not recaps and not news and not football and not football_news:
         print("No reusable AI stories found")
 
 

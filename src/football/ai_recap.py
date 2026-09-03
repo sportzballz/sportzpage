@@ -35,6 +35,9 @@ class FootballLeadStoryService:
     def news_cache_path(self, article: dict[str, Any], edition_date: str) -> Path:
         return self._cache_dir / f"nfl-news-{edition_date}-{article['id']}.json"
 
+    def news_brief_cache_path(self, article: dict[str, Any]) -> Path:
+        return self._cache_dir / f"nfl-around-{article['id']}.json"
+
     async def generate(self, game: dict[str, Any], edition_date: str) -> dict[str, Any] | None:
         cached = self._load_cached(game, edition_date)
         if cached:
@@ -90,6 +93,25 @@ class FootballLeadStoryService:
         self._save_news_cached(article, edition_date, generated)
         return generated
 
+    async def generate_news_brief(self, article: dict[str, Any]) -> dict[str, Any] | None:
+        """Create a cached, self-contained Around the NFL brief."""
+        cached = self._load_news_brief_cached(article)
+        if cached:
+            logger.info("reusing cached Around the NFL brief for ESPN article %s", article["id"])
+            return cached
+        if not self._api_key:
+            return None
+        source = await self._fetch_news_article(article.get("api_url", ""))
+        if not source:
+            return None
+        try:
+            generated = await self._rewrite_news_brief(source, article)
+        except (ValueError, httpx.HTTPError, json.JSONDecodeError) as exc:
+            logger.warning("Around the NFL rewrite unavailable for %s: %s", article["id"], exc)
+            return None
+        self._save_news_brief(article, generated)
+        return generated
+
     def _load_cached(self, game: dict[str, Any], edition_date: str) -> dict[str, Any] | None:
         try:
             payload = json.loads(self.cache_path(game, edition_date).read_text(encoding="utf-8"))
@@ -129,6 +151,29 @@ class FootballLeadStoryService:
         self, article: dict[str, Any], edition_date: str, story: dict[str, Any]
     ) -> None:
         path = self.news_cache_path(article, edition_date)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(json.dumps(story, indent=2) + "\n", encoding="utf-8")
+        temporary.replace(path)
+
+    def _load_news_brief_cached(self, article: dict[str, Any]) -> dict[str, Any] | None:
+        try:
+            payload = json.loads(
+                self.news_brief_cache_path(article).read_text(encoding="utf-8")
+            )
+        except (OSError, ValueError):
+            return None
+        required = {"headline", "deck", "paragraphs", "ai_generated", "espn_news_id"}
+        if required <= payload.keys() and payload["ai_generated"] is True:
+            payload.pop("url", None)
+            payload.pop("source_url", None)
+            return payload
+        return None
+
+    def _save_news_brief(
+        self, article: dict[str, Any], story: dict[str, Any]
+    ) -> None:
+        path = self.news_brief_cache_path(article)
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(".tmp")
         temporary.write_text(json.dumps(story, indent=2) + "\n", encoding="utf-8")
@@ -286,6 +331,63 @@ class FootballLeadStoryService:
             }
         )
         return story
+
+    async def _rewrite_news_brief(
+        self, source: str, article: dict[str, Any]
+    ) -> dict[str, Any]:
+        prompt = (
+            "Write an original, self-contained Around the NFL brief in the voice of an "
+            "experienced sports journalist. Use only facts in the supplied source article; "
+            "do not copy phrasing, speculate, add quotes, mention ESPN, or direct the reader "
+            "elsewhere. Return a headline, a one-sentence deck, and one or two concise "
+            "paragraphs.\n\n"
+            f"Source headline: {article['headline']}\n"
+            f"Source description: {article.get('description', '')}\n\nSource article:\n{source}"
+        )
+        schema = {
+            "type": "object",
+            "properties": {
+                "headline": {"type": "string"},
+                "deck": {"type": "string"},
+                "paragraphs": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": 2,
+                },
+            },
+            "required": ["headline", "deck", "paragraphs"],
+            "additionalProperties": False,
+        }
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            response = await client.post(
+                "https://api.openai.com/v1/responses",
+                headers={"Authorization": f"Bearer {self._api_key}"},
+                json={
+                    "model": self._model,
+                    "input": prompt,
+                    "text": {
+                        "format": {
+                            "type": "json_schema",
+                            "name": "football_around_the_league_brief",
+                            "strict": True,
+                            "schema": schema,
+                        }
+                    },
+                },
+            )
+            response.raise_for_status()
+        story = json.loads(self._output_text(response.json()))
+        paragraphs = [str(value).strip() for value in story.get("paragraphs", [])]
+        if not 1 <= len(paragraphs) <= 2 or not all(paragraphs):
+            raise ValueError("Around the NFL brief must contain one or two paragraphs")
+        return {
+            "headline": str(story["headline"]).strip(),
+            "deck": str(story["deck"]).strip(),
+            "paragraphs": paragraphs,
+            "ai_generated": True,
+            "espn_news_id": str(article["id"]),
+        }
 
     @staticmethod
     def _output_text(payload: dict[str, Any]) -> str:

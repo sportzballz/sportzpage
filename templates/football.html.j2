@@ -72,7 +72,7 @@
         </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
     </section>
     <section id="around-the-league" class="section around-the-league"><h2 class="section-heading">Around the NFL</h2>
-      {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{{ story.headline }}</h3><p>{{ story.description }}</p></article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}
+      {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{{ story.headline }}</h3><p class="story-deck">{{ story.deck }}</p>{% for paragraph in story.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}
     </section>
   </main>
   <footer class="site-footer"><p>The Daily Sports Page — Football Edition — {{ page.edition_date }}</p></footer>

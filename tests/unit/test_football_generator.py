@@ -29,6 +29,14 @@ def test_football_page_contains_stories_without_espn_links() -> None:
     assert "story.url" not in template
 
 
+def test_around_the_nfl_renders_complete_rewritten_briefs() -> None:
+    template = Path("templates/football.html.j2").read_text()
+
+    assert "story.deck" in template
+    assert "story.paragraphs" in template
+    assert "story.description" not in template
+
+
 def _event(event_id: str, away: str, home: str, completed: bool = True) -> dict:
     return {
         "id": event_id,
@@ -357,11 +365,52 @@ async def test_football_lead_rewrites_full_news_article_and_caches_it(
 
 
 @pytest.mark.asyncio
+async def test_around_the_nfl_rewrites_full_article_and_reuses_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    article = {
+        "id": "49802956",
+        "headline": "Players prepare for opener",
+        "description": "Veterans advanced in their recovery.",
+        "api_url": "https://content.core.api.espn.com/v1/sports/news/49802956",
+    }
+    service = FootballLeadStoryService(api_key="unused", cache_dir=tmp_path)
+
+    async def fetch(_api_url: str) -> str:
+        return "Grounded NFL source article text " * 20
+
+    async def rewrite(_source: str, _article: dict) -> dict:
+        return {
+            "headline": "Veterans Near Return",
+            "deck": "Two players moved closer to the opener.",
+            "paragraphs": ["The veterans took another step in their recovery."],
+            "ai_generated": True,
+            "espn_news_id": "49802956",
+        }
+
+    monkeypatch.setattr(service, "_fetch_news_article", fetch)
+    monkeypatch.setattr(service, "_rewrite_news_brief", rewrite)
+
+    first = await service.generate_news_brief(article)
+    assert first is not None
+    assert service.news_brief_cache_path(article).exists()
+
+    async def should_not_fetch(_api_url: str) -> str:
+        raise AssertionError("ESPN must not be fetched for a cached NFL brief")
+
+    monkeypatch.setattr(service, "_fetch_news_article", should_not_fetch)
+    assert await service.generate_news_brief(article) == first
+
+
+@pytest.mark.asyncio
 async def test_missing_news_rewrite_publishes_empty_lead(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class EmptyNewsService:
         async def generate_from_news(self, _article: dict, _edition_date: str) -> None:
+            return None
+
+        async def generate_news_brief(self, _article: dict) -> None:
             return None
 
     generator = FootballEditionGenerator(

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from src.editorial.espn_recap import ESPNLeadStoryService
 from src.editorial.fallback import generate_fallback_recap
+from src.editorial.news_rewrite import NewsStoryRewriteService
 from src.editorial.scoring import ScoringContext, ScoringWeights, score_game
 from src.models.edition import Edition, EditionMetadata, EditionType, GenerationMetadata
 from src.models.game import Game, GameStatus
@@ -68,6 +69,7 @@ class EditorialEngine:
         edition_type_override: str | None = None,
         ai_client: object | None = None,
         lead_story_service: ESPNLeadStoryService | None = None,
+        news_story_service: NewsStoryRewriteService | None = None,
     ) -> None:
         self._weights = scoring_weights
         self._overrides = manual_overrides
@@ -81,6 +83,7 @@ class EditorialEngine:
         self._edition_type_override = edition_type_override
         self._ai_client = ai_client
         self._lead_story_service = lead_story_service
+        self._news_story_service = news_story_service
         self._stats = StatisticsProcessor()
 
     @classmethod
@@ -104,9 +107,15 @@ class EditorialEngine:
         except Exception as exc:
             logger.warning("AI settings unavailable; using deterministic lead: %s", exc)
         lead_story_service = None
+        news_story_service = None
         if settings and settings.provider in {"openclaw", "openai"}:
             lead_story_service = ESPNLeadStoryService(
                 provider=settings.provider,
+                model=settings.model,
+                timeout=settings.timeout_seconds + 30,
+            )
+        if settings and settings.provider == "openai":
+            news_story_service = NewsStoryRewriteService(
                 model=settings.model,
                 timeout=settings.timeout_seconds + 30,
             )
@@ -122,6 +131,7 @@ class EditorialEngine:
             require_primary_team_lead=focus.get("require_primary_team_lead", True),
             edition_type_override=edition_type_override,
             lead_story_service=lead_story_service,
+            news_story_service=news_story_service,
         )
 
     async def generate(
@@ -217,6 +227,12 @@ class EditorialEngine:
                     )
                 )
 
+        around_the_league = normalized.news_stories
+        if self._news_story_service:
+            around_the_league = await self._news_story_service.rewrite_all(
+                normalized.news_stories
+            )
+
         import platform
 
         return Edition(
@@ -234,7 +250,7 @@ class EditorialEngine:
             standings=normalized.standings,
             league_leaders=normalized.league_leaders,
             game_recaps=game_recaps,
-            around_the_league=normalized.news_stories,
+            around_the_league=around_the_league,
             transactions=normalized.transactions,
             historical_items=normalized.historical_items,
             team_season_leaders=normalized.team_season_leaders,

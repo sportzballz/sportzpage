@@ -100,10 +100,13 @@ private struct DailySportsPageWebView: UIViewRepresentable {
                 return
             }
 
-            if url.scheme == "http" || url.scheme == "https" {
+            if (url.scheme == "http" || url.scheme == "https"),
+               url.host == "thedailysportspage.com" || url.host == "www.thedailysportspage.com" {
                 decisionHandler(.allow)
-            } else {
+            } else if url.scheme != "http" && url.scheme != "https" {
                 UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+            } else {
                 decisionHandler(.cancel)
             }
         }

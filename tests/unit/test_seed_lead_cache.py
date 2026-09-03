@@ -1,7 +1,13 @@
 import json
 from pathlib import Path
 
-from scripts.seed_lead_cache import seed, seed_football, seed_short_recaps
+from scripts.seed_lead_cache import (
+    seed,
+    seed_football,
+    seed_football_news,
+    seed_news,
+    seed_short_recaps,
+)
 from src.models.story import GameRecap
 
 
@@ -151,3 +157,43 @@ def test_seeds_published_football_news_lead(tmp_path: Path) -> None:
 
     assert cached == tmp_path / "cache" / "nfl-news-2026-09-02-49802956.json"
     assert json.loads(cached.read_text())["headline"] == "Cached NFL news lead"
+
+
+def test_seeds_self_contained_baseball_and_football_news(tmp_path: Path) -> None:
+    baseball = tmp_path / "baseball.json"
+    baseball.write_text(
+        json.dumps(
+            {
+                "around_the_league": [
+                    {
+                        "headline": "Cached MLB brief",
+                        "deck": "Deck",
+                        "paragraphs": ["Body"],
+                        "story_type": "editorial",
+                        "source_data_references": ["mlb-news:abc123"],
+                        "ai_generated": True,
+                        "source_url": None,
+                    }
+                ]
+            }
+        )
+    )
+    football = tmp_path / "football.json"
+    football.write_text(
+        json.dumps(
+            {
+                "news": [
+                    {
+                        "headline": "Cached NFL brief",
+                        "deck": "Deck",
+                        "paragraphs": ["Body"],
+                        "ai_generated": True,
+                        "espn_news_id": "987",
+                    }
+                ]
+            }
+        )
+    )
+
+    assert seed_news(baseball, tmp_path / "cache")[0].name == "mlb-news-abc123.json"
+    assert seed_football_news(football, tmp_path / "cache")[0].name == "nfl-around-987.json"

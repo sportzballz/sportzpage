@@ -76,6 +76,8 @@ jobs:
         with:
           path: build/ai-cache
           key: sportzpage-lead-${{ steps.edition.outputs.date }}
+          restore-keys: |
+            sportzpage-lead-
 
       - name: Reuse the already published daily lead
         run: |
