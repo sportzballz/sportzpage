@@ -1,291 +1,111 @@
 import SwiftUI
+import WebKit
 
 struct RootView: View {
-    @EnvironmentObject private var store: EditionStore
-    @AppStorage("selectedMarket") private var selectedMarket = "philadelphia"
-    @State private var sport = Sport.baseball
-
-    private var market: Market {
-        Market.all.first { $0.id == selectedMarket } ?? Market.all[0]
-    }
+    @StateObject private var routes = AppRouteStore.shared
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: 20) {
-                    masthead
-
-                    if let message = store.errorMessage {
-                        Label(message, systemImage: "wifi.slash")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    }
-
-                    if sport == .baseball, let edition = store.baseball {
-                        BaseballEditionView(edition: edition)
-                    } else if sport == .football, let edition = store.football {
-                        FootballEditionView(edition: edition)
-                    } else if store.isRefreshing {
-                        ProgressView("Fetching today’s edition…")
-                            .padding(.vertical, 80)
-                    } else {
-                        ContentUnavailableView(
-                            "Edition Unavailable",
-                            systemImage: "newspaper",
-                            description: Text("Pull down to try loading it again.")
-                        )
-                    }
-
-                    Link(destination: URL(string: "https://thedailysportspage.com/#feedback")!) {
-                        Label("Letter to the Editor", systemImage: "envelope")
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .frame(maxWidth: 760)
-                .padding()
-                .frame(maxWidth: .infinity)
-            }
-            .background(Color(.systemGroupedBackground))
-            .refreshable { await store.load(market: selectedMarket) }
-            .navigationTitle(market.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        Picker("Local edition", selection: $selectedMarket) {
-                            ForEach(Market.all) { market in
-                                Text(market.name).tag(market.id)
-                            }
-                        }
-                    } label: {
-                        Label(market.name, systemImage: "mappin.and.ellipse")
-                    }
-                    .accessibilityLabel("Local edition: \(market.name)")
-                }
-            }
-            .task(id: selectedMarket) { await store.load(market: selectedMarket) }
-        }
-    }
-
-    private var masthead: some View {
-        VStack(spacing: 10) {
-            HStack {
-                Text("INDEPENDENT DAILY COVERAGE")
-                Spacer()
-                Text("\(market.name.uppercased()) EDITION")
-            }
-            .font(.caption2.weight(.bold))
-            .tracking(0.7)
-
-            Rectangle().frame(height: 1)
-
-            Text("The Daily Sports Page")
-                .font(.custom("Chomsky", size: 47, relativeTo: .largeTitle))
-                .minimumScaleFactor(0.62)
-                .lineLimit(1)
-                .accessibilityAddTraits(.isHeader)
-
-            Rectangle().frame(height: 3)
-
-            HStack {
-                Text(sport == .baseball ? "MAJOR LEAGUE BASEBALL" : "NATIONAL FOOTBALL LEAGUE")
-                Spacer()
-                Text(displayDate)
-            }
-            .font(.caption.weight(.semibold))
-
-            Picker("Sport", selection: $sport) {
-                ForEach(Sport.allCases) { sport in
-                    Text(sport.rawValue).tag(sport)
-                }
-            }
-            .pickerStyle(.segmented)
-        }
-        .foregroundStyle(.primary)
-    }
-
-    private var displayDate: String {
-        let rawDate = sport == .baseball ? store.baseball?.edition.date : store.football?.editionDate
-        guard let rawDate,
-              let date = DateFormatter.isoDay.date(from: rawDate) else { return "TODAY" }
-        return date.formatted(.dateTime.month(.wide).day().year()).uppercased()
+        DailySportsPageWebView(destination: routes.destination)
+            .ignoresSafeArea(.container, edges: .bottom)
     }
 }
 
-private extension DateFormatter {
-    static let isoDay: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-}
+private struct DailySportsPageWebView: UIViewRepresentable {
+    let destination: URL
 
-private struct BaseballEditionView: View {
-    let edition: BaseballEdition
+    func makeCoordinator() -> Coordinator {
+        Coordinator(homeURL: destination)
+    }
 
-    var body: some View {
-        VStack(spacing: 20) {
-            if let story = edition.leadStory {
-                StoryCard(story: story, editionDate: edition.edition.date)
-            }
-            ScoreSection(title: "Scoreboard") {
-                ForEach(edition.games) { game in
-                    BaseballScoreRow(game: game)
-                    if game.id != edition.games.last?.id { Divider() }
-                }
-            }
-            ForEach(edition.secondaryStories, id: \.self) { story in
-                StoryCard(story: story, editionDate: nil)
-            }
-            CompleteEditionSections(
-                games: edition.completeGames,
-                sections: edition.supplementalSections
-            )
+    func makeUIView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .default()
+        configuration.defaultWebpagePreferences.allowsContentJavaScript = true
+
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
+        webView.allowsBackForwardNavigationGestures = true
+        webView.scrollView.contentInsetAdjustmentBehavior = .automatic
+
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.refresh(_:)),
+            for: .valueChanged
+        )
+        webView.scrollView.refreshControl = refreshControl
+        context.coordinator.webView = webView
+
+        webView.load(URLRequest(url: destination, cachePolicy: .reloadRevalidatingCacheData))
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        guard webView.url?.absoluteString != destination.absoluteString else { return }
+        webView.load(URLRequest(url: destination, cachePolicy: .reloadRevalidatingCacheData))
+    }
+
+    final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+        weak var webView: WKWebView?
+        private let homeURL: URL
+
+        init(homeURL: URL) {
+            self.homeURL = homeURL
         }
-    }
-}
 
-private struct FootballEditionView: View {
-    let edition: FootballEdition
-
-    var body: some View {
-        VStack(spacing: 20) {
-            if let story = edition.lead {
-                StoryCard(story: story, editionDate: edition.editionDate)
+        @objc func refresh(_ sender: UIRefreshControl) {
+            if webView?.url == nil {
+                webView?.load(URLRequest(url: homeURL, cachePolicy: .reloadIgnoringLocalCacheData))
+            } else {
+                webView?.reloadFromOrigin()
             }
-            ScoreSection(title: edition.weekLabel ?? "Scoreboard") {
-                ForEach(edition.scoreboard) { game in
-                    FootballScoreRow(game: game)
-                    if game.id != edition.scoreboard.last?.id { Divider() }
-                }
-            }
-            CompleteEditionSections(
-                games: edition.completeScoreboard,
-                sections: edition.supplementalSections
-            )
         }
-    }
-}
 
-private struct StoryCard: View {
-    let story: Story
-    let editionDate: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if let editionDate {
-                Text(editionDate)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
-            Text(story.headline)
-                .font(.system(.title, design: .serif, weight: .bold))
-                .fixedSize(horizontal: false, vertical: true)
-            if let deck = story.deck {
-                Text(deck)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-            }
-            if let byline = story.byline {
-                Text(byline.uppercased())
-                    .font(.caption.weight(.bold))
-                    .tracking(0.7)
-            }
-            ForEach(Array(story.paragraphs.enumerated()), id: \.offset) { _, paragraph in
-                Text(paragraph)
-                    .font(.system(.body, design: .serif))
-                    .lineSpacing(4)
-            }
-            ShareLink(item: shareText) {
-                Label("Share story", systemImage: "square.and.arrow.up")
-            }
-            .buttonStyle(.bordered)
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
+            webView.scrollView.refreshControl?.endRefreshing()
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
-    }
 
-    private var shareText: String {
-        "\(story.headline) — The Daily Sports Page\nhttps://thedailysportspage.com"
-    }
-}
-
-private struct ScoreSection<Content: View>: View {
-    let title: String
-    let content: Content
-
-    init(title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(.title2, design: .serif, weight: .bold))
-            content
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {
+            webView.scrollView.refreshControl?.endRefreshing()
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
-    }
-}
 
-private struct BaseballScoreRow: View {
-    let game: BaseballGame
-
-    var body: some View {
-        VStack(spacing: 8) {
-            team(game.away.teamName, abbreviation: game.away.teamAbbr, score: game.away.runs)
-            team(game.home.teamName, abbreviation: game.home.teamAbbr, score: game.home.runs)
-            Text(game.status.capitalized == "Final" ? "Final" : (game.gameTimeET ?? game.status.capitalized))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        func webView(
+            _ webView: WKWebView,
+            didFailProvisionalNavigation navigation: WKNavigation?,
+            withError error: Error
+        ) {
+            webView.scrollView.refreshControl?.endRefreshing()
         }
-        .padding(.vertical, 4)
-    }
 
-    private func team(_ name: String, abbreviation: String, score: Int?) -> some View {
-        HStack {
-            Text(abbreviation).font(.caption.monospaced().weight(.bold)).frame(width: 36, alignment: .leading)
-            Text(name).lineLimit(1)
-            Spacer()
-            if let score { Text(score, format: .number).font(.headline.monospacedDigit()) }
-        }
-    }
-}
-
-private struct FootballScoreRow: View {
-    let game: FootballGame
-
-    var body: some View {
-        VStack(spacing: 8) {
-            team(game.away)
-            team(game.home)
-            Text(game.detail ?? game.time ?? game.status)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .padding(.vertical, 4)
-    }
-
-    private func team(_ team: FootballTeam) -> some View {
-        HStack {
-            Text(team.abbr).font(.caption.monospaced().weight(.bold)).frame(width: 36, alignment: .leading)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(team.name).lineLimit(1)
-                if let record = team.record { Text(record).font(.caption2).foregroundStyle(.secondary) }
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            if let url = navigationAction.request.url {
+                webView.load(URLRequest(url: url))
             }
-            Spacer()
-            if let score = team.score { Text(score).font(.headline.monospacedDigit()) }
+            return nil
         }
-        .fontWeight(team.winner == true ? .bold : .regular)
+
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.cancel)
+                return
+            }
+
+            if url.scheme == "http" || url.scheme == "https" {
+                decisionHandler(.allow)
+            } else {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+            }
+        }
     }
 }

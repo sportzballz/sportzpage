@@ -26,6 +26,33 @@
 	<string>public.app-category.sports</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeFavorite</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Baseball Edition</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.thedailysportspage.app.baseball</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypePlay</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Football Edition</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.thedailysportspage.app.football</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconType</key>
+			<string>UIApplicationShortcutIconTypeSearch</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>League Leaders</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.thedailysportspage.app.leaders</string>
+		</dict>
+	</array>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Chomsky.ttf</string>

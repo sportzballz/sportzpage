@@ -2,12 +2,11 @@ import SwiftUI
 
 @main
 struct TDSPApp: App {
-    @StateObject private var store = EditionStore()
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environmentObject(store)
         }
     }
 }
