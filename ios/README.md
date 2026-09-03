@@ -25,6 +25,6 @@ The default bundle identifier is `com.thedailysportspage.app`. Change it before 
 The monthly StoreKit product identifier is `com.thedailysportspage.app.monthly`.
 Create a one-month auto-renewable subscription with that exact identifier in the
 `The Daily Sports Page` subscription group. Configure its U.S. price at $2.99
-and add a seven-day free-trial introductory offer before distributing Build 8.
+and add a seven-day free-trial introductory offer before distributing Build 9.
 
 The app currently declares no tracking or collected data in `PrivacyInfo.xcprivacy`. Revisit both the manifest and App Store privacy answers before adding accounts or native feedback submission.

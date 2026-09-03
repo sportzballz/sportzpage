@@ -28,6 +28,14 @@ final class SubscriptionStore: ObservableObject {
         isLoading = true
         errorMessage = nil
 
+        let timeoutTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(12))
+            guard !Task.isCancelled, let self, self.isLoading else { return }
+            self.errorMessage = "Apple's subscription service is taking too long to respond. Please try again."
+            self.isLoading = false
+        }
+        defer { timeoutTask.cancel() }
+
         do {
             product = try await Product.products(for: [Self.monthlyProductID]).first
             if product == nil {
@@ -256,11 +264,6 @@ struct SubscriptionView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 22)
                 .frame(maxWidth: 620)
-            }
-        }
-        .task {
-            if store.product == nil {
-                await store.prepare()
             }
         }
     }
