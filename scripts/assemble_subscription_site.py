@@ -79,10 +79,61 @@ def _page(title: str, body: str, *, description: str, canonical: str) -> str:
     <p class="masthead-meta">Baseball &bull; Football &bull; Delivered Daily</p>
   </header>
   {body}
-  <footer class="site-footer"><p>The Daily Sports Page</p></footer>
+  <footer class="site-footer"><p>The Daily Sports Page &bull; <a href="/privacy/">Privacy Policy</a></p></footer>
 </body>
 </html>
 """
+
+
+def _privacy_policy() -> str:
+    body = """
+  <main class="subscription-shell" id="main-content">
+    <article class="privacy-policy">
+      <p class="section-label">Effective September 3, 2026</p>
+      <h2>Privacy Policy</h2>
+      <p>The Daily Sports Page respects your privacy. This policy explains what information may be processed when you use the website or iOS app, why it is used, and the choices available to you.</p>
+
+      <h3>Information we process</h3>
+      <p><strong>Website analytics.</strong> We use Cloudflare Web Analytics to understand aggregate traffic, such as page views, referring pages, approximate region, and browser or device type. The Daily Sports Page does not use this service to build advertising profiles or identify individual readers.</p>
+      <p><strong>Reader feedback.</strong> If you submit a Letter to the Editor, we receive the category, message, page address, and submission time. A one-way daily hash derived from the network address is used only to enforce the limit of three submissions per day; the raw address is not stored in the feedback record.</p>
+      <p><strong>Subscriptions.</strong> Purchases are processed by Apple through StoreKit. Apple handles payment and billing information. The app checks subscription product and entitlement information supplied by Apple, but The Daily Sports Page does not receive your payment-card details.</p>
+      <p><strong>Preferences and offline content.</strong> Your selected market and downloaded edition may be stored on your device so the app and website remember your preferences and can provide offline reading.</p>
+      <p><strong>Notifications.</strong> If you allow notifications, Apple supplies the app with a device token. The current app stores that token on your device and does not transmit it to The Daily Sports Page. You can disable notifications at any time in iOS Settings.</p>
+
+      <h3>How information is used</h3>
+      <ul>
+        <li>Provide, maintain, and improve the sports page.</li>
+        <li>Verify access to subscriber features.</li>
+        <li>Respond to feedback and correct errors.</li>
+        <li>Protect the feedback service from spam and abuse.</li>
+        <li>Understand aggregate readership and site performance.</li>
+      </ul>
+
+      <h3>Retention</h3>
+      <p>Reader feedback is retained for up to 180 days. Daily rate-limit records expire after approximately two days. Local preferences and cached editions remain on your device until the app data is removed or cleared. Apple and Cloudflare process information under their own retention practices.</p>
+
+      <h3>Sharing and services</h3>
+      <p>We do not sell personal information. Information is processed only as needed by service providers that operate the site and app, including Apple, Cloudflare, Amazon Web Services, and the email service used to deliver submitted feedback. The homepage also links to Buy Me a Coffee; information you provide there is governed by that service's privacy policy.</p>
+
+      <h3>Your choices</h3>
+      <p>You may decline notifications, avoid submitting feedback, clear website data, remove downloaded app data, or manage and cancel your subscription through your Apple Account. To ask a privacy question or request deletion of submitted feedback, use the <a href="/#feedback">Letter to the Editor</a> form and select General feedback.</p>
+
+      <h3>Children</h3>
+      <p>The Daily Sports Page is a general-audience sports publication and is not directed to children under 13. We do not knowingly request personal information from children.</p>
+
+      <h3>Changes to this policy</h3>
+      <p>We may update this policy as the service changes. The effective date at the top of this page will identify the latest version.</p>
+
+      <p><a href="/">Return to The Daily Sports Page</a></p>
+    </article>
+  </main>
+"""
+    return _page(
+        "Privacy Policy — The Daily Sports Page",
+        body,
+        description="Privacy practices for The Daily Sports Page website and iOS app.",
+        canonical="/privacy/",
+    )
 
 
 def _landing(edition: dict, archive_dates: list[str]) -> str:
@@ -302,7 +353,13 @@ def _remove_legacy_edition_support_link(directory: Path) -> None:
 
 def _write_discovery_files(output: Path, archive_dates: list[str], current_date: str) -> None:
     paths = [("/", current_date), ("/archive/", current_date)]
-    paths.extend([("/subscriber/current/", current_date), ("/football/", current_date)])
+    paths.extend(
+        [
+            ("/subscriber/current/", current_date),
+            ("/football/", current_date),
+            ("/privacy/", current_date),
+        ]
+    )
     paths.extend((f"/archive/{day}/", day) for day in archive_dates)
     for market in MARKETS:
         paths.extend(
@@ -423,6 +480,9 @@ def assemble(
         _remove_legacy_edition_support_link(market_route)
         _apply_edition_seo(market_route, f"/editions/{market.slug}/")
     (output / "index.html").write_text(_landing(edition, archive_dates), encoding="utf-8")
+    privacy = output / "privacy"
+    privacy.mkdir(parents=True, exist_ok=True)
+    (privacy / "index.html").write_text(_privacy_policy(), encoding="utf-8")
     archive_root.mkdir(exist_ok=True)
     (archive_root / "index.html").write_text(_archive_index(archive_dates), encoding="utf-8")
     (archive_root / "manifest.json").write_text(

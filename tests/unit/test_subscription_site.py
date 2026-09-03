@@ -72,6 +72,13 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     assert "Headline for 2026-08-21 — The Daily Sports Page" in current_html
     assert "Sitemap: https://thedailysportspage.com/sitemap.xml" in (output / "robots.txt").read_text()
     assert "https://thedailysportspage.com/subscriber/current/" in (output / "sitemap.xml").read_text()
+    privacy = (output / "privacy/index.html").read_text()
+    assert 'rel="canonical" href="https://thedailysportspage.com/privacy/"' in privacy
+    assert "Cloudflare Web Analytics" in privacy
+    assert "Reader feedback is retained for up to 180 days" in privacy
+    assert "does not transmit it to The Daily Sports Page" in privacy
+    assert 'href="/privacy/">Privacy Policy</a>' in landing
+    assert "https://thedailysportspage.com/privacy/" in (output / "sitemap.xml").read_text()
     assert "localStorage.getItem('tdsp-market')" in landing
     for market in (
         "philadelphia",

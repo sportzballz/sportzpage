@@ -60,6 +60,14 @@
 .archive-card p { font: 700 .68rem var(--font-sans); text-transform: uppercase; color: #666; }
 .archive-card h2 { font-size: 1.15rem; }
 .subscribe-panel p { max-width: 680px; margin: 1rem auto; }
+.privacy-policy { max-width: 860px; margin-inline: auto; padding: clamp(1.25rem, 4vw, 3rem); border-top: 8px solid #8b1e2d; background: #fffdf7; }
+.privacy-policy h2 { margin: .35rem 0 1rem; font-size: clamp(2.1rem, 5vw, 4rem); }
+.privacy-policy h3 { margin: 1.75rem 0 .55rem; font-size: 1.35rem; }
+.privacy-policy p,
+.privacy-policy li { line-height: 1.65; }
+.privacy-policy ul { padding-left: 1.35rem; }
+.privacy-policy a,
+.site-footer a { color: inherit; }
 @media (max-width: 640px) {
   .subscription-page { padding-inline: .55rem; }
   .subscription-page .masthead { padding-inline: .35rem; }
@@ -69,6 +77,7 @@
   .subscription-benefits,
   .feedback-panel,
   .free-archive { padding: 1.1rem .9rem; }
+  .privacy-policy { padding: 1.25rem 1rem; }
   .subscription-hero h2 { font-size: clamp(1.85rem, 9vw, 2.65rem); }
   .subscription-deck { font-size: 1rem; }
   .subscribe-button,
