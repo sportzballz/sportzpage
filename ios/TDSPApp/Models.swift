@@ -21,6 +21,45 @@ enum Sport: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+indirect enum JSONValue: Codable, Hashable {
+    case object([String: JSONValue])
+    case array([JSONValue])
+    case string(String)
+    case number(Double)
+    case bool(Bool)
+    case null
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() { self = .null }
+        else if let value = try? container.decode(Bool.self) { self = .bool(value) }
+        else if let value = try? container.decode(Double.self) { self = .number(value) }
+        else if let value = try? container.decode(String.self) { self = .string(value) }
+        else if let value = try? container.decode([JSONValue].self) { self = .array(value) }
+        else { self = .object(try container.decode([String: JSONValue].self)) }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .object(let value): try container.encode(value)
+        case .array(let value): try container.encode(value)
+        case .string(let value): try container.encode(value)
+        case .number(let value): try container.encode(value)
+        case .bool(let value): try container.encode(value)
+        case .null: try container.encodeNil()
+        }
+    }
+}
+
+struct AnyCodingKey: CodingKey {
+    let stringValue: String
+    let intValue: Int? = nil
+
+    init?(stringValue: String) { self.stringValue = stringValue }
+    init?(intValue: Int) { return nil }
+}
+
 struct Story: Codable, Hashable {
     let headline: String
     let deck: String?
@@ -59,13 +98,45 @@ struct BaseballEdition: Codable {
     let leadStory: Story?
     let games: [BaseballGame]
     let secondaryStories: [Story]
+    let completeGames: [JSONValue]
+    let supplementalSections: [String: JSONValue]
 
     enum CodingKeys: String, CodingKey {
         case edition, games
         case leadStory = "lead_story"
         case secondaryStories = "secondary_stories"
     }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        edition = try values.decode(BaseballMetadata.self, forKey: .edition)
+        leadStory = try values.decodeIfPresent(Story.self, forKey: .leadStory)
+        games = try values.decodeIfPresent([BaseballGame].self, forKey: .games) ?? []
+        secondaryStories = try values.decodeIfPresent([Story].self, forKey: .secondaryStories) ?? []
+        completeGames = try values.decodeIfPresent([JSONValue].self, forKey: .games) ?? []
+
+        let dynamic = try decoder.container(keyedBy: AnyCodingKey.self)
+        let known = Set(CodingKeys.allCases.map(\.rawValue))
+        supplementalSections = try Dictionary(uniqueKeysWithValues: dynamic.allKeys.compactMap { key in
+            guard !known.contains(key.stringValue) else { return nil }
+            return (key.stringValue, try dynamic.decode(JSONValue.self, forKey: key))
+        })
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(edition, forKey: .edition)
+        try values.encodeIfPresent(leadStory, forKey: .leadStory)
+        try values.encode(completeGames, forKey: .games)
+        try values.encode(secondaryStories, forKey: .secondaryStories)
+        var dynamic = encoder.container(keyedBy: AnyCodingKey.self)
+        for (name, value) in supplementalSections {
+            try dynamic.encode(value, forKey: AnyCodingKey(stringValue: name)!)
+        }
+    }
 }
+
+extension BaseballEdition.CodingKeys: CaseIterable {}
 
 struct BaseballMetadata: Codable {
     let date: String
@@ -114,6 +185,8 @@ struct FootballEdition: Codable {
     let lead: Story?
     let scoreboard: [FootballGame]
     let weekLabel: String?
+    let completeScoreboard: [JSONValue]
+    let supplementalSections: [String: JSONValue]
 
     enum CodingKeys: String, CodingKey {
         case editionDate = "edition_date"
@@ -122,7 +195,41 @@ struct FootballEdition: Codable {
         case lead, scoreboard
         case weekLabel = "week_label"
     }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        editionDate = try values.decode(String.self, forKey: .editionDate)
+        generatedAt = try values.decodeIfPresent(Date.self, forKey: .generatedAt)
+        marketLabel = try values.decode(String.self, forKey: .marketLabel)
+        lead = try values.decodeIfPresent(Story.self, forKey: .lead)
+        scoreboard = try values.decodeIfPresent([FootballGame].self, forKey: .scoreboard) ?? []
+        weekLabel = try values.decodeIfPresent(String.self, forKey: .weekLabel)
+        completeScoreboard = try values.decodeIfPresent([JSONValue].self, forKey: .scoreboard) ?? []
+
+        let dynamic = try decoder.container(keyedBy: AnyCodingKey.self)
+        let known = Set(CodingKeys.allCases.map(\.rawValue))
+        supplementalSections = try Dictionary(uniqueKeysWithValues: dynamic.allKeys.compactMap { key in
+            guard !known.contains(key.stringValue) else { return nil }
+            return (key.stringValue, try dynamic.decode(JSONValue.self, forKey: key))
+        })
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var values = encoder.container(keyedBy: CodingKeys.self)
+        try values.encode(editionDate, forKey: .editionDate)
+        try values.encodeIfPresent(generatedAt, forKey: .generatedAt)
+        try values.encode(marketLabel, forKey: .marketLabel)
+        try values.encodeIfPresent(lead, forKey: .lead)
+        try values.encode(completeScoreboard, forKey: .scoreboard)
+        try values.encodeIfPresent(weekLabel, forKey: .weekLabel)
+        var dynamic = encoder.container(keyedBy: AnyCodingKey.self)
+        for (name, value) in supplementalSections {
+            try dynamic.encode(value, forKey: AnyCodingKey(stringValue: name)!)
+        }
+    }
 }
+
+extension FootballEdition.CodingKeys: CaseIterable {}
 
 struct FootballGame: Codable, Identifiable {
     let id: String

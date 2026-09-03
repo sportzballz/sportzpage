@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		1F3FD6E956C7A7D0E0AB2533 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22741A1C13243F0EF6FB1DCA /* APIClient.swift */; };
+		21325AB70F65602B9A7F0E45 /* Chomsky.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ECE6564D0B6CD6334F4B4970 /* Chomsky.ttf */; };
+		684C538EC4E5ACF11A95D82B /* CompleteEditionViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6916063492C36AE470D4BB58 /* CompleteEditionViews.swift */; };
 		752848C8AAA831FD62293C65 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 07AE3BCBA8FEA14B5F60814D /* Assets.xcassets */; };
 		7675ABBF47C4A14C8911004B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC83EC432FD631EC1C9656 /* RootView.swift */; };
 		C96195DA3F484EDC65C66395 /* TDSPApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492D076541C8F9D22F155497 /* TDSPApp.swift */; };
@@ -34,10 +36,13 @@
 		2FF0816F40F5EF7DE552F0A5 /* TDSPAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TDSPAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		492D076541C8F9D22F155497 /* TDSPApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDSPApp.swift; sourceTree = "<group>"; };
 		57FC83EC432FD631EC1C9656 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		6916063492C36AE470D4BB58 /* CompleteEditionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteEditionViews.swift; sourceTree = "<group>"; };
 		758492C043BE4156C25AACCD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A994B50A67724ECECA9FD269 /* TDSPApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TDSPApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DC67770DAD8797C815C7FBF9 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		E12864F8ED9FBB6032414911 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EBF877CEE362BE6E9D59E8AE /* EditionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditionStore.swift; sourceTree = "<group>"; };
+		ECE6564D0B6CD6334F4B4970 /* Chomsky.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Chomsky.ttf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -72,7 +77,10 @@
 			children = (
 				22741A1C13243F0EF6FB1DCA /* APIClient.swift */,
 				07AE3BCBA8FEA14B5F60814D /* Assets.xcassets */,
+				ECE6564D0B6CD6334F4B4970 /* Chomsky.ttf */,
+				6916063492C36AE470D4BB58 /* CompleteEditionViews.swift */,
 				EBF877CEE362BE6E9D59E8AE /* EditionStore.swift */,
+				E12864F8ED9FBB6032414911 /* Info.plist */,
 				DC67770DAD8797C815C7FBF9 /* Models.swift */,
 				758492C043BE4156C25AACCD /* PrivacyInfo.xcprivacy */,
 				57FC83EC432FD631EC1C9656 /* RootView.swift */,
@@ -130,11 +138,11 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					3B1AFBDF562FDBB75BA8BC82 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = UN27MHU5SB;
 						ProvisioningStyle = Automatic;
 					};
 					BEA0D72EB5BEB9AD8E2768DB = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = UN27MHU5SB;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -165,6 +173,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				752848C8AAA831FD62293C65 /* Assets.xcassets in Resources */,
+				21325AB70F65602B9A7F0E45 /* Chomsky.ttf in Resources */,
 				E7C2E1A98E97164D43374066 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -185,6 +194,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1F3FD6E956C7A7D0E0AB2533 /* APIClient.swift in Sources */,
+				684C538EC4E5ACF11A95D82B /* CompleteEditionViews.swift in Sources */,
 				D80B7B81A2EAFE591E80D697 /* EditionStore.swift in Sources */,
 				D1C5A627DDEDC3A07C831FF4 /* Models.swift in Sources */,
 				7675ABBF47C4A14C8911004B /* RootView.swift in Sources */,
@@ -238,6 +248,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = UN27MHU5SB;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -251,6 +262,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -267,17 +279,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "The Daily Sports Page";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TDSPApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.thedailysportspage.app;
-				PRODUCT_NAME = "The Daily Sports Page";
+				PRODUCT_NAME = TDSPApp;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -319,6 +328,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = UN27MHU5SB;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -338,6 +348,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -372,17 +383,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "The Daily Sports Page";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TDSPApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.thedailysportspage.app;
-				PRODUCT_NAME = "The Daily Sports Page";
+				PRODUCT_NAME = TDSPApp;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";

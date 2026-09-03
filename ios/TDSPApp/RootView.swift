@@ -50,7 +50,7 @@ struct RootView: View {
             }
             .background(Color(.systemGroupedBackground))
             .refreshable { await store.load(market: selectedMarket) }
-            .navigationTitle("The Daily Sports Page")
+            .navigationTitle(market.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -71,11 +71,31 @@ struct RootView: View {
     }
 
     private var masthead: some View {
-        VStack(spacing: 12) {
-            Text(market.name.uppercased())
-                .font(.caption.weight(.bold))
-                .tracking(1.5)
-                .foregroundStyle(.secondary)
+        VStack(spacing: 10) {
+            HStack {
+                Text("INDEPENDENT DAILY COVERAGE")
+                Spacer()
+                Text("\(market.name.uppercased()) EDITION")
+            }
+            .font(.caption2.weight(.bold))
+            .tracking(0.7)
+
+            Rectangle().frame(height: 1)
+
+            Text("The Daily Sports Page")
+                .font(.custom("Chomsky", size: 47, relativeTo: .largeTitle))
+                .minimumScaleFactor(0.62)
+                .lineLimit(1)
+                .accessibilityAddTraits(.isHeader)
+
+            Rectangle().frame(height: 3)
+
+            HStack {
+                Text(sport == .baseball ? "MAJOR LEAGUE BASEBALL" : "NATIONAL FOOTBALL LEAGUE")
+                Spacer()
+                Text(displayDate)
+            }
+            .font(.caption.weight(.semibold))
 
             Picker("Sport", selection: $sport) {
                 ForEach(Sport.allCases) { sport in
@@ -84,7 +104,24 @@ struct RootView: View {
             }
             .pickerStyle(.segmented)
         }
+        .foregroundStyle(.primary)
     }
+
+    private var displayDate: String {
+        let rawDate = sport == .baseball ? store.baseball?.edition.date : store.football?.editionDate
+        guard let rawDate,
+              let date = DateFormatter.isoDay.date(from: rawDate) else { return "TODAY" }
+        return date.formatted(.dateTime.month(.wide).day().year()).uppercased()
+    }
+}
+
+private extension DateFormatter {
+    static let isoDay: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 }
 
 private struct BaseballEditionView: View {
@@ -104,6 +141,10 @@ private struct BaseballEditionView: View {
             ForEach(edition.secondaryStories, id: \.self) { story in
                 StoryCard(story: story, editionDate: nil)
             }
+            CompleteEditionSections(
+                games: edition.completeGames,
+                sections: edition.supplementalSections
+            )
         }
     }
 }
@@ -122,6 +163,10 @@ private struct FootballEditionView: View {
                     if game.id != edition.scoreboard.last?.id { Divider() }
                 }
             }
+            CompleteEditionSections(
+                games: edition.completeScoreboard,
+                sections: edition.supplementalSections
+            )
         }
     }
 }
