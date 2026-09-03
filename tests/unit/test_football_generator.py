@@ -8,16 +8,10 @@ from src.football.ai_recap import FootballLeadStoryService
 from src.football.generator import FootballEditionGenerator
 
 
-def test_support_link_is_first_football_menu_item() -> None:
+def test_support_link_is_not_in_football_menu() -> None:
     template = Path("templates/football.html.j2").read_text()
-    support_link = (
-        '<li><a href="https://buymeacoffee.com/thedailysportspage" '
-        'target="_blank" rel="noopener noreferrer">Buy me a beer 🍻</a></li>'
-    )
-
-    assert template.index(support_link) < template.index(
-        '<li><a href="#scoreboard">Weekly Scoreboard &amp; Schedule</a></li>'
-    )
+    assert "buymeacoffee.com" not in template
+    assert "Buy me a beer" not in template
 
 
 def test_football_page_contains_stories_without_espn_links() -> None:

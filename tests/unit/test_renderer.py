@@ -222,14 +222,10 @@ def test_production_urls_use_sportzpage_path():
     assert 'src="static/js/daily-sports-page.js?v=20260830-market-editions"' in html
 
 
-def test_support_link_is_first_daily_edition_menu_item():
+def test_support_link_is_not_in_daily_edition_menu():
     html = make_renderer().render(make_minimal_edition())
-    support_link = (
-        '<li><a href="https://buymeacoffee.com/thedailysportspage" '
-        'target="_blank" rel="noopener noreferrer">Buy me a beer 🍻</a></li>'
-    )
-    assert support_link in html
-    assert html.index(support_link) < html.index('<li><a href="#scoreboard">Scoreboard</a></li>')
+    assert "buymeacoffee.com" not in html
+    assert "Buy me a beer" not in html
 
 
 def test_todays_games_renders_moneylines_and_run_total_only():
