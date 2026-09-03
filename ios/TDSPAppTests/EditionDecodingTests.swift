@@ -2,6 +2,13 @@ import XCTest
 @testable import TDSPApp
 
 final class EditionDecodingTests: XCTestCase {
+    func testMonthlySubscriptionUsesAppStoreProductIdentifier() {
+        XCTAssertEqual(
+            SubscriptionStore.monthlyProductID,
+            "com.thedailysportspage.app.monthly"
+        )
+    }
+
     func testBaseballEditionDecodesCurrentContract() throws {
         let data = Data(
             """

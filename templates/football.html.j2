@@ -36,7 +36,7 @@
   <nav class="section-nav" aria-label="Football page sections">
     <ul>
       <li><a href="#scoreboard">Weekly Scoreboard &amp; Schedule</a></li>
-      <li><a href="#standings">Standings</a></li><li><a href="#league-leaders">League Leaders</a></li><li><a href="#around-the-league">Around the NFL</a></li>
+      <li><a href="#standings">Standings</a></li><li><a href="#league-leaders">League Leaders</a></li>
     </ul>
     <button class="print-btn" type="button" onclick="window.print()">Print</button>
   </nav>
@@ -69,9 +69,6 @@
         <table><thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>{{ category.abbreviation or 'Stat' }}</th></tr></thead><tbody>
         {% for row in category.rows %}<tr{% if row.team in page.market_teams %} class="is-primary-team"{% endif %}><td>{{ row.rank }}</td><td>{{ row.name }}{% if row.position %} <small>{{ row.position }}</small>{% endif %}</td><td>{{ row.team }}</td><td><strong>{{ row.value }}</strong></td></tr>{% endfor %}
         </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
-    </section>
-    <section id="around-the-league" class="section around-the-league"><h2 class="section-heading">Around the NFL</h2>
-      {% if page.news %}<div class="news-grid">{% for story in page.news %}<article class="news-item"><h3>{{ story.headline }}</h3><p class="story-deck">{{ story.deck }}</p>{% for paragraph in story.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</article>{% endfor %}</div>{% else %}<p class="no-content">League stories are being gathered.</p>{% endif %}
     </section>
   </main>
   <footer class="site-footer"><p>The Daily Sports Page — Football Edition — {{ page.edition_date }}</p></footer>

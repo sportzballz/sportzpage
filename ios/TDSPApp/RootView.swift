@@ -3,10 +3,43 @@ import WebKit
 
 struct RootView: View {
     @StateObject private var routes = AppRouteStore.shared
+    @ObservedObject var subscriptionStore: SubscriptionStore
 
     var body: some View {
-        DailySportsPageWebView(destination: routes.destination)
-            .ignoresSafeArea(.container, edges: .bottom)
+        Group {
+            if subscriptionStore.isLoading {
+                ZStack {
+                    Color(red: 0.96, green: 0.94, blue: 0.88).ignoresSafeArea()
+                    ProgressView("Checking subscription…")
+                        .font(.system(.body, design: .serif))
+                }
+            } else if subscriptionStore.hasAccess {
+                ZStack(alignment: .bottomTrailing) {
+                    DailySportsPageWebView(destination: routes.destination)
+                        .ignoresSafeArea(.container, edges: .bottom)
+
+                    Menu {
+                        Button("Manage Subscription") {
+                            Task { await subscriptionStore.manageSubscriptions() }
+                        }
+                        Button("Restore Purchases") {
+                            Task { await subscriptionStore.restorePurchases() }
+                        }
+                    } label: {
+                        Image(systemName: "person.crop.circle")
+                            .font(.title2)
+                            .foregroundStyle(.black)
+                            .padding(10)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .shadow(radius: 3, y: 1)
+                    }
+                    .padding(14)
+                    .accessibilityLabel("Subscription settings")
+                }
+            } else {
+                SubscriptionView(store: subscriptionStore)
+            }
+        }
     }
 }
 

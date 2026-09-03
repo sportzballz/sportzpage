@@ -6,7 +6,7 @@ struct CompleteEditionSections: View {
 
     private let preferredOrder = [
         "game_recaps", "standings", "league_leaders", "team_game_leaders",
-        "team_season_leaders", "news", "around_the_league", "injuries",
+        "team_season_leaders", "injuries",
         "transactions", "historical_items", "week_detail", "season_label",
         "leaders_season_label", "canonical_path", "generation_metadata",
     ]
@@ -30,7 +30,7 @@ struct CompleteEditionSections: View {
     }
 
     private var orderedSections: [(String, JSONValue)] {
-        sections.sorted { left, right in
+        sections.filter { !["news", "around_the_league"].contains($0.key) }.sorted { left, right in
             let leftIndex = preferredOrder.firstIndex(of: left.key) ?? preferredOrder.count
             let rightIndex = preferredOrder.firstIndex(of: right.key) ?? preferredOrder.count
             return leftIndex == rightIndex ? left.key < right.key : leftIndex < rightIndex

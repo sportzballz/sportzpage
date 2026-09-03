@@ -19,7 +19,6 @@ REQUIRED_SECTION_IDS = [
     'id="todays-games"',
     'id="standings"',
     'id="league-leaders"',
-    'id="around-the-league"',
     'id="transactions"',
     'id="history"',
 ]
@@ -58,6 +57,8 @@ def test_full_slate_pipeline():
         # All required section IDs present
         for section_id in REQUIRED_SECTION_IDS:
             assert section_id in html_content, f"Missing section: {section_id}"
+        assert 'id="around-the-league"' not in html_content
+        assert "Around the League" not in html_content
 
         # Edition ID meta tag present
         edition_id = edition.edition.id

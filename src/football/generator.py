@@ -105,16 +105,6 @@ class FootballEditionGenerator:
                 lead = await self.lead_story_service.generate_from_news(
                     headline_article, self.edition_date.isoformat()
                 )
-        news_stories: list[dict[str, Any]] = []
-        if self.lead_story_service:
-            rewritten = await asyncio.gather(
-                *(
-                    self.lead_story_service.generate_news_brief(article)
-                    for article in self._news(news)
-                )
-            )
-            news_stories = [story for story in rewritten if story]
-
         return {
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.edition_date,
@@ -130,7 +120,6 @@ class FootballEditionGenerator:
             "standings": self._standings(standings),
             "league_leaders": self._league_leaders(leaders),
             "leaders_season_label": self._leaders_season_label(leaders),
-            "news": news_stories,
         }
 
     async def _get(self, client: httpx.AsyncClient, url: str, params: dict[str, str]) -> dict[str, Any]:

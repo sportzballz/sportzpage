@@ -227,12 +227,6 @@ class EditorialEngine:
                     )
                 )
 
-        around_the_league = normalized.news_stories
-        if self._news_story_service:
-            around_the_league = await self._news_story_service.rewrite_all(
-                normalized.news_stories
-            )
-
         import platform
 
         return Edition(
@@ -250,7 +244,7 @@ class EditorialEngine:
             standings=normalized.standings,
             league_leaders=normalized.league_leaders,
             game_recaps=game_recaps,
-            around_the_league=around_the_league,
+            around_the_league=[],
             transactions=normalized.transactions,
             historical_items=normalized.historical_items,
             team_season_leaders=normalized.team_season_leaders,

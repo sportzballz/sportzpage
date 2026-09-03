@@ -13,6 +13,7 @@
 		752848C8AAA831FD62293C65 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 07AE3BCBA8FEA14B5F60814D /* Assets.xcassets */; };
 		7675ABBF47C4A14C8911004B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57FC83EC432FD631EC1C9656 /* RootView.swift */; };
 		984E545BA3703CFB057BA036 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C888EDB5AEC511200F74FDA /* AppDelegate.swift */; };
+		A3DD4326C9234C7CA1B90001 /* SubscriptionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3DD4326C9234C7CA1B90002 /* SubscriptionStore.swift */; };
 		C96195DA3F484EDC65C66395 /* TDSPApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492D076541C8F9D22F155497 /* TDSPApp.swift */; };
 		D1C5A627DDEDC3A07C831FF4 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC67770DAD8797C815C7FBF9 /* Models.swift */; };
 		D80B7B81A2EAFE591E80D697 /* EditionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF877CEE362BE6E9D59E8AE /* EditionStore.swift */; };
@@ -35,12 +36,13 @@
 		1F41E367D5162CF758DF804B /* EditionDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditionDecodingTests.swift; sourceTree = "<group>"; };
 		22741A1C13243F0EF6FB1DCA /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		2C888EDB5AEC511200F74FDA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		2FF0816F40F5EF7DE552F0A5 /* TDSPAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TDSPAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2FF0816F40F5EF7DE552F0A5 /* TDSPAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TDSPAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		492D076541C8F9D22F155497 /* TDSPApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDSPApp.swift; sourceTree = "<group>"; };
 		57FC83EC432FD631EC1C9656 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		6916063492C36AE470D4BB58 /* CompleteEditionViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteEditionViews.swift; sourceTree = "<group>"; };
-		758492C043BE4156C25AACCD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		A994B50A67724ECECA9FD269 /* TDSPApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TDSPApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		758492C043BE4156C25AACCD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A3DD4326C9234C7CA1B90002 /* SubscriptionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionStore.swift; sourceTree = "<group>"; };
+		A994B50A67724ECECA9FD269 /* TDSPApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TDSPApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CB76CA32860A90163A076C30 /* TDSPApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TDSPApp.entitlements; sourceTree = "<group>"; };
 		DC67770DAD8797C815C7FBF9 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		E12864F8ED9FBB6032414911 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -88,6 +90,7 @@
 				DC67770DAD8797C815C7FBF9 /* Models.swift */,
 				758492C043BE4156C25AACCD /* PrivacyInfo.xcprivacy */,
 				57FC83EC432FD631EC1C9656 /* RootView.swift */,
+				A3DD4326C9234C7CA1B90002 /* SubscriptionStore.swift */,
 				CB76CA32860A90163A076C30 /* TDSPApp.entitlements */,
 				492D076541C8F9D22F155497 /* TDSPApp.swift */,
 			);
@@ -140,7 +143,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					3B1AFBDF562FDBB75BA8BC82 = {
 						DevelopmentTeam = UN27MHU5SB;
@@ -204,6 +207,7 @@
 				D80B7B81A2EAFE591E80D697 /* EditionStore.swift in Sources */,
 				D1C5A627DDEDC3A07C831FF4 /* Models.swift in Sources */,
 				7675ABBF47C4A14C8911004B /* RootView.swift in Sources */,
+				A3DD4326C9234C7CA1B90001 /* SubscriptionStore.swift in Sources */,
 				C96195DA3F484EDC65C66395 /* TDSPApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -254,11 +258,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 8;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = UN27MHU5SB;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -273,6 +278,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -335,11 +341,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 8;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = UN27MHU5SB;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -361,6 +368,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

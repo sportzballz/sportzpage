@@ -13,10 +13,18 @@ The default bundle identifier is `com.thedailysportspage.app`. Change it before 
 
 ## First-release behavior
 
-- Downloads baseball and football editions for the selected market.
+- Uses StoreKit 2 to require an active monthly subscription in the iOS app.
+- Offers a 7-day introductory trial when configured in App Store Connect.
+- Supports purchase restoration and Apple subscription management.
+- Displays the live baseball and football editions for subscribers.
 - Remembers the selected market with `AppStorage`.
 - Caches the latest successfully downloaded editions for offline reading.
 - Supports pull-to-refresh, Dynamic Type, VoiceOver labels, and native sharing.
 - Does not embed the website or include external tipping links.
 
-The app currently declares no tracking or collected data in `PrivacyInfo.xcprivacy`. Revisit both the manifest and App Store privacy answers before adding analytics, notifications, accounts, or native feedback submission.
+The monthly StoreKit product identifier is `com.thedailysportspage.app.monthly`.
+Create a one-month auto-renewable subscription with that exact identifier in the
+`The Daily Sports Page` subscription group. Configure its U.S. price at $2.99
+and add a seven-day free-trial introductory offer before distributing Build 8.
+
+The app currently declares no tracking or collected data in `PrivacyInfo.xcprivacy`. Revisit both the manifest and App Store privacy answers before adding accounts or native feedback submission.

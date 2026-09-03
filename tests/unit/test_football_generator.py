@@ -23,12 +23,11 @@ def test_football_page_contains_stories_without_espn_links() -> None:
     assert "story.url" not in template
 
 
-def test_around_the_nfl_renders_complete_rewritten_briefs() -> None:
+def test_around_the_nfl_is_not_rendered() -> None:
     template = Path("templates/football.html.j2").read_text()
 
-    assert "story.deck" in template
-    assert "story.paragraphs" in template
-    assert "story.description" not in template
+    assert "Around the NFL" not in template
+    assert 'id="around-the-league"' not in template
 
 
 def _event(event_id: str, away: str, home: str, completed: bool = True) -> dict:
