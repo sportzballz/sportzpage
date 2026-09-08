@@ -8,7 +8,7 @@ import html
 import json
 import re
 import shutil
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
 
@@ -16,6 +16,7 @@ from src.markets import MARKETS
 
 ARCHIVE_LIMIT = 7
 SITE_URL = "https://thedailysportspage.com"
+APP_STORE_URL = "https://apps.apple.com/app/id6808274175"
 
 
 def _copy_tree(source: Path, destination: Path) -> None:
@@ -70,7 +71,7 @@ def _page(title: str, body: str, *, description: str, canonical: str) -> str:
   <script type="application/ld+json">{structured_data}</script>
   <link rel="icon" href="/static/icons/favicon.ico" sizes="any">
   <link rel="stylesheet" href="/static/css/daily-sports-page.css?v=20260830-market-editions">
-  <link rel="stylesheet" href="/static/css/subscription.css?v=20260830-market-editions">
+  <link rel="stylesheet" href="/static/css/subscription.css?v=20260908-app-store-sample">
 </head>
 <body class="subscription-page">
   <header class="masthead">
@@ -140,26 +141,25 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
     metadata = edition["edition"]
     story = edition.get("lead_story") or {}
     headline = story.get("headline") or "Today’s Daily Sports Page is ready"
-    deck = story.get("deck") or "Scores, standings, reporting, and analysis in one daily edition."
+    current_date = date.fromisoformat(metadata["date"])
+    formatted_date = current_date.strftime("%B %-d, %Y")
+    last_week_dates = [
+        (current_date - timedelta(days=offset)).isoformat() for offset in range(3, 7)
+    ]
     archive = "".join(
         f'<li><a href="/archive/{day}/">{date.fromisoformat(day).strftime("%A, %B %-d, %Y")}</a></li>'
-        for day in archive_dates
+        for day in last_week_dates
+        if day in archive_dates
     ) or "<li>The first archive edition will appear tomorrow.</li>"
     body = f"""
   <main class="subscription-shell" id="main-content">
     <section class="subscription-hero">
-      <p class="edition-label">Today’s edition &bull; {html.escape(metadata['date'])}</p>
+      <p class="edition-label">Today’s edition &bull; {html.escape(formatted_date)}</p>
       <h2>{html.escape(headline)}</h2>
-      <p class="subscription-deck">{html.escape(deck)}</p>
-      <a class="subscribe-button" data-current-edition-link href="/subscriber/current/">Read today’s complete edition</a>
+      <a class="subscribe-button" href="{APP_STORE_URL}">Get today’s complete edition on the App Store</a>
       <p class="delivery-note">
-        The Daily Sports Page is open to everyone and supported on the honor system.
+        Today’s complete edition is available in The Daily Sports Page app for iPhone and iPad.
       </p>
-      <a class="support-button" href="https://buymeacoffee.com/thedailysportspage"
-         target="_blank" rel="noopener noreferrer"
-         aria-label="Buy The Daily Sports Page a beer, once or monthly (opens in a new tab)">
-        Buy me a beer 🍻
-      </a>
     </section>
     <section class="subscription-benefits">
       <h2>Independent daily coverage, open to everyone.</h2>
@@ -169,6 +169,11 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
         <li>Support only when the coverage earns it</li>
         <li>Print-ready edition for reading offline</li>
       </ul>
+    </section>
+    <section class="free-archive">
+      <p class="section-label">Recent coverage</p>
+      <h2>Last Week in Sports</h2>
+      <ul>{archive}</ul>
     </section>
     <section class="feedback-panel" id="feedback">
       <p class="section-label">Letter to the Editor</p>
@@ -192,21 +197,8 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
         <p class="feedback-status" data-feedback-status role="status" aria-live="polite"></p>
       </form>
     </section>
-    <section class="free-archive">
-      <p class="section-label">Recent coverage</p>
-      <h2>Last Week in Sports</h2>
-      <ul>{archive}</ul>
-    </section>
   </main>
   <script>
-  try {{
-    const market = localStorage.getItem('tdsp-market');
-    const supported = ['philadelphia', 'boston', 'new-york', 'los-angeles', 'chicago', 'dallas'];
-    if (supported.includes(market) && market !== 'philadelphia') {{
-      document.querySelector('[data-current-edition-link]').href = `/editions/${{market}}/`;
-    }}
-  }} catch (_error) {{}}
-
   const feedbackForm = document.querySelector('[data-feedback-form]');
   if (feedbackForm) {{
     feedbackForm.addEventListener('submit', async (event) => {{

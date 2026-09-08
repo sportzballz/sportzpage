@@ -40,13 +40,21 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
 
     landing = (output / "index.html").read_text(encoding="utf-8")
     assert "Headline for 2026-08-21" in landing
+    assert "Today’s edition &bull; August 21, 2026" in landing
+    assert "A concise public preview." not in landing
     assert "full-story-marker" not in landing
-    assert "open to everyone and supported on the honor system" in landing
+    assert "Today’s complete edition is available in The Daily Sports Page app" in landing
     assert "Last Week in Sports" in landing
+    assert landing.index("Last Week in Sports") < landing.index("Letter to the Editor")
     assert "Previous seven editions" not in landing
     assert "One-time or monthly tips through Buy Me a Coffee" not in landing
-    assert "Buy me a beer 🍻" in landing
-    assert "https://buymeacoffee.com/thedailysportspage" in landing
+    assert "Buy me a beer 🍻" not in landing
+    assert "https://buymeacoffee.com/thedailysportspage" not in landing
+    assert "https://apps.apple.com/app/id6808274175" in landing
+    assert "Get today’s complete edition on the App Store" in landing
+    assert "<h2>Headline for 2026-08-21</h2>" in landing
+    assert "app-store-headline" not in landing
+    assert 'href="/subscriber/current/"' not in landing
     assert "Help shape the next edition" in landing
     assert "Letter to the Editor" in landing
     assert "Reader feedback" not in landing
@@ -56,8 +64,7 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     landing_text = re.sub(r"<[^>]+>", " ", landing).lower()
     assert "free" not in landing_text
     assert "subscribe" not in landing_text
-    assert 'subscription.css?v=20260830-market-editions' in landing
-    assert 'href="/subscriber/current/"' in landing
+    assert 'subscription.css?v=20260908-app-store-sample' in landing
     assert "full-story-marker" in (output / "subscriber/current/index.html").read_text()
     assert "football-full-marker" in (output / "subscriber/current/football/index.html").read_text()
     assert "Read the complete edition" in (output / "delivery/current/email.html").read_text()
@@ -79,7 +86,7 @@ def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path)
     assert "does not transmit it to The Daily Sports Page" in privacy
     assert 'href="/privacy/">Privacy Policy</a>' in landing
     assert "https://thedailysportspage.com/privacy/" in (output / "sitemap.xml").read_text()
-    assert "localStorage.getItem('tdsp-market')" in landing
+    assert "localStorage.getItem('tdsp-market')" not in landing
     for market in (
         "philadelphia",
         "boston",
@@ -129,7 +136,14 @@ def test_promotes_previous_current_and_keeps_seven_editions(tmp_path: Path) -> N
     assert "yesterday-full" in (output / "archive/2026-08-20/index.html").read_text()
     assert not (output / "archive/2026-08-13").exists()
     assert not (output / "archive/2026-08-21").exists()
-    assert "/archive/2026-08-20/" in (output / "index.html").read_text()
+    landing = (output / "index.html").read_text()
+    assert "/archive/2026-08-20/" not in landing
+    assert "/archive/2026-08-19/" not in landing
+    assert 'href="/archive/2026-08-18/"' in landing
+    assert 'href="/archive/2026-08-17/"' in landing
+    assert 'href="/archive/2026-08-16/"' in landing
+    assert 'href="/archive/2026-08-15/"' in landing
+    assert 'href="/archive/2026-08-14/"' not in landing
     archived_html = (output / "archive/2026-08-20/index.html").read_text()
     assert "buymeacoffee.com" not in archived_html
     assert "Buy me a beer" not in archived_html
