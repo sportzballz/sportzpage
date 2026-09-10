@@ -80,7 +80,7 @@ class FootballEditionGenerator:
             weekly, standings, news, leaders = await asyncio.gather(
                 self._get(client, SCOREBOARD_URL, weekly_params),
                 self._get(client, STANDINGS_URL, {"region": "us", "lang": "en", "contentorigin": "espn", "type": "0", "level": "3"}),
-                self._get(client, NEWS_URL, {"limit": "10"}),
+                self._get(client, NEWS_URL, {"limit": "100"}),
                 self._get_optional(client, LEADERS_URL, {}),
             )
         previous_games = self._games(edition_scoreboard)
@@ -94,17 +94,20 @@ class FootballEditionGenerator:
                 lead_game, self.edition_date.isoformat()
             )
             if not generated:
-                facts = "\n".join([lead.get("deck", ""), *lead.get("paragraphs", [])])
-                generated = await self.lead_story_service.generate_from_game_facts(
-                    lead_game, self.edition_date.isoformat(), facts
-                )
-            lead = generated
-        elif not lead_game and self.lead_story_service:
-            headline_article = self._select_news_lead(news)
-            if headline_article:
+                for headline_article in self._news_candidates(news):
+                    generated = await self.lead_story_service.generate_from_news(
+                        headline_article, self.edition_date.isoformat()
+                    )
+                    if generated:
+                        break
+            lead = generated or lead
+        elif self.lead_story_service:
+            for headline_article in self._news_candidates(news):
                 lead = await self.lead_story_service.generate_from_news(
                     headline_article, self.edition_date.isoformat()
                 )
+                if lead:
+                    break
         return {
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.edition_date,
@@ -290,6 +293,11 @@ class FootballEditionGenerator:
 
     @staticmethod
     def _select_news_lead(payload: dict[str, Any]) -> dict[str, str] | None:
+        return next(iter(FootballEditionGenerator._news_candidates(payload)), None)
+
+    @staticmethod
+    def _news_candidates(payload: dict[str, Any]) -> list[dict[str, str]]:
+        candidates = []
         for article in payload.get("articles", []):
             api_url = ((article.get("links") or {}).get("api", {}).get("self") or {}).get(
                 "href", ""
@@ -302,13 +310,13 @@ class FootballEditionGenerator:
                 or not api_url.startswith("https://content.core.api.espn.com/")
             ):
                 continue
-            return {
+            candidates.append({
                 "id": str(article["id"]),
                 "headline": str(article["headline"]),
                 "description": str(article.get("description") or ""),
                 "api_url": api_url,
-            }
-        return None
+            })
+        return candidates
 
     @staticmethod
     def _league_leaders(payload: dict[str, Any]) -> list[dict[str, Any]]:

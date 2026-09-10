@@ -310,6 +310,8 @@ async def test_football_lead_reuses_daily_cache_without_api_call(
         "deck": "The published copy stays put.",
         "paragraphs": ["One.", "Two.", "Three."],
         "ai_generated": True,
+        "byline": "Daily Sports Page Staff",
+        "source_credit": "AP",
         "espn_game_id": "401",
         "edition_date": "2026-08-20",
     }
@@ -323,36 +325,6 @@ async def test_football_lead_reuses_daily_cache_without_api_call(
 
     assert result == cached
     assert service.cache_path(game, "2026-08-20").name == "nfl-2026-08-20-401.json"
-
-
-@pytest.mark.asyncio
-async def test_football_lead_rewrites_collected_facts_when_article_is_missing(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    game = FootballEditionGenerator._games({"events": [_event("401", "NYG", "PHI")]})[0]
-    service = FootballLeadStoryService(api_key="unused", cache_dir=tmp_path)
-    rewritten = {
-        "headline": "Facts become a full lead",
-        "deck": "A grounded deck.",
-        "paragraphs": ["One.", "Two.", "Three."],
-        "ai_generated": True,
-        "espn_game_id": "401",
-        "edition_date": "2026-08-20",
-    }
-
-    async def rewrite(source: str, selected_game: dict, edition_date: str) -> dict:
-        assert "Philadelphia" in source
-        assert selected_game == game
-        assert edition_date == "2026-08-20"
-        return rewritten
-
-    monkeypatch.setattr(service, "_rewrite", rewrite)
-    result = await service.generate_from_game_facts(
-        game, "2026-08-20", "Philadelphia collected game facts"
-    )
-
-    assert result == rewritten
-    assert service.cache_path(game, "2026-08-20").exists()
 
 
 @pytest.mark.asyncio
@@ -371,6 +343,8 @@ async def test_football_lead_rewrites_full_news_article_and_caches_it(
         "deck": "Two players took another step toward the opener.",
         "paragraphs": ["One.", "Two.", "Three.", "Four."],
         "ai_generated": True,
+        "byline": "Daily Sports Page Staff",
+        "source_credit": "AP",
         "espn_news_id": "49802956",
         "source_kind": "nfl_news",
         "edition_date": "2026-09-02",
@@ -412,9 +386,11 @@ async def test_around_the_nfl_rewrites_full_article_and_reuses_cache(
         return {
             "headline": "Veterans Near Return",
             "deck": "Two players moved closer to the opener.",
-            "paragraphs": ["The veterans took another step in their recovery."],
-            "ai_generated": True,
-            "espn_news_id": "49802956",
+                "paragraphs": ["The veterans took another step in their recovery."],
+                "ai_generated": True,
+                "byline": "Daily Sports Page Staff",
+                "source_credit": "AP",
+                "espn_news_id": "49802956",
         }
 
     monkeypatch.setattr(service, "_fetch_news_article", fetch)

@@ -3,6 +3,9 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+import pytest
+
+from src.ncaaf.ai_recap import NCAAFLeadStoryService
 from src.ncaaf.generator import NCAAFEditionGenerator
 
 
@@ -183,3 +186,72 @@ def test_ncaaf_template_has_major_conference_tabs() -> None:
     assert "AP Top 25" in template
     assert "Major-Conference Standings" in template
     assert 'data-tablist-id="ncaaf-conferences"' in template
+
+
+def test_ncaaf_news_lead_skips_media_and_selects_article() -> None:
+    selected = NCAAFEditionGenerator._select_news_lead(
+        {
+            "articles": [
+                {"id": "video", "headline": "Video", "type": "Media"},
+                {
+                    "id": "story-1",
+                    "headline": "A Saturday result reshapes the race",
+                    "description": "Conference contenders adjust after a decisive result.",
+                    "type": "Story",
+                    "links": {
+                        "api": {
+                            "self": {
+                                "href": "https://content.core.api.espn.com/v1/sports/news/story-1"
+                            }
+                        }
+                    },
+                },
+            ]
+        }
+    )
+
+    assert selected and selected["id"] == "story-1"
+
+
+@pytest.mark.asyncio
+async def test_ncaaf_lead_service_reuses_game_cache(tmp_path: Path, monkeypatch) -> None:
+    service = NCAAFLeadStoryService(api_key="test", cache_dir=tmp_path)
+    game = NCAAFEditionGenerator._games(
+        {
+            "events": [
+                _event(
+                    "401",
+                    ("10", "Opponent", "1", 10),
+                    ("99", "Penn State", "5", 1),
+                    completed=True,
+                )
+            ]
+        },
+        {},
+    )[0]
+    generated = {
+        "headline": "Penn State owns the night",
+        "deck": "A ranked matchup turns decisively.",
+        "paragraphs": ["One.", "Two.", "Three."],
+        "ai_generated": True,
+        "byline": "Daily Sports Page Staff",
+        "source_credit": "AP",
+        "espn_game_id": "401",
+        "edition_date": "2026-09-12",
+    }
+
+    async def fake_fetch(game_id: str) -> str:
+        assert game_id == "401"
+        return "Grounded recap source"
+
+    async def fake_rewrite(source: str, selected_game: dict, edition_date: str) -> dict:
+        return generated
+
+    monkeypatch.setattr(service, "_fetch_recap", fake_fetch)
+    monkeypatch.setattr(service, "_rewrite", fake_rewrite)
+    first = await service.generate(game, "2026-09-12")
+    monkeypatch.setattr(service, "_fetch_recap", lambda *_: pytest.fail("cache was not reused"))
+    second = await service.generate(game, "2026-09-12")
+
+    assert first == second == generated
+    assert (tmp_path / "ncaaf-2026-09-12-401.json").exists()

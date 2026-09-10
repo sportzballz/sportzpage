@@ -16,6 +16,13 @@ SUMMARY_URL = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summar
 class FootballLeadStoryService:
     """Create one ESPN-grounded NFL lead and reuse it for the edition day."""
 
+    sport_label = "NFL"
+    cache_prefix = "nfl"
+    source_kind = "nfl_news"
+    summary_url = SUMMARY_URL
+    schema_prefix = "football"
+    publication_byline = "Daily Sports Page Staff"
+
     def __init__(
         self,
         *,
@@ -30,10 +37,10 @@ class FootballLeadStoryService:
         self._timeout = timeout
 
     def cache_path(self, game: dict[str, Any], edition_date: str) -> Path:
-        return self._cache_dir / f"nfl-{edition_date}-{game['id']}.json"
+        return self._cache_dir / f"{self.cache_prefix}-{edition_date}-{game['id']}.json"
 
     def news_cache_path(self, article: dict[str, Any], edition_date: str) -> Path:
-        return self._cache_dir / f"nfl-news-{edition_date}-{article['id']}.json"
+        return self._cache_dir / f"{self.cache_prefix}-news-{edition_date}-{article['id']}.json"
 
     def news_brief_cache_path(self, article: dict[str, Any]) -> Path:
         return self._cache_dir / f"nfl-around-{article['id']}.json"
@@ -53,20 +60,6 @@ class FootballLeadStoryService:
             generated = await self._rewrite(source, game, edition_date)
         except (ValueError, httpx.HTTPError, json.JSONDecodeError) as exc:
             logger.warning("NFL lead rewrite unavailable for game %s: %s", game["id"], exc)
-            return None
-        self._save_cached(game, edition_date, generated)
-        return generated
-
-    async def generate_from_game_facts(
-        self, game: dict[str, Any], edition_date: str, facts: str
-    ) -> dict[str, Any] | None:
-        """Rewrite collected scoreboard facts when ESPN has no recap article."""
-        if not self._api_key:
-            return None
-        try:
-            generated = await self._rewrite(facts, game, edition_date)
-        except (ValueError, httpx.HTTPError, json.JSONDecodeError) as exc:
-            logger.warning("NFL fact rewrite unavailable for game %s: %s", game["id"], exc)
             return None
         self._save_cached(game, edition_date, generated)
         return generated
@@ -117,8 +110,12 @@ class FootballLeadStoryService:
             payload = json.loads(self.cache_path(game, edition_date).read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return None
-        required = {"headline", "deck", "paragraphs", "ai_generated"}
-        if required <= payload.keys() and payload["ai_generated"] is True:
+        required = {"headline", "deck", "paragraphs", "ai_generated", "source_credit"}
+        if (
+            required <= payload.keys()
+            and payload["ai_generated"] is True
+            and payload["source_credit"] == "AP"
+        ):
             payload.pop("url", None)
             payload.pop("source_url", None)
             return payload
@@ -140,8 +137,19 @@ class FootballLeadStoryService:
             )
         except (OSError, ValueError):
             return None
-        required = {"headline", "deck", "paragraphs", "ai_generated", "espn_news_id"}
-        if required <= payload.keys() and payload["ai_generated"] is True:
+        required = {
+            "headline",
+            "deck",
+            "paragraphs",
+            "ai_generated",
+            "espn_news_id",
+            "source_credit",
+        }
+        if (
+            required <= payload.keys()
+            and payload["ai_generated"] is True
+            and payload["source_credit"] == "AP"
+        ):
             payload.pop("url", None)
             payload.pop("source_url", None)
             return payload
@@ -163,8 +171,19 @@ class FootballLeadStoryService:
             )
         except (OSError, ValueError):
             return None
-        required = {"headline", "deck", "paragraphs", "ai_generated", "espn_news_id"}
-        if required <= payload.keys() and payload["ai_generated"] is True:
+        required = {
+            "headline",
+            "deck",
+            "paragraphs",
+            "ai_generated",
+            "espn_news_id",
+            "source_credit",
+        }
+        if (
+            required <= payload.keys()
+            and payload["ai_generated"] is True
+            and payload["source_credit"] == "AP"
+        ):
             payload.pop("url", None)
             payload.pop("source_url", None)
             return payload
@@ -182,9 +201,12 @@ class FootballLeadStoryService:
     async def _fetch_recap(self, game_id: str) -> str | None:
         try:
             async with httpx.AsyncClient(timeout=self._timeout, follow_redirects=True) as client:
-                response = await client.get(SUMMARY_URL, params={"event": game_id})
+                response = await client.get(self.summary_url, params={"event": game_id})
                 response.raise_for_status()
             article = response.json().get("article") or {}
+            if str(article.get("source") or "").upper() != "AP":
+                logger.info("skipping non-AP ESPN recap for game %s", game_id)
+                return None
             story = article.get("story")
             if not story:
                 return None
@@ -202,6 +224,9 @@ class FootballLeadStoryService:
                 response.raise_for_status()
             payload = response.json()
             article = (payload.get("headlines") or [payload])[0]
+            if str(article.get("source") or "").upper() != "AP":
+                logger.info("skipping non-AP ESPN news article %s", api_url)
+                return None
             story = article.get("story")
             if not story:
                 return None
@@ -215,7 +240,8 @@ class FootballLeadStoryService:
         self, source: str, game: dict[str, Any], edition_date: str
     ) -> dict[str, Any]:
         prompt = (
-            "Rewrite this ESPN NFL recap as an original, self-contained newspaper game story. "
+            f"Rewrite this ESPN {self.sport_label} recap as an original, self-contained "
+            "newspaper game story. "
             "Use only facts in the supplied recap and game facts. Return a strong headline, "
             "a one-sentence deck, and 3 to 5 substantive paragraphs. Write in the clear, vivid "
             "voice of an experienced sports journalist. Do not mention ESPN or the "
@@ -249,7 +275,7 @@ class FootballLeadStoryService:
                     "text": {
                         "format": {
                             "type": "json_schema",
-                            "name": "football_lead_story",
+                            "name": f"{self.schema_prefix}_lead_story",
                             "strict": True,
                             "schema": schema,
                         }
@@ -265,6 +291,8 @@ class FootballLeadStoryService:
             {
                 "paragraphs": paragraphs,
                 "ai_generated": True,
+                "byline": self.publication_byline,
+                "source_credit": "AP",
                 "espn_game_id": str(game["id"]),
                 "edition_date": edition_date,
             }
@@ -275,7 +303,8 @@ class FootballLeadStoryService:
         self, source: str, article: dict[str, Any], edition_date: str
     ) -> dict[str, Any]:
         prompt = (
-            "Write an original, self-contained NFL newspaper story in the voice of an experienced "
+            f"Write an original, self-contained {self.sport_label} newspaper story in the voice "
+            "of an experienced "
             "sports journalist. Use only facts in the supplied source article; do not copy its "
             "phrasing, speculate, add quotes, or mention ESPN or the rewriting process. Return a "
             "strong headline, a one-sentence deck, and 3 to 5 substantive paragraphs. The result "
@@ -309,7 +338,7 @@ class FootballLeadStoryService:
                     "text": {
                         "format": {
                             "type": "json_schema",
-                            "name": "football_news_lead_story",
+                            "name": f"{self.schema_prefix}_news_lead_story",
                             "strict": True,
                             "schema": schema,
                         }
@@ -325,8 +354,10 @@ class FootballLeadStoryService:
             {
                 "paragraphs": paragraphs,
                 "ai_generated": True,
+                "byline": self.publication_byline,
+                "source_credit": "AP",
                 "espn_news_id": str(article["id"]),
-                "source_kind": "nfl_news",
+                "source_kind": self.source_kind,
                 "edition_date": edition_date,
             }
         )
@@ -386,6 +417,8 @@ class FootballLeadStoryService:
             "deck": str(story["deck"]).strip(),
             "paragraphs": paragraphs,
             "ai_generated": True,
+            "byline": self.publication_byline,
+            "source_credit": "AP",
             "espn_news_id": str(article["id"]),
         }
 

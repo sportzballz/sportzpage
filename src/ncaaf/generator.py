@@ -14,6 +14,7 @@ import httpx
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.markets import DEFAULT_MARKET, MARKETS
+from src.ncaaf.ai_recap import NCAAFLeadStoryService
 from src.rendering.edition_meta import daypart_edition, format_eastern_time, volume_number
 
 EASTERN = ZoneInfo("America/New_York")
@@ -22,6 +23,7 @@ SCOREBOARD_URL = (
 )
 STANDINGS_URL = "https://site.web.api.espn.com/apis/v2/sports/football/college-football/standings"
 RANKINGS_URL = "https://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings"
+NEWS_URL = "https://site.api.espn.com/apis/site/v2/sports/football/college-football/news"
 FBS_GROUP = "80"
 MAJOR_CONFERENCES = {
     "1": "ACC",
@@ -58,10 +60,15 @@ def render_ncaaf_page(data: dict[str, Any], output_dir: Path) -> Path:
 class NCAAFEditionGenerator:
     edition_date: date
     timeout: float = 20.0
+    lead_story_service: NCAAFLeadStoryService | None = None
+
+    def __post_init__(self) -> None:
+        if self.lead_story_service is None and os.getenv("AI_PROVIDER", "").casefold() == "openai":
+            self.lead_story_service = NCAAFLeadStoryService(timeout=self.timeout + 25)
 
     async def collect(self) -> dict[str, Any]:
         async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
-            daily, standings, rankings = await asyncio.gather(
+            daily, standings, rankings, news = await asyncio.gather(
                 self._get_optional(
                     client,
                     SCOREBOARD_URL,
@@ -83,6 +90,7 @@ class NCAAFEditionGenerator:
                     },
                 ),
                 self._get_optional(client, RANKINGS_URL, {}),
+                self._get_optional(client, NEWS_URL, {"limit": "100"}),
             )
             week = self._week_context(daily, self.edition_date)
             weekly = await self._get_optional(
@@ -100,6 +108,30 @@ class NCAAFEditionGenerator:
         ranking_map, poll = self._rankings(rankings)
         games = self._games(weekly or daily, ranking_map)
         major_games = [game for game in games if game["major_conference"]]
+        daily_games = [
+            game for game in self._games(daily, ranking_map) if game["major_conference"]
+        ]
+        lead_game = self._select_lead_game(daily_games)
+        lead = self._story_for_game(lead_game) if lead_game else None
+        if lead_game and self.lead_story_service:
+            generated = await self.lead_story_service.generate(
+                lead_game, self.edition_date.isoformat()
+            )
+            if not generated:
+                for news_item in self._news_candidates(news):
+                    generated = await self.lead_story_service.generate_from_news(
+                        news_item, self.edition_date.isoformat()
+                    )
+                    if generated:
+                        break
+            lead = generated or lead
+        elif self.lead_story_service:
+            for news_item in self._news_candidates(news):
+                lead = await self.lead_story_service.generate_from_news(
+                    news_item, self.edition_date.isoformat()
+                )
+                if lead:
+                    break
         today = datetime.now(EASTERN).date().isoformat()
         for game in major_games:
             game["is_today"] = game["date"] == today
@@ -112,7 +144,7 @@ class NCAAFEditionGenerator:
             "market_slug": DEFAULT_MARKET.slug,
             "market_label": DEFAULT_MARKET.label,
             "canonical_path": "/ncaaf/",
-            "lead": self._lead_story(major_games),
+            "lead": lead,
             "scoreboard": major_games,
             "rankings": poll,
             "conferences": self._conference_standings(standings),
@@ -283,17 +315,20 @@ class NCAAFEditionGenerator:
         return result
 
     @staticmethod
-    def _lead_story(games: list[dict[str, Any]]) -> dict[str, Any] | None:
+    def _select_lead_game(games: list[dict[str, Any]]) -> dict[str, Any] | None:
         completed = [game for game in games if game["completed"]]
         if not completed:
             return None
-        game = min(
+        return min(
             completed,
             key=lambda item: min(
                 item["away"]["rank"] or 999,
                 item["home"]["rank"] or 999,
             ),
         )
+
+    @staticmethod
+    def _story_for_game(game: dict[str, Any]) -> dict[str, Any]:
         winner = game["away"] if game["away"]["winner"] else game["home"]
         loser = game["home"] if winner is game["away"] else game["away"]
         rank = f"No. {winner['rank']} " if winner["rank"] else ""
@@ -317,7 +352,48 @@ class NCAAFEditionGenerator:
                     "conference races together as the season develops."
                 ),
             ],
+            "ai_generated": False,
+            "espn_game_id": game["id"],
+            "edition_date": game["date"],
         }
+
+    @classmethod
+    def _lead_story(cls, games: list[dict[str, Any]]) -> dict[str, Any] | None:
+        game = cls._select_lead_game(games)
+        return cls._story_for_game(game) if game else None
+
+    @staticmethod
+    def _select_news_lead(payload: dict[str, Any]) -> dict[str, str] | None:
+        return next(iter(NCAAFEditionGenerator._news_candidates(payload)), None)
+
+    @staticmethod
+    def _news_candidates(payload: dict[str, Any]) -> list[dict[str, str]]:
+        candidates = []
+        for article in payload.get("articles") or []:
+            article_id = str(article.get("id") or "")
+            headline = str(article.get("headline") or "").strip()
+            description = str(article.get("description") or "").strip()
+            api_url = str(
+                ((article.get("links") or {}).get("api", {}).get("self") or {}).get(
+                    "href", ""
+                )
+            )
+            article_type = str(article.get("type") or "").casefold()
+            if (
+                article_id
+                and headline
+                and article.get("premium") is not True
+                and "premium" not in article_type
+                and "media" not in article_type
+                and "content.core.api.espn.com" in api_url
+            ):
+                candidates.append({
+                    "id": article_id,
+                    "headline": headline,
+                    "description": description,
+                    "api_url": api_url,
+                })
+        return candidates
 
     async def generate(self, output_dir: Path) -> Path:
         return render_ncaaf_page(await self.collect(), output_dir)

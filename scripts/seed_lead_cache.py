@@ -99,24 +99,36 @@ def seed_short_recaps(edition_path: Path, game_date: str, cache_dir: Path) -> li
     return seeded
 
 
-def seed_football(edition_path: Path, cache_dir: Path) -> Path | None:
-    """Restore the already-published AI football lead for a fresh runner."""
+def seed_gridiron(edition_path: Path, cache_dir: Path, cache_prefix: str) -> Path | None:
+    """Restore an already-published AI football lead for a fresh runner."""
     if not edition_path.exists():
         return None
     edition = json.loads(edition_path.read_text(encoding="utf-8"))
     lead = edition.get("lead") or {}
     source_id = lead.get("espn_game_id") or lead.get("espn_news_id")
-    if not lead.get("ai_generated") or not source_id:
+    if (
+        not lead.get("ai_generated")
+        or not source_id
+        or lead.get("source_credit") != "AP"
+    ):
         return None
     edition_date = str(lead.get("edition_date") or edition.get("edition_date") or "")[:10]
     if not edition_date:
         return None
     cache_dir.mkdir(parents=True, exist_ok=True)
-    prefix = "nfl-news" if lead.get("espn_news_id") else "nfl"
+    prefix = f"{cache_prefix}-news" if lead.get("espn_news_id") else cache_prefix
     destination = cache_dir / f"{prefix}-{edition_date}-{source_id}.json"
     if not destination.exists():
         destination.write_text(json.dumps(lead, indent=2) + "\n", encoding="utf-8")
     return destination
+
+
+def seed_football(edition_path: Path, cache_dir: Path) -> Path | None:
+    return seed_gridiron(edition_path, cache_dir, "nfl")
+
+
+def seed_ncaaf(edition_path: Path, cache_dir: Path) -> Path | None:
+    return seed_gridiron(edition_path, cache_dir, "ncaaf")
 
 
 def seed_news(edition_path: Path, cache_dir: Path) -> list[Path]:
@@ -172,6 +184,7 @@ def main() -> None:
     parser.add_argument("--game-date", required=True)
     parser.add_argument("--cache-dir", type=Path, default=Path("build/ai-cache"))
     parser.add_argument("--football-edition", type=Path)
+    parser.add_argument("--ncaaf-edition", type=Path)
     args = parser.parse_args()
     lead = seed(args.edition, args.game_date, args.cache_dir)
     recaps = seed_short_recaps(args.edition, args.game_date, args.cache_dir)
@@ -186,6 +199,7 @@ def main() -> None:
         if args.football_edition
         else []
     )
+    ncaaf = seed_ncaaf(args.ncaaf_edition, args.cache_dir) if args.ncaaf_edition else None
     if lead:
         print(f"Seeded {lead}")
     for recap in recaps:
@@ -196,7 +210,9 @@ def main() -> None:
         print(f"Seeded {football}")
     for story in football_news:
         print(f"Seeded {story}")
-    if not lead and not recaps and not news and not football and not football_news:
+    if ncaaf:
+        print(f"Seeded {ncaaf}")
+    if not lead and not recaps and not news and not football and not football_news and not ncaaf:
         print("No reusable AI stories found")
 
 

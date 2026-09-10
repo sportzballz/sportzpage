@@ -5,6 +5,7 @@ from scripts.seed_lead_cache import (
     seed,
     seed_football,
     seed_football_news,
+    seed_ncaaf,
     seed_news,
     seed_short_recaps,
 )
@@ -120,6 +121,7 @@ def test_seeds_published_football_lead(tmp_path: Path) -> None:
                     "deck": "Cached deck",
                     "paragraphs": ["One.", "Two.", "Three."],
                     "ai_generated": True,
+                    "source_credit": "AP",
                     "espn_game_id": "401",
                     "edition_date": "2026-08-20",
                 },
@@ -145,6 +147,7 @@ def test_seeds_published_football_news_lead(tmp_path: Path) -> None:
                     "deck": "Cached deck",
                     "paragraphs": ["One.", "Two.", "Three.", "Four."],
                     "ai_generated": True,
+                    "source_credit": "AP",
                     "espn_news_id": "49802956",
                     "edition_date": "2026-09-02",
                 },
@@ -157,6 +160,31 @@ def test_seeds_published_football_news_lead(tmp_path: Path) -> None:
 
     assert cached == tmp_path / "cache" / "nfl-news-2026-09-02-49802956.json"
     assert json.loads(cached.read_text())["headline"] == "Cached NFL news lead"
+
+
+def test_seeds_published_ncaaf_news_lead(tmp_path: Path) -> None:
+    edition = tmp_path / "ncaaf-edition.json"
+    edition.write_text(
+        json.dumps(
+            {
+                "edition_date": "2026-09-10",
+                "lead": {
+                    "headline": "Cached college football lead",
+                    "deck": "Cached deck",
+                    "paragraphs": ["One.", "Two.", "Three."],
+                    "ai_generated": True,
+                    "source_credit": "AP",
+                    "espn_news_id": "12345",
+                    "edition_date": "2026-09-10",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    cached = seed_ncaaf(edition, tmp_path / "cache")
+
+    assert cached == tmp_path / "cache" / "ncaaf-news-2026-09-10-12345.json"
 
 
 def test_seeds_self_contained_baseball_and_football_news(tmp_path: Path) -> None:

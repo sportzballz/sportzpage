@@ -87,10 +87,14 @@ jobs:
           curl -fsS \
             https://thedailysportspage.com/subscriber/current/football/edition.json \
             -o /tmp/current-football-edition.json || true
+          curl -fsS \
+            https://thedailysportspage.com/subscriber/current/ncaaf/edition.json \
+            -o /tmp/current-ncaaf-edition.json || true
           python scripts/seed_lead_cache.py \
             /tmp/current-edition.json \
             --game-date "${{ steps.edition.outputs.date }}" \
-            --football-edition /tmp/current-football-edition.json
+            --football-edition /tmp/current-football-edition.json \
+            --ncaaf-edition /tmp/current-ncaaf-edition.json
           for market in philadelphia boston new-york los-angeles chicago dallas; do
             curl -fsS \
               "https://thedailysportspage.com/editions/${market}/edition.json" \
