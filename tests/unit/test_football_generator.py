@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from src.football.ai_recap import FootballLeadStoryService
-from src.football.generator import FootballEditionGenerator
+from src.football.generator import LEADER_CATEGORIES, FootballEditionGenerator
 
 
 def test_support_link_is_not_in_football_menu() -> None:
@@ -184,7 +184,7 @@ def test_parses_nfl_league_leaders_in_display_order() -> None:
     payload = {
         "leaders": {
             "categories": [
-                category("sacks", "Sacks", "Defender", "PHI", "18"),
+                category("passingTouchdowns", "Passing Touchdowns", "Quarterback", "PHI", "40"),
                 category("passingYards", "Passing Yards", "Quarterback", "BUF", "4,500"),
                 category("rushingYards", "Rushing Yards", "Runner", "BAL", "1,500"),
             ]
@@ -193,7 +193,11 @@ def test_parses_nfl_league_leaders_in_display_order() -> None:
 
     leaders = FootballEditionGenerator._league_leaders(payload)
 
-    assert [item["name"] for item in leaders] == ["passingYards", "rushingYards", "sacks"]
+    assert [item["name"] for item in leaders] == [
+        "passingYards",
+        "passingTouchdowns",
+        "rushingYards",
+    ]
     assert leaders[0]["rows"][0] == {
         "rank": 1,
         "name": "Quarterback",
@@ -291,6 +295,39 @@ def test_nfl_league_leaders_remove_duplicate_athletes_before_limiting() -> None:
         (2, "Drake Maye"),
         (3, "Sam Darnold"),
     ]
+
+
+def test_nfl_league_leaders_use_fantasy_categories_in_display_order() -> None:
+    categories = [
+        {"name": name, "displayName": name, "abbreviation": name, "leaders": []}
+        for name in reversed(LEADER_CATEGORIES)
+    ]
+    for category in categories:
+        category["leaders"] = [
+            {
+                "displayValue": "1",
+                "athlete": {"id": category["name"], "displayName": "Player"},
+                "team": {"abbreviation": "PHI"},
+            }
+        ]
+
+    leaders = FootballEditionGenerator._league_leaders(
+        {"leaders": {"categories": categories}}
+    )
+
+    assert [category["name"] for category in leaders] == list(LEADER_CATEGORIES)
+    assert [category["tab_label"] for category in leaders[:3]] == [
+        "Pass Yds",
+        "Pass TD",
+        "QB Rating",
+    ]
+
+
+def test_nfl_template_uses_selectable_fantasy_leader_tabs() -> None:
+    template = Path("templates/football.html.j2").read_text()
+    assert 'data-tablist-id="nfl-fantasy"' in template
+    assert "Fantasy Football" in template
+    assert 'class="leaders-panel"' in template
 
 
 def test_nfl_leaders_season_label() -> None:

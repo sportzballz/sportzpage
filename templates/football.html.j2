@@ -64,11 +64,22 @@
         {% for row in division.rows %}<tr{% if row.abbr in page.market_teams %} class="is-primary-team"{% endif %}><td>{{ row.abbr }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.ties }}</td><td>{{ row.pct }}</td><td>{{ row.diff }}</td></tr>{% endfor %}
       </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL standings are not available yet.</p>{% endif %}
     </section>
-    <section id="league-leaders" class="section standings"><h2 class="section-heading">NFL League Leaders{% if page.leaders_season_label %} — {{ page.leaders_season_label }}{% endif %}</h2>
-      {% if page.league_leaders %}<div class="standings-grid league-leaders-grid">{% for category in page.league_leaders %}<div class="standings-division league-leader-category"><h3>{{ category.label }}</h3>
-        <table><thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>{{ category.abbreviation or 'Stat' }}</th></tr></thead><tbody>
-        {% for row in category.rows %}<tr{% if row.team in page.market_teams %} class="is-primary-team"{% endif %}><td>{{ row.rank }}</td><td>{{ row.name }}{% if row.position %} <small>{{ row.position }}</small>{% endif %}</td><td>{{ row.team }}</td><td><strong>{{ row.value }}</strong></td></tr>{% endfor %}
-        </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
+    <section id="league-leaders" class="section league-leaders"><h2 class="section-heading">NFL League Leaders{% if page.leaders_season_label %} — {{ page.leaders_season_label }}{% endif %}</h2>
+      {% if page.league_leaders %}
+      <div class="leaders-tabs"><div class="leaders-tab-group">
+        <h3 class="leaders-group-label">Fantasy Football</h3>
+        <nav role="tablist" aria-label="NFL fantasy football leader categories" class="leaders-tablist" data-tablist-id="nfl-fantasy">
+          {% for category in page.league_leaders %}<button role="tab" id="nfl-leaders-tab-{{ category.name }}" aria-controls="nfl-leaders-panel-{{ category.name }}" aria-selected="{{ 'true' if loop.first else 'false' }}" class="leaders-tab {% if loop.first %}leaders-tab-active{% endif %}" data-category="{{ category.name }}" tabindex="{{ '0' if loop.first else '-1' }}">{{ category.tab_label }}</button>{% endfor %}
+        </nav>
+        <div class="leaders-panels" data-panels-group="nfl-fantasy">
+          {% for category in page.league_leaders %}<div class="leaders-panel" id="nfl-leaders-panel-{{ category.name }}" role="tabpanel" aria-labelledby="nfl-leaders-tab-{{ category.name }}">
+            <table class="leaders-table"><caption>{{ category.label }} Leaders</caption><thead><tr><th scope="col" class="rank-col">RK</th><th scope="col" class="player-col">Player</th><th scope="col" class="team-col">Team</th><th scope="col" class="value-col">{{ category.abbreviation or 'Stat' }}</th></tr></thead><tbody>
+            {% for row in category.rows %}<tr{% if row.team in page.market_teams %} class="is-primary-team"{% endif %}><td class="rank-col">{{ row.rank }}</td><td class="player-col">{{ row.name }}{% if row.position %}<span class="player-pos">, {{ row.position }}</span>{% endif %}</td><td class="team-col">{{ row.team }}</td><td class="value-col">{{ row.value }}</td></tr>{% endfor %}
+            </tbody></table>
+          </div>{% endfor %}
+        </div>
+      </div></div>
+      {% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
     </section>
   </main>
   <footer class="site-footer"><p>The Daily Sports Page — NFL Edition — {{ page.edition_date }}</p></footer>

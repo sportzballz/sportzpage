@@ -25,12 +25,28 @@ LEADERS_URL = "https://site.api.espn.com/apis/site/v3/sports/football/nfl/leader
 NFC_EAST = {"PHI", "DAL", "NYG", "WSH"}
 LEADER_CATEGORIES = (
     "passingYards",
+    "passingTouchdowns",
+    "quarterbackRating",
     "rushingYards",
+    "rushingTouchdowns",
+    "receptions",
     "receivingYards",
-    "totalTackles",
-    "sacks",
-    "interceptions",
+    "receivingTouchdowns",
+    "totalTouchdowns",
+    "totalPoints",
 )
+LEADER_TAB_LABELS = {
+    "passingYards": "Pass Yds",
+    "passingTouchdowns": "Pass TD",
+    "quarterbackRating": "QB Rating",
+    "rushingYards": "Rush Yds",
+    "rushingTouchdowns": "Rush TD",
+    "receptions": "Rec",
+    "receivingYards": "Rec Yds",
+    "receivingTouchdowns": "Rec TD",
+    "totalTouchdowns": "Total TD",
+    "totalPoints": "Points",
+}
 
 
 def render_football_page(data: dict[str, Any], output_dir: Path) -> Path:
@@ -355,6 +371,7 @@ class FootballEditionGenerator:
                 result.append(
                     {
                         "name": category_name,
+                        "tab_label": LEADER_TAB_LABELS[category_name],
                         "label": category.get("displayName", category_name),
                         "abbreviation": category.get("abbreviation", ""),
                         "rows": rows,
