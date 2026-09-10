@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#8b1e2d">
+  <title>The Daily Sports Page — NCAAF</title>
+  <meta name="description" content="Major-conference college football scores, schedules, rankings, standings, and stories.">
+  <link rel="canonical" href="https://thedailysportspage.com{{ page.canonical_path }}">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta property="og:site_name" content="The Daily Sports Page">
+  <meta property="og:title" content="The Daily Sports Page — NCAAF">
+  <meta property="og:description" content="Major-conference college football scores, schedules, rankings, standings, and stories.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://thedailysportspage.com{{ page.canonical_path }}">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="../static/icons/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="../static/css/daily-sports-page.css?v=20260910-ncaaf">
+</head>
+<body data-market="{{ page.market_slug }}">
+  <a href="#front-page" class="skip-link">Skip to content</a>
+  <header class="masthead" role="banner">
+    <div class="masthead-inner">
+      <div class="masthead-kicker"><span>Independent Daily Coverage</span><strong>College Football</strong><span>National Edition</span></div>
+      <h1 class="masthead-title">The Daily Sports Page</h1>
+      <div class="masthead-meta">
+        <span class="masthead-date">{{ page.edition_date.strftime('%A, %B %-d, %Y') }}</span>
+        <span class="masthead-sep">&bull;</span><span>{{ daypart_edition(page.generated_at) }}</span>
+        <span class="masthead-sep">&bull;</span><span>Written at {{ format_eastern_time(page.generated_at) }}</span>
+        <span class="masthead-sep">&bull;</span><span>Volume {{ volume_number(page.generated_at) }}</span>
+      </div>
+    </div>
+  </header>
+  {% set active_market_slug = page.market_slug %}{% include "sections/market-selector.html.j2" %}
+  {% set active_sport = "ncaaf" %}{% include "sections/sport-tabs.html.j2" %}
+  <nav class="section-nav" aria-label="NCAAF page sections">
+    <ul>
+      <li><a href="#scoreboard">Weekly Scoreboard</a></li>
+      <li><a href="#rankings">AP Top 25</a></li>
+      <li><a href="#conference-standings">Conference Standings</a></li>
+    </ul>
+    <button class="print-btn" type="button" onclick="window.print()">Print</button>
+  </nav>
+  <main>
+    <div class="top-news-grid football-top-news-grid">
+      <section id="front-page" class="front-page section">
+        {% if page.lead %}
+        <article class="lead-story">
+          <p class="section-label">College Football Front Page</p>
+          <h2 class="lead-headline">{{ page.lead.headline }}</h2>
+          <p class="story-deck">{{ page.lead.deck }}</p>
+          <p class="story-byline">By Daily Sports Page Staff</p>
+          <div class="story-body">{% for paragraph in page.lead.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</div>
+        </article>
+        {% else %}
+        <article class="lead-story"><p class="section-label">College Football Front Page</p><h2 class="lead-headline">The college football week is taking shape</h2><p class="story-deck">Scores and conference races will fill in as games are played.</p></article>
+        {% endif %}
+      </section>
+    </div>
+
+    <section id="scoreboard" class="scoreboard section weekly-football-scoreboard">
+      <h2 class="section-heading">{{ page.week_label }} Major-Conference Scoreboard{% if page.week_detail %} <small>{{ page.week_detail }}</small>{% endif %}</h2>
+      {% if page.scoreboard %}
+      <div class="standings-table-wrapper"><table class="scoreboard-table football-week-table" aria-label="{{ page.week_label }} major-conference college football scores and schedule">
+        <thead><tr><th>Date</th><th>Matchup</th><th>Score / Time</th><th>Status / TV</th></tr></thead>
+        <tbody>{% for game in page.scoreboard %}<tr{% if game.is_today %} class="is-today"{% endif %}>
+          <td>{% if game.is_today %}<strong>Today</strong><br>{% endif %}{{ game.date_label }}</td>
+          <td><strong>{% if game.away.rank %}<span class="team-rank">{{ game.away.rank }}</span> {% endif %}{{ game.away.name }} at {% if game.home.rank %}<span class="team-rank">{{ game.home.rank }}</span> {% endif %}{{ game.home.name }}</strong><br><small>{{ game.venue }}</small></td>
+          <td>{% if game.completed %}<strong>{{ game.away.score }}–{{ game.home.score }}</strong>{% else %}<strong>{{ game.time }}</strong>{% endif %}</td>
+          <td>{{ game.status }}{% if game.broadcast %}<br><small>{{ game.broadcast }}</small>{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+      </table></div>
+      {% else %}<p class="no-content">No major-conference games are available for {{ page.week_label }}.</p>{% endif %}
+    </section>
+
+    <section id="rankings" class="section standings">
+      <h2 class="section-heading">AP Top 25</h2>
+      {% if page.rankings %}<div class="standings-table-wrapper"><table class="ncaaf-rankings-table"><thead><tr><th>Rank</th><th>Team</th><th>Record</th><th>Points</th></tr></thead><tbody>
+        {% for row in page.rankings %}<tr><td><strong>{{ row.rank }}</strong></td><td>{{ row.team }}</td><td>{{ row.record }}</td><td>{{ row.points }}</td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<p class="no-content">The AP Top 25 is not available yet.</p>{% endif %}
+    </section>
+
+    <section id="conference-standings" class="section standings ncaaf-conferences">
+      <h2 class="section-heading">Major-Conference Standings</h2>
+      {% if page.conferences %}
+      <div class="leaders-tab-group">
+        <div class="leaders-tablist" role="tablist" aria-label="College football conferences" data-tablist-id="ncaaf-conferences">
+          {% for conference in page.conferences %}<button class="leaders-tab{% if loop.first %} leaders-tab-active{% endif %}" type="button" role="tab" id="conference-tab-{{ conference.id }}" aria-controls="conference-panel-{{ conference.id }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-category="{{ conference.id }}">{{ conference.name }}</button>{% endfor %}
+        </div>
+        <div class="leaders-panels">
+          {% for conference in page.conferences %}<div class="leaders-panel" id="conference-panel-{{ conference.id }}" role="tabpanel" aria-labelledby="conference-tab-{{ conference.id }}"{% if not loop.first %} style="display:none"{% endif %}>
+            <div class="standings-table-wrapper"><table class="ncaaf-conference-table"><thead><tr><th>Team</th><th>Conf.</th><th>Overall</th><th>Streak</th></tr></thead><tbody>
+              {% for row in conference.rows %}<tr><td>{% if row.rank %}<span class="team-rank">{{ row.rank }}</span> {% endif %}{{ row.team }}</td><td>{{ row.conference }}</td><td>{{ row.overall }}</td><td>{{ row.streak }}</td></tr>{% endfor %}
+            </tbody></table></div>
+          </div>{% endfor %}
+        </div>
+      </div>
+      {% else %}<p class="no-content">Major-conference standings are not available yet.</p>{% endif %}
+    </section>
+  </main>
+  <footer class="site-footer"><p>The Daily Sports Page — NCAAF Edition — {{ page.edition_date }}</p></footer>
+  <script src="../static/js/daily-sports-page.js?v=20260910-ncaaf"></script>
+  {% include "sections/web-analytics.html.j2" %}
+</body>
+</html>

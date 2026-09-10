@@ -322,14 +322,19 @@ class FootballEditionGenerator:
             if not category:
                 continue
             rows = []
-            for rank, leader in enumerate(category.get("leaders") or [], start=1):
+            seen_athletes: set[str] = set()
+            for leader in category.get("leaders") or []:
                 athlete = leader.get("athlete") or {}
                 team = leader.get("team") or {}
                 if not athlete.get("displayName"):
                     continue
+                athlete_key = str(athlete.get("id") or athlete["displayName"]).casefold()
+                if athlete_key in seen_athletes:
+                    continue
+                seen_athletes.add(athlete_key)
                 rows.append(
                     {
-                        "rank": rank,
+                        "rank": len(rows) + 1,
                         "name": athlete["displayName"],
                         "position": (athlete.get("position") or {}).get("abbreviation", ""),
                         "team": team.get("abbreviation", ""),

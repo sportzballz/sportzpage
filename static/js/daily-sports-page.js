@@ -38,7 +38,11 @@
     ]);
     const selector = document.querySelector("[data-market-selector]");
     const currentMarket = document.body.dataset.market || "philadelphia";
-    const isFootball = window.location.pathname.includes("/football/");
+    const sportPath = window.location.pathname.includes("/ncaaf/")
+      ? "ncaaf/"
+      : window.location.pathname.includes("/football/")
+        ? "football/"
+        : "";
 
     let savedMarket = null;
     try {
@@ -58,7 +62,7 @@
       savedMarket !== currentMarket
     ) {
       window.location.replace(
-        `/editions/${savedMarket}/${isFootball ? "football/" : ""}`,
+        `/editions/${savedMarket}/${sportPath}`,
       );
       return;
     }
@@ -74,7 +78,7 @@
         // Navigation remains functional without persistent storage.
       }
       window.location.assign(
-        `/editions/${market}/${isFootball ? "football/" : ""}`,
+        `/editions/${market}/${sportPath}`,
       );
     });
   }

@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import json
 import os
+from copy import deepcopy
 from datetime import date, datetime
 from pathlib import Path
 
@@ -18,6 +19,7 @@ from src.market_editions import (
 )
 from src.markets import MARKETS
 from src.models.edition import Edition
+from src.ncaaf.generator import render_ncaaf_page
 from src.rendering.html_renderer import HTMLRenderer
 
 
@@ -26,6 +28,8 @@ async def generate(
     football_edition: Path,
     baseball_output: Path,
     football_output: Path,
+    ncaaf_edition: Path | None = None,
+    ncaaf_output: Path | None = None,
     baseball_service: ESPNLeadStoryService | None = None,
     football_service: FootballLeadStoryService | None = None,
 ) -> None:
@@ -33,6 +37,10 @@ async def generate(
     football = json.loads(football_edition.read_text())
     football["edition_date"] = date.fromisoformat(football["edition_date"])
     football["generated_at"] = datetime.fromisoformat(football["generated_at"])
+    ncaaf = json.loads(ncaaf_edition.read_text()) if ncaaf_edition else None
+    if ncaaf:
+        ncaaf["edition_date"] = date.fromisoformat(ncaaf["edition_date"])
+        ncaaf["generated_at"] = datetime.fromisoformat(ncaaf["generated_at"])
     renderer = HTMLRenderer.from_config()
 
     if baseball_service is None and os.getenv("AI_PROVIDER") == "openai":
@@ -77,9 +85,7 @@ async def generate(
         )
         if football_service and football_game and not football_lead:
             deterministic = marketize_football(football, market)["lead"]
-            facts = "\n".join(
-                [deterministic.get("deck", ""), *deterministic.get("paragraphs", [])]
-            )
+            facts = "\n".join([deterministic.get("deck", ""), *deterministic.get("paragraphs", [])])
             football_lead = await football_service.generate_from_game_facts(
                 football_game, football["edition_date"].isoformat(), facts
             )
@@ -93,6 +99,12 @@ async def generate(
             ),
             football_dir,
         )
+        if ncaaf and ncaaf_output:
+            localized_ncaaf = deepcopy(ncaaf)
+            localized_ncaaf["market_slug"] = market.slug
+            localized_ncaaf["market_label"] = market.label
+            localized_ncaaf["canonical_path"] = f"/editions/{market.slug}/ncaaf/"
+            render_ncaaf_page(localized_ncaaf, ncaaf_output / market.slug)
 
 
 def main() -> None:
@@ -102,9 +114,9 @@ def main() -> None:
         "--football-edition", type=Path, default=Path("build/football/edition.json")
     )
     parser.add_argument("--baseball-output", type=Path, default=Path("build/markets"))
-    parser.add_argument(
-        "--football-output", type=Path, default=Path("build/football-markets")
-    )
+    parser.add_argument("--football-output", type=Path, default=Path("build/football-markets"))
+    parser.add_argument("--ncaaf-edition", type=Path, default=Path("build/ncaaf/edition.json"))
+    parser.add_argument("--ncaaf-output", type=Path, default=Path("build/ncaaf-markets"))
     args = parser.parse_args()
     asyncio.run(
         generate(
@@ -112,6 +124,8 @@ def main() -> None:
             args.football_edition,
             args.baseball_output,
             args.football_output,
+            args.ncaaf_edition,
+            args.ncaaf_output,
         )
     )
 

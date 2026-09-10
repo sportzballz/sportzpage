@@ -107,11 +107,12 @@ jobs:
       - name: Install generator
         run: python -m pip install .
 
-      - name: Generate Baseball and Football editions
+      - name: Generate MLB, NFL, and NCAAF editions
         run: |
           EDITION_DATE="${{ steps.edition.outputs.date }}"
           daily-sports-page run --date "$EDITION_DATE" --build-dir build
           python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
+          python -m src.ncaaf.generator --date "$EDITION_DATE" --build-dir build/ncaaf
           python scripts/generate_market_editions.py
 
       - uses: aws-actions/configure-aws-credentials@v4
@@ -131,6 +132,8 @@ jobs:
             --previous-site previous-site \
             --market-build-dir build/markets \
             --football-market-dir build/football-markets \
+            --ncaaf-dir build/ncaaf \
+            --ncaaf-market-dir build/ncaaf-markets \
             --output dist
 
       - name: Publish versioned site artifact

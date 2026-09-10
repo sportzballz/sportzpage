@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#8b1e2d">
-  <title>The Daily Sports Page — Football</title>
+  <title>The Daily Sports Page — NFL</title>
   <meta name="description" content="{{ page.market_label }}-focused NFL scores, schedules, standings, and stories.">
   <link rel="canonical" href="https://thedailysportspage.com{{ page.canonical_path }}">
   <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
   <meta property="og:site_name" content="The Daily Sports Page">
-  <meta property="og:title" content="The Daily Sports Page — Football">
+  <meta property="og:title" content="The Daily Sports Page — NFL">
   <meta property="og:description" content="{{ page.market_label }}-focused NFL scores, schedules, standings, and stories.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://thedailysportspage.com{{ page.canonical_path }}">
@@ -33,7 +33,7 @@
   </header>
   {% set active_market_slug = page.market_slug %}{% include "sections/market-selector.html.j2" %}
   {% set active_sport = "football" %}{% include "sections/sport-tabs.html.j2" %}
-  <nav class="section-nav" aria-label="Football page sections">
+  <nav class="section-nav" aria-label="NFL page sections">
     <ul>
       <li><a href="#scoreboard">Weekly Scoreboard &amp; Schedule</a></li>
       <li><a href="#standings">Standings</a></li><li><a href="#league-leaders">League Leaders</a></li>
@@ -45,7 +45,7 @@
       <section id="front-page" class="front-page section">
         {% if page.lead %}
         <article class="lead-story">
-          <p class="section-label">Football Front Page</p><h2 class="lead-headline">{{ page.lead.headline }}</h2>
+          <p class="section-label">NFL Front Page</p><h2 class="lead-headline">{{ page.lead.headline }}</h2>
           <p class="story-deck">{{ page.lead.deck }}</p><p class="story-byline">By Daily Sports Page Staff</p>
           <div class="story-body">{% for paragraph in page.lead.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</div>
         </article>
@@ -71,7 +71,7 @@
         </tbody></table></div>{% endfor %}</div>{% else %}<p class="no-content">NFL league leaders are not available yet.</p>{% endif %}
     </section>
   </main>
-  <footer class="site-footer"><p>The Daily Sports Page — Football Edition — {{ page.edition_date }}</p></footer>
+  <footer class="site-footer"><p>The Daily Sports Page — NFL Edition — {{ page.edition_date }}</p></footer>
   <script src="../static/js/daily-sports-page.js?v=20260830-market-editions"></script>
   {% include "sections/web-analytics.html.j2" %}
 </body>

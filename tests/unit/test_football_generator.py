@@ -257,6 +257,42 @@ def test_nfl_league_leaders_limit_each_category_to_five() -> None:
     assert [row["rank"] for row in leaders[0]["rows"]] == [1, 2, 3, 4, 5]
 
 
+def test_nfl_league_leaders_remove_duplicate_athletes_before_limiting() -> None:
+    def leader(athlete_id: str, name: str, value: str) -> dict:
+        return {
+            "displayValue": value,
+            "athlete": {"id": athlete_id, "displayName": name},
+            "team": {"abbreviation": "SEA"},
+        }
+
+    payload = {
+        "leaders": {
+            "categories": [
+                {
+                    "name": "passingYards",
+                    "displayName": "Passing Yards",
+                    "abbreviation": "YDS",
+                    "leaders": [
+                        leader("1", "Drew Lock", "187"),
+                        leader("1", "Drew Lock", "187"),
+                        leader("2", "Drake Maye", "178"),
+                        leader("2", "Drake Maye", "178"),
+                        leader("3", "Sam Darnold", "13"),
+                    ],
+                }
+            ]
+        }
+    }
+
+    leaders = FootballEditionGenerator._league_leaders(payload)
+
+    assert [(row["rank"], row["name"]) for row in leaders[0]["rows"]] == [
+        (1, "Drew Lock"),
+        (2, "Drake Maye"),
+        (3, "Sam Darnold"),
+    ]
+
+
 def test_nfl_leaders_season_label() -> None:
     payload = {"requestedSeason": {"year": 2026, "type": {"name": "Preseason"}}}
 

@@ -477,7 +477,9 @@ body {
 }
 
 .weekly-football-scoreboard { grid-column: 1 / -1; }
-.football-top-news-grid { display: block; }
+.top-news-grid.football-top-news-grid { display: block; }
+.football-top-news-grid .front-page { display: block; }
+.football-top-news-grid .lead-story { width: 100%; }
 
 .football-week-table {
   width: 100%;
@@ -496,6 +498,28 @@ body {
   background: #fff4c2;
   box-shadow: inset 0.28rem 0 #8b1e2d;
 }
+
+.team-rank {
+  display: inline-block;
+  min-width: 1.25em;
+  color: #8b1e2d;
+  font: 900 0.8em/1 var(--font-sans);
+}
+
+.ncaaf-rankings-table,
+.ncaaf-conference-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.ncaaf-rankings-table th:first-child,
+.ncaaf-rankings-table td:first-child { width: 12%; text-align: center; }
+.ncaaf-rankings-table th:nth-child(2) { width: 48%; }
+.ncaaf-rankings-table th:nth-child(3),
+.ncaaf-rankings-table th:nth-child(4) { width: 20%; }
+.ncaaf-conference-table th:first-child { width: 52%; }
+.ncaaf-conference-table th:not(:first-child) { width: 16%; }
+.ncaaf-conferences { grid-column: 1 / -1; }
 
 .section-heading small {
   font: 600 0.65em/1 var(--font-sans);

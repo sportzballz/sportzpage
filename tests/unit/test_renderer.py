@@ -138,7 +138,8 @@ def test_market_selector_lists_and_persists_local_editions():
     assert '<option value="chicago">Chicago</option>' in html
     assert '<option value="dallas">Dallas</option>' in html
     assert 'localStorage.setItem("tdsp-market", market)' in script
-    assert '`/editions/${market}/${isFootball ? "football/" : ""}`' in script
+    assert '`/editions/${market}/${sportPath}`' in script
+    assert 'window.location.pathname.includes("/ncaaf/")' in script
 
 
 def test_box_scores_follow_standings():

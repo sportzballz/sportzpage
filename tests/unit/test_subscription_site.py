@@ -182,6 +182,37 @@ def test_cloudfront_function_routes_football_to_current_edition() -> None:
     assert "request.uri = '/static/icons/favicon.ico'" in code
 
 
+def test_cloudfront_function_routes_ncaaf_to_current_edition() -> None:
+    code = Path("terraform/functions/directory-index.js").read_text(encoding="utf-8")
+    assert "uri === '/ncaaf'" in code
+    assert "location: { value: '/subscriber/current/ncaaf/' }" in code
+
+
+def test_assembles_ncaaf_current_and_market_routes(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    football = tmp_path / "football"
+    ncaaf = tmp_path / "ncaaf"
+    static = tmp_path / "static"
+    _write_edition(build, "2026-09-10")
+    _write_edition(football, "2026-09-10")
+    _write_edition(ncaaf, "2026-09-10", "ncaaf-marker")
+    static.mkdir()
+
+    output = tmp_path / "dist"
+    assemble(
+        build,
+        football,
+        static,
+        tmp_path / "previous",
+        output,
+        ncaaf_dir=ncaaf,
+    )
+
+    assert "ncaaf-marker" in (output / "subscriber/current/ncaaf/index.html").read_text()
+    assert (output / "editions/philadelphia/ncaaf/index.html").exists()
+    assert "https://thedailysportspage.com/ncaaf/" in (output / "sitemap.xml").read_text()
+
+
 def test_subscription_panels_span_the_newspaper_grid() -> None:
     css = Path("static/css/subscription.css").read_text(encoding="utf-8")
     panel_rule = css.split(".free-archive {", maxsplit=1)[1].split("}", maxsplit=1)[0]

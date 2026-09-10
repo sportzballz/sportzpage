@@ -13,6 +13,17 @@ function handler(event) {
     };
   }
 
+  if (uri === '/ncaaf' || uri.startsWith('/ncaaf/')) {
+    return {
+      statusCode: 302,
+      statusDescription: 'Preview Edition',
+      headers: {
+        location: { value: '/subscriber/current/ncaaf/' },
+        'cache-control': { value: 'no-store' }
+      }
+    };
+  }
+
   if (uri === '/favicon.ico') {
     request.uri = '/static/icons/favicon.ico';
     return request;
