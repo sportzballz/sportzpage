@@ -77,7 +77,7 @@ def _page(title: str, body: str, *, description: str, canonical: str) -> str:
   <header class="masthead">
     <p class="masthead-label">Independent Daily Coverage</p>
     <h1 class="masthead-title">The Daily Sports Page</h1>
-    <p class="masthead-meta">MLB &bull; NFL &bull; NCAAF &bull; Delivered Daily</p>
+    <p class="masthead-meta">MLB &bull; NFL &bull; NCAAF &bull; NHL &bull; Delivered Daily</p>
   </header>
   {body}
   <footer class="site-footer"><p>The Daily Sports Page &bull; <a href="/privacy/">Privacy Policy</a></p></footer>
@@ -164,7 +164,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
     <section class="subscription-benefits">
       <h2>Independent daily coverage, open to everyone.</h2>
       <ul>
-        <li>Full MLB, NFL, and NCAAF editions</li>
+        <li>Full MLB, NFL, NCAAF, and NHL editions</li>
         <li>Open web access from any device</li>
         <li>Support only when the coverage earns it</li>
         <li>Print-ready edition for reading offline</li>
@@ -350,6 +350,7 @@ def _write_discovery_files(output: Path, archive_dates: list[str], current_date:
             ("/subscriber/current/", current_date),
             ("/football/", current_date),
             ("/ncaaf/", current_date),
+            ("/nhl/", current_date),
             ("/privacy/", current_date),
         ]
     )
@@ -360,6 +361,7 @@ def _write_discovery_files(output: Path, archive_dates: list[str], current_date:
                 (f"/editions/{market.slug}/", current_date),
                 (f"/editions/{market.slug}/football/", current_date),
                 (f"/editions/{market.slug}/ncaaf/", current_date),
+                (f"/editions/{market.slug}/nhl/", current_date),
             ]
         )
     urls = "".join(
@@ -402,6 +404,7 @@ def assemble(
     football_market_dir: Path | None = None,
     ncaaf_dir: Path | None = None,
     ncaaf_market_dir: Path | None = None,
+    nhl_market_dir: Path | None = None,
 ) -> None:
     if output.exists():
         shutil.rmtree(output)
@@ -438,6 +441,9 @@ def assemble(
     _copy_tree(football_dir, current / "football")
     if ncaaf_dir:
         _copy_tree(ncaaf_dir, current / "ncaaf")
+    if nhl_market_dir:
+        _copy_tree(nhl_market_dir / "philadelphia", current / "nhl")
+        _copy_tree(nhl_market_dir / "philadelphia", output / "nhl")
     _copy_tree(static_dir, current / "static")
 
     delivery = output / "delivery" / "current"
@@ -479,6 +485,8 @@ def assemble(
                 ncaaf_market_dir / market.slug if ncaaf_market_dir else ncaaf_dir
             )
             _copy_tree(ncaaf_source, market_route / "ncaaf")
+        if nhl_market_dir:
+            _copy_tree(nhl_market_dir / market.slug, market_route / "nhl")
         _copy_tree(static_dir, market_route / "static")
         _remove_legacy_edition_support_link(market_route)
         _apply_edition_seo(market_route, f"/editions/{market.slug}/")
@@ -509,6 +517,7 @@ def main() -> None:
     )
     parser.add_argument("--ncaaf-dir", type=Path, default=Path("build/ncaaf"))
     parser.add_argument("--ncaaf-market-dir", type=Path, default=Path("build/ncaaf-markets"))
+    parser.add_argument("--nhl-market-dir", type=Path, default=Path("build/nhl-markets"))
     parser.add_argument("--static-dir", type=Path, default=Path("static"))
     parser.add_argument("--previous-site", type=Path, default=Path("previous-site"))
     parser.add_argument("--output", type=Path, default=Path("dist"))
@@ -523,6 +532,7 @@ def main() -> None:
         football_market_dir=args.football_market_dir,
         ncaaf_dir=args.ncaaf_dir,
         ncaaf_market_dir=args.ncaaf_market_dir,
+        nhl_market_dir=args.nhl_market_dir,
     )
 
 

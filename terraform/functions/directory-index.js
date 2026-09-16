@@ -24,6 +24,17 @@ function handler(event) {
     };
   }
 
+  if (uri === '/nhl' || uri.startsWith('/nhl/')) {
+    return {
+      statusCode: 302,
+      statusDescription: 'Preview Edition',
+      headers: {
+        location: { value: '/subscriber/current/nhl/' },
+        'cache-control': { value: 'no-store' }
+      }
+    };
+  }
+
   if (uri === '/favicon.ico') {
     request.uri = '/static/icons/favicon.ico';
     return request;

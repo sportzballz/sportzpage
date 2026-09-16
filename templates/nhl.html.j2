@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#8b1e2d">
+  <title>The Daily Sports Page — NHL</title>
+  <meta name="description" content="NHL scores, schedules, standings, and original hockey coverage.">
+  <link rel="canonical" href="https://thedailysportspage.com{{ page.canonical_path }}">
+  <link rel="icon" href="../static/icons/favicon.ico" sizes="any">
+  <link rel="stylesheet" href="../static/css/daily-sports-page.css?v=20260916-nhl">
+</head>
+<body data-market="{{ page.market_slug }}">
+  <a href="#front-page" class="skip-link">Skip to content</a>
+  <header class="masthead" role="banner"><div class="masthead-inner">
+    <div class="masthead-kicker"><span>Independent Daily Coverage</span><strong>National Hockey League</strong><span>{{ page.market_label }} Edition</span></div>
+    <h1 class="masthead-title">The Daily Sports Page</h1>
+    <div class="masthead-meta"><span class="masthead-date">{{ page.edition_date.strftime('%A, %B %-d, %Y') }}</span><span class="masthead-sep">&bull;</span><span>{{ daypart_edition(page.generated_at) }}</span><span class="masthead-sep">&bull;</span><span>Written at {{ format_eastern_time(page.generated_at) }}</span><span class="masthead-sep">&bull;</span><span>Volume {{ volume_number(page.generated_at) }}</span></div>
+  </div></header>
+  {% set active_market_slug = page.market_slug %}{% include "sections/market-selector.html.j2" %}
+  {% set active_sport = "nhl" %}{% include "sections/sport-tabs.html.j2" %}
+  <nav class="section-nav" aria-label="NHL page sections"><ul>
+    <li><a href="#scoreboard">Scores &amp; Schedule</a></li><li><a href="#standings">Standings</a></li>
+  </ul><button class="print-btn" type="button" onclick="window.print()">Print</button></nav>
+  <main>
+    <section id="front-page" class="front-page section"><article class="lead-story">
+      <p class="section-label">Hockey Front Page</p>
+      {% if page.lead %}<h2 class="lead-headline">{{ page.lead.headline }}</h2><p class="story-deck">{{ page.lead.deck }}</p><p class="story-byline">By Daily Sports Page Staff</p><div class="story-body">{% for paragraph in page.lead.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}</div>
+      {% else %}<h2 class="lead-headline">Around the NHL</h2><p class="story-deck">Scores and standings are below. No AP-sourced lead story is available for this edition.</p>{% endif %}
+    </article></section>
+    <section id="scoreboard" class="scoreboard section"><h2 class="section-heading">Scores &amp; Schedule</h2>
+      {% for label, games in [('Previous Day', page.recent_games), ('Edition Day', page.games), ('Next Day', page.upcoming_games)] %}
+      <h3>{{ label }}</h3>
+      {% if games %}<div class="standings-table-wrapper"><table class="scoreboard-table" aria-label="NHL {{ label|lower }} games"><thead><tr><th>Matchup</th><th>Score / Time</th><th>Status</th></tr></thead><tbody>
+      {% for game in games %}<tr><td><strong>{{ game.away.name }} at {{ game.home.name }}</strong></td><td>{% if game.completed %}{{ game.away.score }}–{{ game.home.score }}{% else %}{{ game.time }}{% endif %}</td><td>{{ game.status }}</td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<p class="no-content">No games scheduled.</p>{% endif %}
+      {% endfor %}
+    </section>
+    <section id="standings" class="standings section"><h2 class="section-heading">NHL Standings</h2>
+      {% for division in page.divisions %}<h3>{{ division.name }}</h3><div class="standings-table-wrapper"><table class="standings-table" aria-label="{{ division.name }} standings"><thead><tr><th>Team</th><th>GP</th><th>W</th><th>L</th><th>OTL</th><th>PTS</th></tr></thead><tbody>
+      {% for row in division.rows %}<tr><td>{{ row.team }}</td><td>{{ row.gp }}</td><td>{{ row.w }}</td><td>{{ row.l }}</td><td>{{ row.otl }}</td><td>{{ row.pts }}</td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<p class="no-content">Standings are not available yet.</p>{% endfor %}
+    </section>
+  </main>
+  <footer class="site-footer"><p>The Daily Sports Page — NHL Edition — {{ page.edition_date }}</p></footer>
+  <script src="../static/js/daily-sports-page.js?v=20260916-nhl"></script>
+  {% include "sections/web-analytics.html.j2" %}
+</body>
+</html>

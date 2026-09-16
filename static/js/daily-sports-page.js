@@ -38,9 +38,11 @@
     ]);
     const selector = document.querySelector("[data-market-selector]");
     const currentMarket = document.body.dataset.market || "philadelphia";
-    const sportPath = window.location.pathname.includes("/ncaaf/")
-      ? "ncaaf/"
-      : window.location.pathname.includes("/football/")
+    const sportPath = window.location.pathname.includes("/nhl/")
+      ? "nhl/"
+      : window.location.pathname.includes("/ncaaf/")
+        ? "ncaaf/"
+        : window.location.pathname.includes("/football/")
         ? "football/"
         : "";
 
@@ -54,7 +56,7 @@
 
     const isLegacyCurrent = window.location.pathname.startsWith(
       "/subscriber/current/",
-    );
+    ) || window.location.pathname === "/nhl/";
     if (
       isLegacyCurrent &&
       savedMarket &&

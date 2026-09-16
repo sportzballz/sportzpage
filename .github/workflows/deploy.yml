@@ -90,11 +90,15 @@ jobs:
           curl -fsS \
             https://thedailysportspage.com/subscriber/current/ncaaf/edition.json \
             -o /tmp/current-ncaaf-edition.json || true
+          curl -fsS \
+            https://thedailysportspage.com/subscriber/current/nhl/edition.json \
+            -o /tmp/current-nhl-edition.json || true
           python scripts/seed_lead_cache.py \
             /tmp/current-edition.json \
             --game-date "${{ steps.edition.outputs.date }}" \
             --football-edition /tmp/current-football-edition.json \
-            --ncaaf-edition /tmp/current-ncaaf-edition.json
+            --ncaaf-edition /tmp/current-ncaaf-edition.json \
+            --nhl-edition /tmp/current-nhl-edition.json
           for market in philadelphia boston new-york los-angeles chicago dallas; do
             curl -fsS \
               "https://thedailysportspage.com/editions/${market}/edition.json" \
@@ -102,21 +106,26 @@ jobs:
             curl -fsS \
               "https://thedailysportspage.com/editions/${market}/football/edition.json" \
               -o "/tmp/${market}-football-edition.json" || true
+            curl -fsS \
+              "https://thedailysportspage.com/editions/${market}/nhl/edition.json" \
+              -o "/tmp/${market}-nhl-edition.json" || true
             python scripts/seed_lead_cache.py \
               "/tmp/${market}-edition.json" \
               --game-date "${{ steps.edition.outputs.date }}" \
-              --football-edition "/tmp/${market}-football-edition.json"
+              --football-edition "/tmp/${market}-football-edition.json" \
+              --nhl-edition "/tmp/${market}-nhl-edition.json"
           done
 
       - name: Install generator
         run: python -m pip install .
 
-      - name: Generate MLB, NFL, and NCAAF editions
+      - name: Generate MLB, NFL, NCAAF, and NHL editions
         run: |
           EDITION_DATE="${{ steps.edition.outputs.date }}"
           daily-sports-page run --date "$EDITION_DATE" --build-dir build
           python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
           python -m src.ncaaf.generator --date "$EDITION_DATE" --build-dir build/ncaaf
+          python -m src.nhl.generator --date "$EDITION_DATE" --build-dir build/nhl-markets
           python scripts/generate_market_editions.py
 
       - uses: aws-actions/configure-aws-credentials@v4
@@ -138,6 +147,7 @@ jobs:
             --football-market-dir build/football-markets \
             --ncaaf-dir build/ncaaf \
             --ncaaf-market-dir build/ncaaf-markets \
+            --nhl-market-dir build/nhl-markets \
             --output dist
 
       - name: Publish versioned site artifact

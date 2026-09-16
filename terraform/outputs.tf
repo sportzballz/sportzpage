@@ -27,6 +27,7 @@ output "site_urls" {
   value = {
     baseball = "https://${var.domain_name}/"
     football = "https://${var.domain_name}/football/"
+    nhl      = "https://${var.domain_name}/nhl/"
   }
 }
 
