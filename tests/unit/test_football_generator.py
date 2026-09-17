@@ -5,7 +5,7 @@ import httpx
 import pytest
 
 from src.football.ai_recap import FootballLeadStoryService
-from src.football.generator import LEADER_CATEGORIES, FootballEditionGenerator
+from src.football.generator import LEADER_CATEGORIES, FootballEditionGenerator, render_football_page
 
 
 def test_support_link_is_not_in_football_menu() -> None:
@@ -80,15 +80,42 @@ def test_week_context_uses_espn_calendar_label() -> None:
         "number": 4,
         "label": "Preseason Week 3",
         "detail": "Aug 27-Sep 5",
+        "entries": [{"value": "4", "label": "Preseason Week 3", "detail": "Aug 27-Sep 5"}],
     }
 
 
 def test_football_template_is_weekly_and_highlights_today() -> None:
     template = Path("templates/football.html.j2").read_text()
 
-    assert "{{ page.week_label }} Scoreboard &amp; Schedule" in template
+    assert "{{ page.scoreboard_week_label }} Scoreboard" in template
+    assert "{{ page.week_label }} Schedule" in template
+    assert 'id="scoreboard"' in template
+    assert 'id="schedule"' in template
+    assert "{% for game in page.scoreboard %}" in template
+    assert "{% for game in page.schedule %}" in template
     assert 'class="is-today"' in template
     assert "Today's NFL Games" not in template
+
+
+def test_resolves_week_on_a_day_without_games() -> None:
+    payload = {
+        "week": None,
+        "leagues": [{
+            "season": {"year": 2026, "type": {"id": "2", "name": "Regular Season"}},
+            "calendar": [{"value": "2", "entries": [
+                {"value": "1", "label": "Week 1", "detail": "Sep 6-15", "startDate": "2026-09-06T07:00Z", "endDate": "2026-09-16T06:59Z"},
+                {"value": "2", "label": "Week 2", "detail": "Sep 16-22", "startDate": "2026-09-16T07:00Z", "endDate": "2026-09-23T06:59Z"},
+            ]}],
+        }],
+        "events": [],
+    }
+
+    context = FootballEditionGenerator._week_context(payload, date(2026, 9, 15))
+
+    assert context["season_year"] == 2026
+    assert context["season_type"] == "2"
+    assert context["number"] == 1
+    assert FootballEditionGenerator._week_label(context, 2) == "Week 2"
 
 
 def test_lead_prioritizes_eagles_then_nfc_east() -> None:
@@ -116,10 +143,11 @@ async def test_collect_requests_and_returns_complete_espn_week(
 ) -> None:
     generator = FootballEditionGenerator(date(2026, 8, 20))
     calls: list[tuple[str, dict[str, str]]] = []
-    calendar = [{
-        "value": "1",
-        "entries": [{"value": "3", "label": "Preseason Week 2", "detail": "Aug 20-26"}],
-    }]
+    calendar = [{"value": "1", "entries": [
+        {"value": "2", "label": "Preseason Week 1", "detail": "Aug 13-19"},
+        {"value": "3", "label": "Preseason Week 2", "detail": "Aug 20-26"},
+        {"value": "4", "label": "Preseason Week 3", "detail": "Aug 27-Sep 5"},
+    ]}]
     edition_payload = {
         "week": {"number": 3},
         "leagues": [{
@@ -128,33 +156,93 @@ async def test_collect_requests_and_returns_complete_espn_week(
         }],
         "events": [_event("401", "NYG", "PHI")],
     }
-    weekly_payload = {
-        **edition_payload,
-        "events": [_event("401", "NYG", "PHI"), _event("402", "DAL", "WAS", False)],
-    }
-
     async def fake_get(
         _client: httpx.AsyncClient, url: str, params: dict[str, str]
     ) -> dict:
         calls.append((url, params))
         if url == "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard":
-            return weekly_payload if params.get("week") else edition_payload
-        return {}
-
-    async def empty_optional(*_args: object, **_kwargs: object) -> dict:
+            if not params.get("week"):
+                return edition_payload
+            number = int(params["week"])
+            events = {
+                2: [_event("400", "BUF", "NE")],
+                3: [_event("401", "NYG", "PHI"), _event("402", "DAL", "WAS", False)],
+                4: [_event("403", "GB", "CHI", False)],
+            }.get(number, [])
+            return {**edition_payload, "week": {"number": number}, "events": events}
         return {}
 
     monkeypatch.setattr(generator, "_get", fake_get)
-    monkeypatch.setattr(generator, "_get_optional", empty_optional)
 
     page = await generator.collect()
 
     assert ("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard", {
-        "dates": "2026", "seasontype": "1", "week": "3"
+        "dates": "2026", "seasontype": "1", "week": "3", "limit": "100"
     }) in calls
     assert page["week_label"] == "Preseason Week 2"
     assert page["week_detail"] == "Aug 20-26"
-    assert [game["id"] for game in page["scoreboard"]] == ["401", "402"]
+    assert page["scoreboard_week_label"] == "Preseason Week 1"
+    assert [game["id"] for game in page["scoreboard"]] == ["400"]
+    assert [game["id"] for game in page["schedule"]] == ["402"]
+
+
+@pytest.mark.asyncio
+async def test_finished_week_moves_results_to_scoreboard_and_next_week_to_schedule(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    generator = FootballEditionGenerator(date(2026, 9, 15))
+    calendar = [{"value": "2", "entries": [
+        {"value": "1", "label": "Week 1", "detail": "Sep 6-15", "startDate": "2026-09-06T07:00Z", "endDate": "2026-09-16T06:59Z"},
+        {"value": "2", "label": "Week 2", "detail": "Sep 16-22", "startDate": "2026-09-16T07:00Z", "endDate": "2026-09-23T06:59Z"},
+    ]}]
+    base = {"leagues": [{"season": {"year": 2026, "type": {"id": "2", "name": "Regular Season"}}, "calendar": calendar}]}
+
+    calls: list[dict[str, str]] = []
+
+    async def fake_get(_client: httpx.AsyncClient, url: str, params: dict[str, str]) -> dict:
+        if url != "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard":
+            return {}
+        calls.append(params)
+        if not params.get("week"):
+            return {**base, "week": None, "events": []}
+        number = int(params["week"])
+        events = [_event("401", "NYG", "PHI")] if number == 1 else [_event("402", "DAL", "WAS", False)]
+        return {**base, "week": {"number": number}, "events": events}
+
+    monkeypatch.setattr(generator, "_get", fake_get)
+    page = await generator.collect()
+
+    assert page["scoreboard_week_label"] == "Week 1"
+    assert page["week_label"] == "Week 2"
+    assert [game["id"] for game in page["scoreboard"]] == ["401"]
+    assert [game["id"] for game in page["schedule"]] == ["402"]
+    assert all(game["completed"] for game in page["scoreboard"])
+    assert not any(game["completed"] for game in page["schedule"])
+    assert all("week" in params for params in calls if params.get("dates") == "2026")
+    html = render_football_page(page, tmp_path).read_text()
+    assert "Week 1 Scoreboard" in html
+    assert "Week 2 Schedule" in html
+    assert html.index('id="scoreboard"') < html.index('id="schedule"')
+
+
+@pytest.mark.asyncio
+async def test_week_query_rejects_last_season_response(monkeypatch: pytest.MonkeyPatch) -> None:
+    generator = FootballEditionGenerator(date(2026, 9, 15))
+
+    async def wrong_season(*_args: object, **_kwargs: object) -> dict:
+        return {
+            "leagues": [{"season": {"year": 2025, "type": {"id": "2"}}}],
+            "week": {"number": 1},
+            "events": [_event("old", "NYG", "PHI")],
+        }
+
+    monkeypatch.setattr(generator, "_get_optional", wrong_season)
+    async with httpx.AsyncClient() as client:
+        payload = await generator._get_week(
+            client, {"season_year": 2026, "season_type": "2"}, 1
+        )
+    assert payload == {}
 
 
 def test_parses_nfl_league_leaders_in_display_order() -> None:

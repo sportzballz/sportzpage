@@ -87,21 +87,33 @@ class FootballEditionGenerator:
             edition_scoreboard = await self._get(
                 client, SCOREBOARD_URL, {"dates": self.edition_date.strftime("%Y%m%d")}
             )
-            week = self._week_context(edition_scoreboard)
-            weekly_params = {"dates": str(week["season_year"])}
-            if week["season_type"] and week["number"]:
-                weekly_params.update(
-                    {"seasontype": str(week["season_type"]), "week": str(week["number"])}
-                )
-            weekly, standings, news, leaders = await asyncio.gather(
-                self._get(client, SCOREBOARD_URL, weekly_params),
+            week = self._week_context(edition_scoreboard, self.edition_date)
+            current_week, previous_week, next_week, standings, news, leaders = await asyncio.gather(
+                self._get_week(client, week, week["number"]),
+                self._get_week(client, week, week["number"] - 1 if week["number"] else None),
+                self._get_week(client, week, week["number"] + 1 if week["number"] else None),
                 self._get(client, STANDINGS_URL, {"region": "us", "lang": "en", "contentorigin": "espn", "type": "0", "level": "3"}),
                 self._get(client, NEWS_URL, {"limit": "100"}),
                 self._get_optional(client, LEADERS_URL, {}),
             )
         previous_games = self._games(edition_scoreboard)
-        weekly_games = self._games(weekly)
-        for game in weekly_games:
+        current_games = self._games(current_week)
+        current_week_finished = bool(current_games) and all(
+            game["completed"] for game in current_games
+        )
+        result_week_number = week["number"] if current_week_finished else (
+            week["number"] - 1 if week["number"] else None
+        )
+        schedule_week_number = (
+            week["number"] + 1 if current_week_finished and week["number"] else week["number"]
+        )
+        result_source = current_games if current_week_finished else self._games(previous_week)
+        result_games = [game for game in result_source if game["completed"]]
+        scheduled_games = [
+            game for game in (self._games(next_week) if current_week_finished else current_games)
+            if not game["completed"]
+        ]
+        for game in scheduled_games:
             game["is_today"] = game["date"] == today.isoformat()
         lead_game = self._select_lead_game(previous_games)
         lead = self._lead_story(lead_game) if lead_game else None
@@ -128,14 +140,16 @@ class FootballEditionGenerator:
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.edition_date,
             "season_label": week["season_label"],
-            "week_label": week["label"],
-            "week_detail": week["detail"],
+            "week_label": self._week_label(week, schedule_week_number),
+            "week_detail": self._week_detail(week, schedule_week_number),
+            "scoreboard_week_label": self._week_label(week, result_week_number),
             "market_slug": DEFAULT_MARKET.slug,
             "market_label": DEFAULT_MARKET.label,
             "market_teams": list(DEFAULT_MARKET.football_teams),
             "canonical_path": "/football/",
             "lead": lead,
-            "scoreboard": weekly_games,
+            "scoreboard": result_games,
+            "schedule": scheduled_games,
             "standings": self._standings(standings),
             "league_leaders": self._league_leaders(leaders),
             "leaders_season_label": self._leaders_season_label(leaders),
@@ -160,6 +174,32 @@ class FootballEditionGenerator:
             return await self._get(client, url, params)
         except (httpx.HTTPError, ValueError):
             return {}
+
+    async def _get_week(
+        self, client: httpx.AsyncClient, context: dict[str, Any], number: int | None
+    ) -> dict[str, Any]:
+        if not number or number < 1 or not context["season_type"]:
+            return {}
+        payload = await self._get_optional(
+            client,
+            SCOREBOARD_URL,
+            {
+                "dates": str(context["season_year"]),
+                "seasontype": str(context["season_type"]),
+                "week": str(number),
+                "limit": "100",
+            },
+        )
+        league = (payload.get("leagues") or [{}])[0]
+        season = league.get("season") or {}
+        season_type = season.get("type") or {}
+        if (
+            str(season.get("year")) != str(context["season_year"])
+            or str(season_type.get("id")) != str(context["season_type"])
+            or str((payload.get("week") or {}).get("number")) != str(number)
+        ):
+            return {}
+        return payload
 
     @staticmethod
     def _games(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -193,17 +233,33 @@ class FootballEditionGenerator:
         return games
 
     @staticmethod
-    def _week_context(payload: dict[str, Any]) -> dict[str, Any]:
+    def _week_context(
+        payload: dict[str, Any], target_date: date | None = None
+    ) -> dict[str, Any]:
         league = (payload.get("leagues") or [{}])[0]
         season = league.get("season") or {}
         season_type = season.get("type") or {}
-        number = (payload.get("week") or {}).get("number")
+        raw_number = (payload.get("week") or {}).get("number")
+        number = int(raw_number) if str(raw_number).isdigit() else None
         label = f"Week {number}" if number else "NFL Schedule"
         detail = ""
+        entries = []
         for period in league.get("calendar") or []:
             if str(period.get("value")) != str(season_type.get("id")):
                 continue
-            for entry in period.get("entries") or []:
+            entries = period.get("entries") or []
+            if number is None and target_date:
+                target = datetime.combine(target_date, datetime.min.time(), EASTERN)
+                target += timedelta(hours=12)
+                for entry in entries:
+                    if not entry.get("startDate") or not entry.get("endDate"):
+                        continue
+                    starts = datetime.fromisoformat(entry["startDate"].replace("Z", "+00:00"))
+                    ends = datetime.fromisoformat(entry["endDate"].replace("Z", "+00:00"))
+                    if starts <= target.astimezone(starts.tzinfo) <= ends:
+                        number = int(entry["value"])
+                        break
+            for entry in entries:
                 if str(entry.get("value")) == str(number):
                     label = entry.get("label") or label
                     detail = entry.get("detail") or ""
@@ -215,7 +271,26 @@ class FootballEditionGenerator:
             "number": number,
             "label": label,
             "detail": detail,
+            "entries": entries,
         }
+
+    @staticmethod
+    def _week_label(context: dict[str, Any], number: int | None) -> str:
+        if not number or number < 1:
+            return "Previous Week"
+        entry = next(
+            (item for item in context.get("entries", []) if str(item.get("value")) == str(number)),
+            None,
+        )
+        return str((entry or {}).get("label") or f"Week {number}")
+
+    @staticmethod
+    def _week_detail(context: dict[str, Any], number: int | None) -> str:
+        entry = next(
+            (item for item in context.get("entries", []) if str(item.get("value")) == str(number)),
+            None,
+        )
+        return str((entry or {}).get("detail") or "")
 
     @staticmethod
     def _team(competitor: dict[str, Any]) -> dict[str, Any]:
