@@ -27,6 +27,8 @@ def _make_game(
     double_header: str = "N",
     game_number: int = 1,
     decisions: dict | None = None,
+    series_description: str | None = None,
+    game_type: str | None = None,
 ) -> dict:
     home_team_info, home_line = _make_team(1, "NYY", "New York Yankees", home_runs)
     away_team_info, away_line = _make_team(2, "BOS", "Boston Red Sox", away_runs)
@@ -36,7 +38,7 @@ def _make_game(
             "home": {"runs": home_runs, "hits": 5, "errors": 0},
             "away": {"runs": away_runs, "hits": 4, "errors": 1},
         }
-    return {
+    game = {
         "gamePk": game_pk,
         "gameDate": "2026-07-04T18:10:00Z",
         "status": {"detailedState": status},
@@ -46,6 +48,11 @@ def _make_game(
         "gameNumber": game_number,
         "decisions": decisions or {},
     }
+    if series_description:
+        game["seriesDescription"] = series_description
+    if game_type:
+        game["gameType"] = game_type
+    return game
 
 
 def _make_schedule(*games) -> dict:
@@ -94,6 +101,39 @@ def _make_transaction(tid: str, type_desc: str) -> dict:
         "fromTeam": {"abbreviation": "NYY", "name": "New York Yankees"},
         "person": {"id": 12345, "fullName": "John Doe"},
     }
+
+
+def test_postseason_schedule_builds_series_score_and_status() -> None:
+    game_one = _make_game(
+        9001,
+        "Final",
+        home_runs=4,
+        away_runs=2,
+        series_description="American League Division Series",
+        game_type="D",
+    )
+    game_two = _make_game(
+        9002,
+        "Scheduled",
+        series_description="American League Division Series",
+        game_type="D",
+    )
+
+    normalized = Normalizer().normalize(
+        {
+            "teams": {"1": "NYY", "2": "BOS"},
+            "postseason_schedule": _make_schedule(game_one, game_two),
+            "postseason_boxscores": {},
+        }
+    )
+
+    assert normalized.postseason is not None
+    assert len(normalized.postseason.series) == 1
+    series = normalized.postseason.series[0]
+    assert series.round_name == "AL Division Series"
+    assert series.status == "NYY leads 1–0"
+    assert series.wins_required == 3
+    assert len(series.games) == 2
 
 
 # ---------------------------------------------------------------------------

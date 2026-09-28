@@ -15,6 +15,7 @@ from src.models.standings import (
     WildCardStandings,
 )
 from src.models.leaders import LeaderEntry, LeagueLeaders, TeamSeasonLeaders, TeamStatLeader
+from src.models.postseason import Postseason, PostseasonSeries
 from src.models.transactions import Transaction, TransactionType
 from src.models.story import Story, StoryType
 from src.models.injuries import Injury, RosterStatus, InjuryConfidence
@@ -37,6 +38,7 @@ class NormalizedData(BaseModel):
     games: List[Game] = Field(default_factory=list)
     standings: Optional[Standings] = Field(default=None)
     league_leaders: Optional[LeagueLeaders] = Field(default=None)
+    postseason: Optional[Postseason] = Field(default=None)
     team_season_leaders: List[TeamSeasonLeaders] = Field(default_factory=list)
     transactions: List[Transaction] = Field(default_factory=list)
     injuries: List[Injury] = Field(default_factory=list)
@@ -96,6 +98,12 @@ class Normalizer:
             result.injuries = self._normalize_injuries(raw["injuries"])
         if "leaders" in raw:
             result.league_leaders = self._normalize_leaders(raw["leaders"])
+        if "postseason_schedule" in raw:
+            result.postseason = self._normalize_postseason(
+                raw["postseason_schedule"],
+                raw.get("postseason_boxscores", {}),
+                teams_map,
+            )
         if "team_player_stats" in raw:
             result.team_season_leaders = self._normalize_team_leaders(raw["team_player_stats"])
         if "history" in raw:
@@ -230,7 +238,11 @@ class Normalizer:
             try:
                 description = " ".join(str(event["description"]).split())
                 sentences = split_sentences(description)
-                full_event = sentences[0].rstrip(".!?") if sentences else description
+                full_event = (
+                    description.rstrip(".!?")
+                    if event.get("ai_generated")
+                    else sentences[0].rstrip(".!?") if sentences else description
+                )
                 if len(full_event) > 110:
                     split_at = full_event.rfind(" ", 0, 111)
                     split_at = split_at if split_at > 60 else 110
@@ -423,18 +435,25 @@ class Normalizer:
             weather_description=g.get("weather", {}).get("condition"),
             is_doubleheader=g.get("doubleHeader", "N") != "N",
             doubleheader_game_num=g.get("gameNumber"),
+            series_description=g.get("seriesDescription"),
+            game_type=g.get("gameType"),
             recap_anchor=f"recap-{g['gamePk']}",
         )
 
     def _parse_team_line(self, team: dict, line: dict, teams_map: dict = {}) -> TeamGameLine:
         team_id = team.get("team", {}).get("id", 0)
+        team_name = team.get("team", {}).get("name", "Unknown")
         # Prefer abbreviation from the teams_map (fetched from /teams endpoint)
         # since schedule response doesn't include abbreviation
         abbr = teams_map.get(team_id) or team.get("team", {}).get("abbreviation", "")
+        if not abbr and (
+            "winner" in team_name.casefold() or team_name.casefold() == "tbd" or "/" in team_name
+        ):
+            abbr = "TBD"
         return TeamGameLine(
             team_id=team_id,
-            team_abbr=abbr or "UNK",
-            team_name=team.get("team", {}).get("name", "Unknown"),
+            team_abbr=abbr or ("TBD" if team_id <= 0 else "UNK"),
+            team_name=team_name,
             runs=line.get("runs"),
             hits=line.get("hits"),
             errors=line.get("errors"),
@@ -663,6 +682,258 @@ class Normalizer:
         "baseOnBallsPer9": "bb9",
         "homeRunsPer9": "hr9",
     }
+
+    def _normalize_postseason(
+        self,
+        schedule: dict[str, Any],
+        boxscores: dict[str, Any],
+        teams_map: dict[int, str],
+    ) -> Postseason:
+        all_games = self._normalize_schedule(schedule, teams_map, {}, {})
+        grouped: dict[str, list[Game]] = {}
+        for game in all_games:
+            if not game.series_description:
+                continue
+            team_ids = sorted((game.away.team_id, game.home.team_id))
+            if not all(team_id > 0 for team_id in team_ids):
+                continue
+            if {game.away.team_abbr, game.home.team_abbr} & {"TBD", "UNK"}:
+                continue
+            round_name = self._postseason_round_name(game.series_description, game.game_type)
+            key = f"{round_name}:{team_ids[0]}:{team_ids[1]}"
+            grouped.setdefault(key, []).append(game)
+
+        series: list[PostseasonSeries] = []
+        for key, series_games in grouped.items():
+            series_games.sort(key=lambda game: (game.game_date, game.game_id))
+            first = series_games[0]
+            away_abbr = first.away.team_abbr
+            home_abbr = first.home.team_abbr
+            away_wins = 0
+            home_wins = 0
+            for game in series_games:
+                if game.status != GameStatus.final:
+                    continue
+                if (game.away.runs or 0) > (game.home.runs or 0):
+                    winner = game.away.team_abbr
+                else:
+                    winner = game.home.team_abbr
+                if winner == away_abbr:
+                    away_wins += 1
+                elif winner == home_abbr:
+                    home_wins += 1
+
+            round_name = key.split(":", 1)[0]
+            wins_required = self._postseason_wins_required(round_name)
+            if max(away_wins, home_wins) >= wins_required:
+                winner = away_abbr if away_wins > home_wins else home_abbr
+                status = f"{winner} won {max(away_wins, home_wins)}–{min(away_wins, home_wins)}"
+            elif away_wins == home_wins:
+                status = f"Series tied {away_wins}–{home_wins}"
+            else:
+                leader = away_abbr if away_wins > home_wins else home_abbr
+                status = f"{leader} leads {max(away_wins, home_wins)}–{min(away_wins, home_wins)}"
+
+            league = "AL" if "American" in round_name or round_name.startswith("AL") else "NL"
+            if "World Series" in round_name:
+                league = "MLB"
+            series.append(
+                PostseasonSeries(
+                    key=key,
+                    round_name=round_name,
+                    league=league,
+                    away_team=away_abbr,
+                    home_team=home_abbr,
+                    away_wins=away_wins,
+                    home_wins=home_wins,
+                    wins_required=wins_required,
+                    status=status,
+                    games=series_games,
+                )
+            )
+
+        order = {"Wild Card": 0, "Division Series": 1, "Championship Series": 2, "World Series": 3}
+        series.sort(
+            key=lambda item: (
+                next((rank for label, rank in order.items() if label in item.round_name), 9),
+                item.league,
+                item.key,
+            )
+        )
+        completed = [game for game in all_games if game.status == GameStatus.final]
+        completed_dates = sorted({game.game_date for game in completed}, reverse=True)[:2]
+        scheduled = [game for game in all_games if game.status != GameStatus.final]
+        scheduled_dates = sorted({game.game_date for game in scheduled})[:3]
+        display_games = [
+            game
+            for game in all_games
+            if game.game_date in completed_dates or game.game_date in scheduled_dates
+        ]
+        leaders = self._normalize_postseason_leaders(schedule, boxscores, teams_map)
+        return Postseason(games=display_games, series=series, league_leaders=leaders)
+
+    def _normalize_postseason_leaders(
+        self,
+        schedule: dict[str, Any],
+        boxscores: dict[str, Any],
+        teams_map: dict[int, str],
+    ) -> LeagueLeaders | None:
+        hitters: dict[int, dict[str, Any]] = {}
+        pitchers: dict[int, dict[str, Any]] = {}
+        decisions: dict[int, dict[str, int]] = {}
+        for date_entry in schedule.get("dates", []):
+            for game in date_entry.get("games", []):
+                game_decisions = game.get("decisions", {})
+                decisions[game.get("gamePk", 0)] = {
+                    key: value.get("id", 0)
+                    for key, value in game_decisions.items()
+                    if isinstance(value, dict)
+                }
+
+        for game_id, boxscore in boxscores.items():
+            for side in ("away", "home"):
+                team = boxscore.get("teams", {}).get(side, {})
+                team_id = team.get("team", {}).get("id", 0)
+                team_abbr = teams_map.get(team_id, team.get("team", {}).get("abbreviation", ""))
+                for player in team.get("players", {}).values():
+                    person = player.get("person", {})
+                    player_id = person.get("id", 0)
+                    if not player_id:
+                        continue
+                    identity = {
+                        "player_id": player_id,
+                        "player_name": person.get("fullName", ""),
+                        "team_abbr": team_abbr or "MLB",
+                        "position": player.get("position", {}).get("abbreviation", ""),
+                    }
+                    batting = player.get("stats", {}).get("batting", {})
+                    if batting and int(batting.get("plateAppearances", 0) or 0) > 0:
+                        row = hitters.setdefault(
+                            player_id,
+                            {**identity, "g": 0, "ab": 0, "h": 0, "hr": 0, "rbi": 0,
+                             "bb": 0, "hbp": 0, "sf": 0, "tb": 0},
+                        )
+                        row["g"] += 1
+                        for source, target in (
+                            ("atBats", "ab"), ("hits", "h"), ("homeRuns", "hr"),
+                            ("rbi", "rbi"), ("baseOnBalls", "bb"), ("hitByPitch", "hbp"),
+                            ("sacFlies", "sf"), ("totalBases", "tb"),
+                        ):
+                            row[target] += int(batting.get(source, 0) or 0)
+
+                    pitching = player.get("stats", {}).get("pitching", {})
+                    if pitching and pitching.get("inningsPitched") not in (None, "0.0"):
+                        row = pitchers.setdefault(
+                            player_id,
+                            {**identity, "g": 0, "outs": 0, "er": 0, "k": 0,
+                             "wins": 0, "saves": 0},
+                        )
+                        row["g"] += 1
+                        innings = str(pitching.get("inningsPitched", "0.0"))
+                        whole, _, partial = innings.partition(".")
+                        row["outs"] += int(whole or 0) * 3 + int(partial or 0)
+                        row["er"] += int(pitching.get("earnedRuns", 0) or 0)
+                        row["k"] += int(pitching.get("strikeOuts", 0) or 0)
+                        game_decisions = decisions.get(int(game_id), {})
+                        row["wins"] += int(game_decisions.get("winner") == player_id)
+                        row["saves"] += int(game_decisions.get("save") == player_id)
+
+        def entries(
+            rows: list[dict[str, Any]],
+            value_key: str,
+            formatter: Any,
+            *,
+            reverse: bool = True,
+        ) -> list[LeaderEntry]:
+            ranked = sorted(rows, key=lambda row: formatter(row, False), reverse=reverse)[:10]
+            return [
+                LeaderEntry(
+                    rank=rank,
+                    player_id=row["player_id"],
+                    player_name=row["player_name"],
+                    team_abbr=row["team_abbr"],
+                    position=row["position"],
+                    value=str(formatter(row, True)),
+                    games_played=row["g"],
+                    league="MLB",
+                    qualified=True,
+                )
+                for rank, row in enumerate(ranked, 1)
+                if value_key in row
+            ]
+
+        hitter_rows = list(hitters.values())
+        pitcher_rows = list(pitchers.values())
+        if not hitter_rows and not pitcher_rows:
+            return None
+
+        batting = {
+            "hr": entries(hitter_rows, "hr", lambda row, display: row["hr"]),
+            "rbi": entries(hitter_rows, "rbi", lambda row, display: row["rbi"]),
+            "avg": entries(
+                [row for row in hitter_rows if row["ab"]],
+                "ab",
+                lambda row, display: f"{row['h'] / row['ab']:.3f}".lstrip("0")
+                if display else row["h"] / row["ab"],
+            ),
+            "ops": entries(
+                [row for row in hitter_rows if row["ab"]],
+                "ab",
+                lambda row, display: self._postseason_ops(row, display),
+            ),
+        }
+        pitching = {
+            "era": entries(
+                [row for row in pitcher_rows if row["outs"]],
+                "outs",
+                lambda row, display: f"{row['er'] * 27 / row['outs']:.2f}"
+                if display else row["er"] * 27 / row["outs"],
+                reverse=False,
+            ),
+            "wins": entries(pitcher_rows, "wins", lambda row, display: row["wins"]),
+            "k": entries(pitcher_rows, "k", lambda row, display: row["k"]),
+            "saves": entries(pitcher_rows, "saves", lambda row, display: row["saves"]),
+        }
+        return LeagueLeaders(batting=batting, pitching=pitching)
+
+    @staticmethod
+    def _postseason_ops(row: dict[str, Any], display: bool) -> float | str:
+        obp_denominator = row["ab"] + row["bb"] + row["hbp"] + row["sf"]
+        obp = (row["h"] + row["bb"] + row["hbp"]) / obp_denominator if obp_denominator else 0
+        slg = row["tb"] / row["ab"] if row["ab"] else 0
+        value = obp + slg
+        return f"{value:.3f}".lstrip("0") if display else value
+
+    @staticmethod
+    def _postseason_round_name(description: str, game_type: str | None) -> str:
+        text = description.casefold()
+        if game_type == "W" or "world series" in text:
+            return "World Series"
+        if game_type == "L" or "championship" in text or "alcs" in text or "nlcs" in text:
+            if "american" in text or text.startswith("al ") or "alcs" in text:
+                return "AL Championship Series"
+            if "national" in text or text.startswith("nl ") or "nlcs" in text:
+                return "NL Championship Series"
+            return "League Championship Series"
+        if game_type == "D" or "division" in text or "alds" in text or "nlds" in text:
+            if "american" in text or text.startswith("al ") or "alds" in text:
+                return "AL Division Series"
+            if "national" in text or text.startswith("nl ") or "nlds" in text:
+                return "NL Division Series"
+            return "Division Series"
+        if "american" in text or text.startswith("al "):
+            return "AL Wild Card"
+        if "national" in text or text.startswith("nl "):
+            return "NL Wild Card"
+        return "Wild Card"
+
+    @staticmethod
+    def _postseason_wins_required(round_name: str) -> int:
+        if "Wild Card" in round_name:
+            return 2
+        if "Division Series" in round_name:
+            return 3
+        return 4
 
     def _normalize_leaders(self, raw: dict[str, Any]) -> LeagueLeaders:
         """Convert raw leaders dict (category -> API response) to LeagueLeaders model."""

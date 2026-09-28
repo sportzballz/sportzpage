@@ -1,6 +1,5 @@
 # src/models/game.py
 from __future__ import annotations
-from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel, Field
@@ -130,6 +129,9 @@ class Game(BaseModel):
         description="Notable tags: walk-off, extra-inning, no-hitter, perfect-game, shutout, etc.",
     )
     series_description: Optional[str] = Field(default=None, description="e.g. ALDS Game 3.")
+    game_type: Optional[str] = Field(
+        default=None, description="MLB game type code, such as R, F, D, L, or W."
+    )
     recap_anchor: Optional[str] = Field(
         default=None, description="Anchor ID linking scoreboard entry to recap."
     )

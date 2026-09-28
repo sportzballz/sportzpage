@@ -30,6 +30,7 @@ class HTMLRenderer:
         self._manifest = static_asset_manifest or {}
         self._env.globals["asset"] = self._asset_url
         self._env.globals["format_edition_date"] = self._format_edition_date
+        self._env.globals["format_short_date"] = self._format_short_date
         self._env.globals["format_eastern_time"] = format_eastern_time
         self._env.globals["daypart_edition"] = daypart_edition
         self._env.globals["volume_number"] = volume_number
@@ -57,6 +58,11 @@ class HTMLRenderer:
     def _format_edition_date(value: str | date) -> str:
         parsed = value if isinstance(value, date) else datetime.strptime(value, "%Y-%m-%d").date()
         return parsed.strftime("%A, %B %-d, %Y")
+
+    @staticmethod
+    def _format_short_date(value: str | date) -> str:
+        parsed = value if isinstance(value, date) else datetime.strptime(value, "%Y-%m-%d").date()
+        return parsed.strftime("%b %-d")
 
     def render(self, edition: Edition) -> str:
         """Render the edition to an HTML string. Deterministic — no side effects."""

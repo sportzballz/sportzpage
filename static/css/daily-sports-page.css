@@ -798,6 +798,154 @@ body {
   margin-top: 1.5rem;
 }
 
+/* =========================================================
+   POSTSEASON
+   ========================================================= */
+
+.postseason-kicker {
+  margin: -0.35rem 0 1rem;
+  color: var(--color-text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.postseason-bracket {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.postseason-round h3,
+.projected-league h3,
+.postseason-games h3,
+.postseason-leaders h3 {
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.28rem;
+  border-bottom: 2px solid var(--color-accent);
+  font-family: var(--font-headline);
+  font-size: 1rem;
+}
+
+.postseason-series-card {
+  margin-bottom: 0.7rem;
+  padding: 0.62rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--color-border) 45%, transparent);
+}
+
+.postseason-series-card.is-primary-series {
+  border-left: 5px solid var(--color-accent);
+}
+
+.postseason-series-label,
+.postseason-series-status,
+.postseason-next {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+}
+
+.postseason-series-label {
+  margin-top: 0;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.postseason-team-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px dotted var(--color-border-light);
+  font-size: 1.05rem;
+}
+
+.postseason-series-status { font-weight: 700; }
+.postseason-next { color: var(--color-text-muted); }
+.postseason-awaiting {
+  margin: 0;
+  padding: 0.8rem 0.55rem;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+}
+.postseason-games,
+.postseason-leaders { margin-top: 1.6rem; }
+.postseason-games-table { width: 100%; }
+
+.projected-postseason-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.projected-seeds {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.projected-seeds li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.42rem 0.3rem;
+  border-bottom: 1px solid var(--color-border-light);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+}
+
+.projected-seeds li > span:last-child {
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.seed-number {
+  display: inline-grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+}
+
+.projected-seeds .is-primary-team { background: #f4ead0; }
+.postseason-note { color: var(--color-text-muted); font-style: italic; }
+
+@media screen and (max-width: 899px) {
+  .postseason-bracket { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media screen and (max-width: 599px) {
+  .postseason-bracket,
+  .projected-postseason-grid { grid-template-columns: 1fr; }
+  .postseason-games-table {
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 0.68rem;
+  }
+  .postseason-games-table th,
+  .postseason-games-table td { padding: 0.3rem 0.18rem; overflow-wrap: anywhere; }
+  .postseason-games-table th:nth-child(1),
+  .postseason-games-table td:nth-child(1) { width: 20%; }
+  .postseason-games-table th:nth-child(2),
+  .postseason-games-table td:nth-child(2) { width: 28%; }
+  .postseason-games-table th:nth-child(3),
+  .postseason-games-table td:nth-child(3) { width: 22%; }
+  .projected-seeds li { grid-template-columns: 1.8rem minmax(0, 1fr) minmax(5.5rem, auto); }
+}
+
 .postseason-table {
   min-width: 420px;
 }
@@ -1667,6 +1815,7 @@ caption,
   }
 
   #todays-games { grid-column: 1 / -1; }
+  #postseason { grid-column: 1 / -1; }
 
   .top-news-rail {
     min-width: 0;
@@ -1737,6 +1886,7 @@ caption,
   #front-page,
   #scoreboard,
   #todays-games,
+  #postseason,
   #standings,
   #team-leaders,
   #box-scores,

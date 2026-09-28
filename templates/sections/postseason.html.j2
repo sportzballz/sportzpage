@@ -1,0 +1,95 @@
+<section id="postseason" class="postseason section" aria-labelledby="postseason-heading">
+  <h2 id="postseason-heading" class="section-heading">Postseason</h2>
+
+  {% set active_series = edition.postseason.series if edition.postseason else [] %}
+  {% if active_series %}
+  <p class="postseason-kicker">The road to the World Series</p>
+  <div class="postseason-bracket" aria-label="MLB postseason series">
+    {% for stage in ['Wild Card', 'Division Series', 'Championship Series', 'World Series'] %}
+    {% set stage_series = active_series | selectattr('round_name', 'in', [stage, 'AL ' ~ stage, 'NL ' ~ stage, 'League ' ~ stage]) | list %}
+    <div class="postseason-round">
+      <h3>{{ stage }}</h3>
+      {% if stage_series %}
+      {% for series in stage_series %}
+      <article class="postseason-series-card{% if series.away_team in edition.edition.market_teams or series.home_team in edition.edition.market_teams %} is-primary-series{% endif %}">
+        <p class="postseason-series-label">{{ series.round_name }}</p>
+        <div class="postseason-team-row"><strong>{{ series.away_team }}</strong><span>{{ series.away_wins }}</span></div>
+        <div class="postseason-team-row"><strong>{{ series.home_team }}</strong><span>{{ series.home_wins }}</span></div>
+        <p class="postseason-series-status">{{ series.status }}</p>
+        {% set next_games = series.games | selectattr('status', 'equalto', 'scheduled') | list %}
+        {% if next_games %}{% set next = next_games[0] %}
+        <p class="postseason-next">Next: {{ format_short_date(next.game_date) }}{% if next.game_time_et %} · {{ next.game_time_et }}{% endif %}</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+      {% else %}
+      <p class="postseason-awaiting">Matchups to be determined.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="postseason-games">
+    <h3>Postseason Scores &amp; Schedule</h3>
+    <div class="standings-table-wrapper">
+      <table class="scoreboard-table postseason-games-table">
+        <thead><tr><th>Date</th><th>Matchup</th><th>Score / Time</th><th>Series</th></tr></thead>
+        <tbody>
+        {% for game in edition.postseason.games %}
+          <tr{% if game.away.team_abbr in edition.edition.market_teams or game.home.team_abbr in edition.edition.market_teams %} class="is-primary-team"{% endif %}>
+            <td>{{ format_short_date(game.game_date) }}</td>
+            <td><strong>{{ game.away.team_abbr }}</strong> at <strong>{{ game.home.team_abbr }}</strong></td>
+            <td>{% if game.status.value == 'final' %}{{ game.away.runs }}–{{ game.home.runs }}{% else %}{{ game.game_time_et or game.status.value | replace('_', ' ') | title }}{% endif %}</td>
+            <td>{{ game.series_description or 'Postseason' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <p class="postseason-kicker">If the season ended today</p>
+  <div class="projected-postseason-grid">
+    {% if edition.standings %}
+      {% for picture in edition.standings.playoff_pictures %}
+      <div class="projected-league">
+        <h3>{{ picture.league }} Playoff Field</h3>
+        <ol class="projected-seeds">
+          {% for row in picture.rows %}
+          <li{% if row.team_abbr in edition.edition.market_teams %} class="is-primary-team"{% endif %}>
+            <span class="seed-number">{{ row.playoff_seed }}</span>
+            <strong>{{ row.team_name }}</strong>
+            <span>{% if row.division_leader %}Division leader{% else %}Wild Card {{ row.wild_card_rank }}{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+  <p class="postseason-note">The live bracket, series results and postseason leaders will appear here when postseason play begins.</p>
+  {% endif %}
+
+  {% if edition.postseason and edition.postseason.league_leaders %}
+  {% set postseason_leaders = edition.postseason.league_leaders %}
+  <div class="postseason-leaders">
+    <h3>Postseason Leaders</h3>
+    <div class="leaders-tab-group">
+    {% set categories = [('hr', 'HR', postseason_leaders.batting), ('rbi', 'RBI', postseason_leaders.batting), ('avg', 'AVG', postseason_leaders.batting), ('ops', 'OPS', postseason_leaders.batting), ('era', 'ERA', postseason_leaders.pitching), ('wins', 'W', postseason_leaders.pitching), ('k', 'SO', postseason_leaders.pitching), ('saves', 'SV', postseason_leaders.pitching)] %}
+    <nav role="tablist" aria-label="Postseason leader categories" class="leaders-tablist postseason-leaders-tabs" data-tablist-id="postseason">
+      {% for key, label, group in categories if key in group and group[key] %}
+      <button role="tab" id="postseason-tab-{{ key }}" aria-controls="postseason-panel-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}" class="leaders-tab{% if loop.first %} leaders-tab-active{% endif %}" data-category="{{ key }}" tabindex="{{ '0' if loop.first else '-1' }}">{{ label }}</button>
+      {% endfor %}
+    </nav>
+    <div class="leaders-panels postseason-leaders-panels">
+      {% for key, label, group in categories if key in group and group[key] %}
+      <div class="leaders-panel" id="postseason-panel-{{ key }}" role="tabpanel" aria-labelledby="postseason-tab-{{ key }}">
+        <table class="leaders-table"><caption>{{ label }} Leaders</caption><thead><tr><th>RK</th><th>Player</th><th>Team</th><th>{{ label }}</th></tr></thead>
+        <tbody>{% for entry in group[key] %}<tr{% if entry.team_abbr in edition.edition.market_teams %} class="is-primary-team"{% endif %}><td>{{ entry.rank }}</td><td>{{ entry.player_name }}</td><td>{{ entry.team_abbr }}</td><td>{{ entry.value }}</td></tr>{% endfor %}</tbody></table>
+      </div>
+      {% endfor %}
+    </div>
+    </div>
+  </div>
+  {% endif %}
+</section>

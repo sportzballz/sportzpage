@@ -20,7 +20,7 @@
   <link rel="icon" href="{{ asset('icons/favicon.ico') }}" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('icons/favicon-32.png') }}">
   <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('icons/apple-touch-icon.png') }}">
-  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260830-market-editions">
+  <link rel="stylesheet" href="{{ asset('css/daily-sports-page.css') }}?v=20260928-postseason">
 </head>
 <body data-market="{{ edition.edition.market_slug }}">
   <a href="#front-page" class="skip-link">Skip to content</a>
@@ -32,6 +32,7 @@
     <ul>
       <li><a href="#scoreboard">Scoreboard</a></li>
       <li><a href="#todays-games">Today's Games</a></li>
+      <li><a href="#postseason">Postseason</a></li>
       <li><a href="#standings">Standings</a></li>
       <li><a href="#box-scores">Box Scores</a></li>
       <li><a href="#league-leaders">League Leaders</a></li>
@@ -49,6 +50,7 @@
       </div>
     </div>
     {% include "sections/todays-games.html.j2" %}
+    {% include "sections/postseason.html.j2" %}
     {% include "sections/standings.html.j2" %}
     {% include "sections/box-scores.html.j2" %}
     {% include "sections/league-leaders.html.j2" %}
@@ -61,7 +63,7 @@
     {% if edition.edition.generated_at %}Written at {{ format_eastern_time(edition.edition.generated_at) }}{% endif %}
     </p>
   </footer>
-  <script src="{{ asset('js/daily-sports-page.js') }}?v=20260830-market-editions"></script>
+  <script src="{{ asset('js/daily-sports-page.js') }}?v=20260928-postseason"></script>
   {% include "sections/web-analytics.html.j2" %}
 </body>
 </html>

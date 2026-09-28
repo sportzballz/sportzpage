@@ -5,6 +5,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 from src.models.game import Game
 from src.models.standings import Standings
+from src.models.postseason import Postseason
 from src.models.leaders import LeagueLeaders, TeamGameLeaders, TeamSeasonLeaders
 from src.models.story import Story, GameRecap
 from src.models.transactions import Transaction
@@ -62,6 +63,7 @@ class Edition(BaseModel):
     games: List[Game] = Field(default_factory=list)
     standings: Optional[Standings] = Field(default=None)
     league_leaders: Optional[LeagueLeaders] = Field(default=None)
+    postseason: Optional[Postseason] = Field(default=None)
     game_recaps: List[GameRecap] = Field(default_factory=list)
     around_the_league: List[Story] = Field(default_factory=list)
     transactions: List[Transaction] = Field(default_factory=list)

@@ -243,6 +243,7 @@ class EditorialEngine:
             games=normalized.games,
             standings=normalized.standings,
             league_leaders=normalized.league_leaders,
+            postseason=normalized.postseason,
             game_recaps=game_recaps,
             around_the_league=[],
             transactions=normalized.transactions,

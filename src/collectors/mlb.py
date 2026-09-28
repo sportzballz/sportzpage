@@ -19,6 +19,7 @@ DEFAULT_MAX_AGE = {
     "stats_leaders": 21600,
     "teams": 86400,
     "boxscore": 86400,
+    "postseason": 1800,
 }
 
 # Batting categories to collect
@@ -186,6 +187,26 @@ class MLBCollector(Collector):
             self._cache.set(key, leaders)
         return leaders
 
+    async def get_postseason_schedule(self, season: int) -> dict[str, Any]:
+        key = f"postseason_schedule_{season}"
+        if self._cache:
+            cached = self._cache.get(key, self._max_ages["postseason"])
+            if cached is not None:
+                return cached
+        data = await self._get(
+            "/schedule",
+            params={
+                "sportId": 1,
+                "startDate": f"{season}-09-29",
+                "endDate": f"{season}-11-15",
+                "gameTypes": "F,D,L,W",
+                "hydrate": "linescore,probablePitcher(note),broadcasts(all),decisions,seriesStatus",
+            },
+        )
+        if self._cache:
+            self._cache.set(key, data)
+        return data
+
     async def get_team_player_stats(self, season: int) -> dict[str, Any]:
         """Fetch season stats for every MLB player so club leaders can be calculated."""
         key = f"team_player_stats_{season}"
@@ -292,6 +313,13 @@ class MLBCollector(Collector):
         )
         boxscores = await self.get_boxscores(schedule)
 
+        try:
+            postseason_schedule = await self.get_postseason_schedule(season)
+            postseason_boxscores = await self.get_boxscores(postseason_schedule)
+        except Exception as exc:
+            logger.warning("postseason data unavailable, continuing without: %s", exc)
+            postseason_schedule, postseason_boxscores = {"dates": []}, {}
+
         # Optional: transactions
         try:
             transactions = await self.get_transactions()
@@ -307,6 +335,8 @@ class MLBCollector(Collector):
             "teams": teams,  # id -> abbreviation map
             "transactions": transactions,
             "boxscores": boxscores,
+            "postseason_schedule": postseason_schedule,
+            "postseason_boxscores": postseason_boxscores,
         }
 
     def _maybe_save_fixture(self, name: str, data: Any) -> None:

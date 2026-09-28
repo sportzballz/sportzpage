@@ -99,6 +99,15 @@ def test_standings_render_playoff_and_wild_card_tables_for_each_league():
     assert "Wild Card 1" in html
 
 
+def test_postseason_section_renders_projected_field_before_games_begin():
+    html = make_renderer().render(build_full_slate_edition())
+
+    assert 'id="postseason"' in html
+    assert "If the season ended today" in html
+    assert "AL Playoff Field" in html
+    assert "NL Playoff Field" in html
+
+
 def test_standings_table_captions_have_contrasting_colors():
     css = (Path(__file__).parents[2] / "static/css/daily-sports-page.css").read_text()
     caption_rule = re.search(r"\.standings-table caption \{(?P<body>[^}]*)\}", css)
@@ -218,8 +227,8 @@ def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
     assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
-    assert 'href="static/css/daily-sports-page.css?v=20260830-market-editions"' in html
-    assert 'src="static/js/daily-sports-page.js?v=20260830-market-editions"' in html
+    assert 'href="static/css/daily-sports-page.css?v=20260928-postseason"' in html
+    assert 'src="static/js/daily-sports-page.js?v=20260928-postseason"' in html
 
 
 def test_support_link_is_not_in_daily_edition_menu():
@@ -377,4 +386,4 @@ def test_lead_story_renders():
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
     assert "Daily Sports Page Staff" in html
-    assert "daily-sports-page.css?v=20260830-market-editions" in html
+    assert "daily-sports-page.css?v=20260928-postseason" in html
