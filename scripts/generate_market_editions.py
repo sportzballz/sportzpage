@@ -60,17 +60,20 @@ async def generate(
             ),
             None,
         )
-        baseball_lead = (
-            await baseball_service.generate(baseball_game)
-            if baseball_service and baseball_game
-            else None
-        )
-        if baseball_service and baseball_game and existing_recap and not baseball_lead:
-            baseball_lead = await baseball_service.generate_from_existing_recap(
-                baseball_game, existing_recap
-            )
+        baseball_lead = None
+        if baseball_service and baseball_game:
+            for _attempt in range(3):
+                baseball_lead = await baseball_service.generate(baseball_game)
+                if not baseball_lead and existing_recap:
+                    baseball_lead = await baseball_service.generate_from_existing_recap(
+                        baseball_game, existing_recap
+                    )
+                if baseball_lead:
+                    break
         if baseball_service and baseball_game and not baseball_lead:
-            raise RuntimeError(f"OpenAI baseball headline failed for {market.label}")
+            raise RuntimeError(
+                f"OpenAI baseball headline failed for {market.label} after 3 attempts"
+            )
         localized = marketize_baseball(base, market, baseball_lead)
         baseball_dir = baseball_output / market.slug
         baseball_dir.mkdir(parents=True, exist_ok=True)
