@@ -205,3 +205,28 @@ def test_short_recap_prompt_and_output_are_concise() -> None:
 
     assert len(result.paragraphs) == 1
     assert "2 to 3 concise sentences" in service._prompt(source, _game(), short=True)
+
+
+def test_verified_final_score_is_allowed_when_espn_body_omits_it() -> None:
+    service = ESPNLeadStoryService()
+    source = ESPNRecap(
+        game_id="401877087",
+        headline="Braves win",
+        body="Atlanta won behind Grant Holmes.",
+        source_url="https://www.espn.com/mlb/recap/_/gameId/401877087",
+    )
+    text = json.dumps(
+        {
+            "headline": "Braves Take a 2-0 Decision",
+            "deck": "Atlanta turned Holmes' work into a 2-0 victory.",
+            "paragraphs": [
+                "Atlanta took control behind Grant Holmes and won 2-0.",
+                "The Braves supplied the support Holmes needed.",
+                "Holmes carried the defining performance to the finish.",
+            ],
+        }
+    )
+
+    result = service._build_game_recap(text, source, _game())
+
+    assert result.final_score == "ATL 2, CWS 0"

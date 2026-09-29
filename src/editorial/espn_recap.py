@@ -278,7 +278,21 @@ class ESPNLeadStoryService:
         generated_text = " ".join(
             [str(story.get("headline", "")), str(story.get("deck", "")), *paragraphs]
         )
-        self._validate_grounding(generated_text, recap.body)
+        # The final score comes from the normalized MLB game record and is
+        # deliberately included in the rewrite prompt. ESPN's article body does
+        # not always repeat that score, especially around postseason previews,
+        # so include the verified runs in the grounding corpus as well. Without
+        # this, a correct score can be rejected on every retry as an unsupported
+        # number.
+        grounding_source = " ".join(
+            [
+                recap.headline,
+                recap.body,
+                str(game.away.runs),
+                str(game.home.runs),
+            ]
+        )
+        self._validate_grounding(generated_text, grounding_source)
         winner = game.home if (game.home.runs or 0) > (game.away.runs or 0) else game.away
         loser = game.away if winner is game.home else game.home
         return GameRecap(
