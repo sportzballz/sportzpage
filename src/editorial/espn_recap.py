@@ -70,14 +70,19 @@ class ESPNLeadStoryService:
         self, game: Game, existing: GameRecap
     ) -> GameRecap | None:
         """Expand an already-grounded brief when ESPN has no usable full article."""
-        if not game.espn_game_id or not self._api_key:
+        if not self._api_key:
             return None
+        source_id = game.espn_game_id or f"mlb-{game.game_id}"
         source = ESPNRecap(
-            game_id=game.espn_game_id,
+            game_id=source_id,
             headline=existing.headline,
             body="\n".join([existing.deck, *existing.paragraphs]),
             source_url=existing.source_url
-            or ESPN_RECAP_URL.format(game_id=game.espn_game_id),
+            or (
+                ESPN_RECAP_URL.format(game_id=game.espn_game_id)
+                if game.espn_game_id
+                else "https://statsapi.mlb.com/"
+            ),
         )
         generated = await self.rewrite(source, game)
         if generated:
@@ -86,7 +91,8 @@ class ESPNLeadStoryService:
 
     def _cache_path(self, game: Game, *, short: bool = False) -> Path:
         suffix = "-short" if short else ""
-        return self._cache_dir / f"{game.game_date}-{game.espn_game_id}{suffix}.json"
+        source_id = game.espn_game_id or f"mlb-{game.game_id}"
+        return self._cache_dir / f"{game.game_date}-{source_id}{suffix}.json"
 
     def _load_cached(self, game: Game, *, short: bool = False) -> GameRecap | None:
         path = self._cache_path(game, short=short)
