@@ -843,6 +843,7 @@ body {
 }
 
 .postseason-series-label,
+.postseason-previous-label,
 .postseason-series-status,
 .postseason-next {
   margin: 0.25rem 0 0;
@@ -852,6 +853,13 @@ body {
 
 .postseason-series-label {
   margin-top: 0;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.postseason-previous-label {
+  margin: 0.55rem 0 0.08rem;
   color: var(--color-text-muted);
   font-weight: 700;
   text-transform: uppercase;

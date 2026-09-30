@@ -737,6 +737,18 @@ class Normalizer:
             league = "AL" if "American" in round_name or round_name.startswith("AL") else "NL"
             if "World Series" in round_name:
                 league = "MLB"
+            completed_series_games = [
+                game for game in series_games if game.status == GameStatus.final
+            ]
+            previous_game = completed_series_games[-1] if completed_series_games else None
+            previous_scores = (
+                {
+                    previous_game.away.team_abbr: previous_game.away.runs,
+                    previous_game.home.team_abbr: previous_game.home.runs,
+                }
+                if previous_game
+                else {}
+            )
             series.append(
                 PostseasonSeries(
                     key=key,
@@ -748,6 +760,9 @@ class Normalizer:
                     home_wins=home_wins,
                     wins_required=wins_required,
                     status=status,
+                    previous_game_date=(previous_game.game_date if previous_game else None),
+                    previous_game_away_runs=previous_scores.get(away_abbr),
+                    previous_game_home_runs=previous_scores.get(home_abbr),
                     games=series_games,
                 )
             )

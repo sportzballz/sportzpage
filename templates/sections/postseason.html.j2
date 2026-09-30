@@ -13,8 +13,15 @@
       {% for series in stage_series %}
       <article class="postseason-series-card{% if series.away_team in edition.edition.market_teams or series.home_team in edition.edition.market_teams %} is-primary-series{% endif %}">
         <p class="postseason-series-label">{{ series.round_name }}</p>
-        <div class="postseason-team-row"><strong>{{ series.away_team }}</strong><span>{{ series.away_wins }}</span></div>
-        <div class="postseason-team-row"><strong>{{ series.home_team }}</strong><span>{{ series.home_wins }}</span></div>
+        {% if series.previous_game_date %}
+        <p class="postseason-previous-label">Previous game · {{ format_short_date(series.previous_game_date) }}</p>
+        <div class="postseason-team-row"><strong>{{ series.away_team }}</strong><span>{{ series.previous_game_away_runs }}</span></div>
+        <div class="postseason-team-row"><strong>{{ series.home_team }}</strong><span>{{ series.previous_game_home_runs }}</span></div>
+        {% else %}
+        <p class="postseason-previous-label">Series opener</p>
+        <div class="postseason-team-row"><strong>{{ series.away_team }}</strong><span>–</span></div>
+        <div class="postseason-team-row"><strong>{{ series.home_team }}</strong><span>–</span></div>
+        {% endif %}
         <p class="postseason-series-status">{{ series.status }}</p>
         {% set next_games = series.games | selectattr('status', 'equalto', 'scheduled') | list %}
         {% if next_games %}{% set next = next_games[0] %}

@@ -133,6 +133,9 @@ def test_postseason_schedule_builds_series_score_and_status() -> None:
     assert series.round_name == "AL Division Series"
     assert series.status == "NYY leads 1–0"
     assert series.wins_required == 3
+    assert series.previous_game_date == "2026-07-04"
+    assert series.previous_game_away_runs == 2
+    assert series.previous_game_home_runs == 4
     assert len(series.games) == 2
 
 

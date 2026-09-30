@@ -16,6 +16,9 @@ class PostseasonSeries(BaseModel):
     home_wins: int = 0
     wins_required: int = 4
     status: str
+    previous_game_date: str | None = None
+    previous_game_away_runs: int | None = None
+    previous_game_home_runs: int | None = None
     games: list[Game] = Field(default_factory=list)
 
 

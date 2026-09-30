@@ -12,6 +12,7 @@ import pytest
 
 from src.models.edition import Edition, EditionMetadata, GenerationMetadata
 from src.models.game import BettingLine, Game, GameStatus, TeamGameLine
+from src.models.postseason import Postseason, PostseasonSeries
 from src.models.story import Story, StoryType
 from src.rendering.html_renderer import HTMLRenderer
 from src.rendering.renderer import render_from_file
@@ -106,6 +107,43 @@ def test_postseason_section_renders_projected_field_before_games_begin():
     assert "If the season ended today" in html
     assert "AL Playoff Field" in html
     assert "NL Playoff Field" in html
+
+
+def test_postseason_series_card_shows_previous_game_score_then_series_score():
+    previous_game = Game(
+        game_id=9001,
+        game_date="2026-09-29",
+        status=GameStatus.final,
+        away=TeamGameLine(team_id=1, team_abbr="BOS", team_name="Boston Red Sox", runs=2),
+        home=TeamGameLine(team_id=2, team_abbr="NYY", team_name="New York Yankees", runs=4),
+    )
+    postseason = Postseason(
+        games=[previous_game],
+        series=[
+            PostseasonSeries(
+                key="AL Wild Card:1:2",
+                round_name="AL Wild Card",
+                league="AL",
+                away_team="BOS",
+                home_team="NYY",
+                away_wins=0,
+                home_wins=1,
+                wins_required=2,
+                status="NYY leads 1–0",
+                previous_game_date="2026-09-29",
+                previous_game_away_runs=2,
+                previous_game_home_runs=4,
+                games=[previous_game],
+            )
+        ],
+    )
+
+    html = make_renderer().render(make_minimal_edition(postseason=postseason))
+
+    assert "Previous game · Sep 29" in html
+    assert "<strong>BOS</strong><span>2</span>" in html
+    assert "<strong>NYY</strong><span>4</span>" in html
+    assert "NYY leads 1–0" in html
 
 
 def test_standings_table_captions_have_contrasting_colors():
@@ -227,8 +265,8 @@ def test_production_urls_use_sportzpage_path():
     edition = make_minimal_edition()
     html = make_renderer().render(edition)
     assert 'href="https://thedailysportspage.com/subscriber/current/"' in html
-    assert 'href="static/css/daily-sports-page.css?v=20260928-postseason"' in html
-    assert 'src="static/js/daily-sports-page.js?v=20260928-postseason"' in html
+    assert 'href="static/css/daily-sports-page.css?v=20260930-postseason-score"' in html
+    assert 'src="static/js/daily-sports-page.js?v=20260930-postseason-score"' in html
 
 
 def test_support_link_is_not_in_daily_edition_menu():
@@ -386,4 +424,4 @@ def test_lead_story_renders():
     html = renderer.render(edition)
     assert "Yankees Win World Series" in html
     assert "Daily Sports Page Staff" in html
-    assert "daily-sports-page.css?v=20260928-postseason" in html
+    assert "daily-sports-page.css?v=20260930-postseason-score" in html
