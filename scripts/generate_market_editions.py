@@ -9,6 +9,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from src.editorial.espn_recap import ESPNLeadStoryService
+from src.editorial.fallback import generate_fallback_recap
 from src.football.ai_recap import FootballLeadStoryService
 from src.football.generator import render_football_page
 from src.market_editions import (
@@ -67,6 +68,8 @@ async def generate(
             ),
             None,
         )
+        if baseball_game and existing_recap is None:
+            existing_recap = generate_fallback_recap(baseball_game)
         baseball_lead = None
         if baseball_service and baseball_game:
             for _attempt in range(3):

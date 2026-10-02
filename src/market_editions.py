@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,10 @@ def _story_from_recap(recap: GameRecap) -> Story:
 
 
 def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
-    games_by_id = {game.game_id: game for game in edition.games}
+    postseason_games = edition.postseason.games if edition.postseason else []
+    games_by_id = {
+        game.game_id: game for game in [*edition.games, *postseason_games]
+    }
     recap_games = [
         (recap, games_by_id.get(recap.game_id))
         for recap in edition.game_recaps
@@ -50,11 +54,17 @@ def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
                 series.home_team if series.away_wins > series.home_wins else series.away_team
             )
 
+        try:
+            results_date = (
+                date.fromisoformat(edition.edition.date) - timedelta(days=1)
+            ).isoformat()
+        except ValueError:
+            results_date = edition.edition.date
         current_postseason_games = [
-            (recap, game)
-            for recap, game in recap_games
-            if game
-            and game.game_date == edition.edition.date
+            game
+            for game in games_by_id.values()
+            if game.status.value == "final"
+            and game.game_date == results_date
             and game.game_type in {"F", "D", "L", "W"}
         ]
         active_market_teams = [
@@ -66,21 +76,42 @@ def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
             (
                 recap
                 for team in active_market_teams
-                for recap, _game in current_postseason_games
-                if team in recap.teams
+                for recap, game in recap_games
+                if game in current_postseason_games and team in recap.teams
             ),
             None,
         )
         if recap is None:
             eliminated_market_teams = eliminated_teams.intersection(market.baseball_teams)
-            recap = next(
+            selected_game = next(
                 (
-                    recap
-                    for recap, _game in current_postseason_games
-                    if not eliminated_market_teams.intersection(recap.teams)
+                    game
+                    for game in current_postseason_games
+                    if not eliminated_market_teams.intersection(
+                        {game.away.team_abbr, game.home.team_abbr}
+                    )
                 ),
                 None,
             )
+            if selected_game is None and eliminated_market_teams and current_postseason_games:
+                selected_game = next(
+                    (
+                        game
+                        for game in sorted(
+                            games_by_id.values(),
+                            key=lambda candidate: (candidate.game_date, candidate.game_id),
+                            reverse=True,
+                        )
+                        if game.status.value == "final"
+                        and game.game_type in {"F", "D", "L", "W"}
+                        and not eliminated_market_teams.intersection(
+                            {game.away.team_abbr, game.home.team_abbr}
+                        )
+                    ),
+                    None,
+                )
+            if selected_game is not None:
+                return selected_game
     else:
         recap = next(
             (

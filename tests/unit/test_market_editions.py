@@ -58,7 +58,7 @@ def test_baseball_market_uses_full_ai_headline_rewrite() -> None:
 
 def test_eliminated_market_team_yields_headline_to_another_playoff_game() -> None:
     edition = build_full_slate_edition()
-    edition.edition.date = edition.games[0].game_date
+    edition.edition.date = "2026-07-14"
     for game in edition.games:
         game.game_type = "F"
     edition.postseason = Postseason(
@@ -97,11 +97,45 @@ def test_eliminated_market_team_yields_headline_to_another_playoff_game() -> Non
     assert localized.lead_story.teams == ["NYY", "BOS"]
 
 
+def test_elimination_game_yields_to_latest_other_completed_playoff_game() -> None:
+    edition = build_full_slate_edition()
+    edition.edition.date = "2026-07-14"
+    for game in edition.games:
+        game.game_type = "F"
+        game.game_date = "2026-07-12"
+    phillies_game = next(game for game in edition.games if game.game_id == 748295)
+    phillies_game.game_date = "2026-07-13"
+    yankees_game = next(game for game in edition.games if game.game_id == 748293)
+    edition.postseason = Postseason(
+        games=[phillies_game, yankees_game],
+        series=[
+            PostseasonSeries(
+                key="NL Wild Card:ATL:PHI",
+                round_name="NL Wild Card",
+                league="NL",
+                away_team="ATL",
+                home_team="PHI",
+                away_wins=2,
+                home_wins=1,
+                wins_required=2,
+                status="ATL won 2–1",
+            )
+        ],
+    )
+
+    selected = baseball_headline_game(edition, MARKETS_BY_SLUG["philadelphia"])
+
+    assert selected is not None
+    assert "PHI" not in {selected.away.team_abbr, selected.home.team_abbr}
+    assert selected.game_date == "2026-07-12"
+
+
 def test_postseason_off_day_reuses_previous_market_lead(tmp_path) -> None:
     edition = build_full_slate_edition()
     edition.edition.date = "2026-07-14"
     for game in edition.games:
         game.game_type = "F"
+        game.game_date = "2026-07-12"
     edition.postseason = Postseason(
         series=[
             PostseasonSeries(
