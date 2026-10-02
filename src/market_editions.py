@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
 from typing import Any
 
 from src.football.generator import FootballEditionGenerator
@@ -28,38 +29,110 @@ def _story_from_recap(recap: GameRecap) -> Story:
 
 
 def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
-    recap = next(
-        (
-            recap
+    games_by_id = {game.game_id: game for game in edition.games}
+    recap_games = [
+        (recap, games_by_id.get(recap.game_id))
+        for recap in edition.game_recaps
+        if games_by_id.get(recap.game_id) is not None
+    ]
+
+    if edition.postseason and edition.postseason.series:
+        postseason_teams = {
+            team
+            for series in edition.postseason.series
+            for team in (series.away_team, series.home_team)
+        }
+        eliminated_teams: set[str] = set()
+        for series in edition.postseason.series:
+            if max(series.away_wins, series.home_wins) < series.wins_required:
+                continue
+            eliminated_teams.add(
+                series.home_team if series.away_wins > series.home_wins else series.away_team
+            )
+
+        current_postseason_games = [
+            (recap, game)
+            for recap, game in recap_games
+            if game
+            and game.game_date == edition.edition.date
+            and game.game_type in {"F", "D", "L", "W"}
+        ]
+        active_market_teams = [
+            team
             for team in market.baseball_teams
-            for recap in edition.game_recaps
-            if team in recap.teams
-        ),
-        None,
-    )
+            if team in postseason_teams and team not in eliminated_teams
+        ]
+        recap = next(
+            (
+                recap
+                for team in active_market_teams
+                for recap, _game in current_postseason_games
+                if team in recap.teams
+            ),
+            None,
+        )
+        if recap is None:
+            eliminated_market_teams = eliminated_teams.intersection(market.baseball_teams)
+            recap = next(
+                (
+                    recap
+                    for recap, _game in current_postseason_games
+                    if not eliminated_market_teams.intersection(recap.teams)
+                ),
+                None,
+            )
+    else:
+        recap = next(
+            (
+                recap
+                for team in market.baseball_teams
+                for recap, _game in recap_games
+                if team in recap.teams
+            ),
+            None,
+        )
     if not recap:
         return None
-    return next((game for game in edition.games if game.game_id == recap.game_id), None)
+    return games_by_id.get(recap.game_id)
+
+
+def previous_baseball_lead(path: Path | None) -> Story | None:
+    """Return the last published, self-contained market lead for an MLB off-day."""
+    if path is None or not path.exists():
+        return None
+    try:
+        previous = Edition.model_validate_json(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    lead = previous.lead_story
+    if lead is None or not lead.headline.strip() or not lead.paragraphs:
+        return None
+    return lead.model_copy(deep=True)
 
 
 def marketize_baseball(
-    edition: Edition, market: Market, lead_recap: GameRecap | None = None
+    edition: Edition,
+    market: Market,
+    lead_recap: GameRecap | None = None,
+    previous_lead: Story | None = None,
 ) -> Edition:
     localized = edition.model_copy(deep=True)
     localized.edition.market_slug = market.slug
     localized.edition.market_label = market.label
     localized.edition.market_teams = list(market.baseball_teams)
+    selected_game = baseball_headline_game(localized, market)
     local_recap = lead_recap or next(
         (
             recap
-            for team in market.baseball_teams
             for recap in localized.game_recaps
-            if team in recap.teams
+            if selected_game and recap.game_id == selected_game.game_id
         ),
         None,
     )
     if local_recap:
         localized.lead_story = _story_from_recap(local_recap)
+    elif previous_lead:
+        localized.lead_story = previous_lead.model_copy(deep=True)
     return localized
 
 

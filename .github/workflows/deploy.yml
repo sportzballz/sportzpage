@@ -126,7 +126,7 @@ jobs:
           python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
           python -m src.ncaaf.generator --date "$EDITION_DATE" --build-dir build/ncaaf
           python -m src.nhl.generator --date "$EDITION_DATE" --build-dir build/nhl-markets
-          python scripts/generate_market_editions.py
+          python scripts/generate_market_editions.py --previous-baseball-dir /tmp
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:

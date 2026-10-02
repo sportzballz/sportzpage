@@ -16,6 +16,7 @@ from src.market_editions import (
     football_headline_game,
     marketize_baseball,
     marketize_football,
+    previous_baseball_lead,
 )
 from src.markets import MARKETS
 from src.models.edition import Edition
@@ -32,6 +33,7 @@ async def generate(
     ncaaf_output: Path | None = None,
     baseball_service: ESPNLeadStoryService | None = None,
     football_service: FootballLeadStoryService | None = None,
+    previous_baseball_dir: Path | None = None,
 ) -> None:
     base = Edition.model_validate_json(baseball_edition.read_text())
     football = json.loads(football_edition.read_text())
@@ -52,6 +54,11 @@ async def generate(
 
     for market in MARKETS:
         baseball_game = baseball_headline_game(base, market)
+        previous_lead = previous_baseball_lead(
+            previous_baseball_dir / f"{market.slug}-edition.json"
+            if previous_baseball_dir
+            else None
+        )
         existing_recap = next(
             (
                 recap
@@ -74,7 +81,7 @@ async def generate(
             raise RuntimeError(
                 f"OpenAI baseball headline failed for {market.label} after 3 attempts"
             )
-        localized = marketize_baseball(base, market, baseball_lead)
+        localized = marketize_baseball(base, market, baseball_lead, previous_lead)
         baseball_dir = baseball_output / market.slug
         baseball_dir.mkdir(parents=True, exist_ok=True)
         (baseball_dir / "edition.json").write_text(localized.model_dump_json(indent=2))
@@ -120,6 +127,7 @@ def main() -> None:
     parser.add_argument("--football-output", type=Path, default=Path("build/football-markets"))
     parser.add_argument("--ncaaf-edition", type=Path, default=Path("build/ncaaf/edition.json"))
     parser.add_argument("--ncaaf-output", type=Path, default=Path("build/ncaaf-markets"))
+    parser.add_argument("--previous-baseball-dir", type=Path)
     args = parser.parse_args()
     asyncio.run(
         generate(
@@ -129,6 +137,7 @@ def main() -> None:
             args.football_output,
             args.ncaaf_edition,
             args.ncaaf_output,
+            previous_baseball_dir=args.previous_baseball_dir,
         )
     )
 
