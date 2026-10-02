@@ -29,6 +29,19 @@ def _story_from_recap(recap: GameRecap) -> Story:
     )
 
 
+def eliminated_postseason_teams(edition: Edition) -> set[str]:
+    eliminated: set[str] = set()
+    if not edition.postseason:
+        return eliminated
+    for series in edition.postseason.series:
+        if max(series.away_wins, series.home_wins) < series.wins_required:
+            continue
+        eliminated.add(
+            series.home_team if series.away_wins > series.home_wins else series.away_team
+        )
+    return eliminated
+
+
 def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
     postseason_games = edition.postseason.games if edition.postseason else []
     games_by_id = {
@@ -46,13 +59,7 @@ def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
             for series in edition.postseason.series
             for team in (series.away_team, series.home_team)
         }
-        eliminated_teams: set[str] = set()
-        for series in edition.postseason.series:
-            if max(series.away_wins, series.home_wins) < series.wins_required:
-                continue
-            eliminated_teams.add(
-                series.home_team if series.away_wins > series.home_wins else series.away_team
-            )
+        eliminated_teams = eliminated_postseason_teams(edition)
 
         try:
             results_date = (
@@ -67,20 +74,19 @@ def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
             and game.game_date == results_date
             and game.game_type in {"F", "D", "L", "W"}
         ]
-        active_market_teams = [
-            team
-            for team in market.baseball_teams
-            if team in postseason_teams and team not in eliminated_teams
-        ]
-        recap = next(
+        current_market_game = next(
             (
-                recap
-                for team in active_market_teams
-                for recap, game in recap_games
-                if game in current_postseason_games and team in recap.teams
+                game
+                for team in market.baseball_teams
+                if team in postseason_teams
+                for game in current_postseason_games
+                if team in {game.away.team_abbr, game.home.team_abbr}
             ),
             None,
         )
+        if current_market_game is not None:
+            return current_market_game
+        recap = None
         if recap is None:
             eliminated_market_teams = eliminated_teams.intersection(market.baseball_teams)
             selected_game = next(
@@ -93,7 +99,7 @@ def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
                 ),
                 None,
             )
-            if selected_game is None and eliminated_market_teams and current_postseason_games:
+            if selected_game is None and eliminated_market_teams:
                 selected_game = next(
                     (
                         game
@@ -127,7 +133,9 @@ def baseball_headline_game(edition: Edition, market: Market) -> Game | None:
     return games_by_id.get(recap.game_id)
 
 
-def previous_baseball_lead(path: Path | None) -> Story | None:
+def previous_baseball_lead(
+    path: Path | None, *, excluded_teams: set[str] | None = None
+) -> Story | None:
     """Return the last published, self-contained market lead for an MLB off-day."""
     if path is None or not path.exists():
         return None
@@ -137,6 +145,8 @@ def previous_baseball_lead(path: Path | None) -> Story | None:
         return None
     lead = previous.lead_story
     if lead is None or not lead.headline.strip() or not lead.paragraphs:
+        return None
+    if (excluded_teams or set()).intersection(lead.teams):
         return None
     return lead.model_copy(deep=True)
 

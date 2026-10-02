@@ -61,6 +61,8 @@ def test_eliminated_market_team_yields_headline_to_another_playoff_game() -> Non
     edition.edition.date = "2026-07-14"
     for game in edition.games:
         game.game_type = "F"
+    cubs_game = next(game for game in edition.games if game.game_id == 748294)
+    cubs_game.game_date = "2026-07-12"
     edition.postseason = Postseason(
         series=[
             PostseasonSeries(
@@ -97,7 +99,7 @@ def test_eliminated_market_team_yields_headline_to_another_playoff_game() -> Non
     assert localized.lead_story.teams == ["NYY", "BOS"]
 
 
-def test_elimination_game_yields_to_latest_other_completed_playoff_game() -> None:
+def test_elimination_game_can_remain_the_headline_on_elimination_day() -> None:
     edition = build_full_slate_edition()
     edition.edition.date = "2026-07-14"
     for game in edition.games:
@@ -126,8 +128,8 @@ def test_elimination_game_yields_to_latest_other_completed_playoff_game() -> Non
     selected = baseball_headline_game(edition, MARKETS_BY_SLUG["philadelphia"])
 
     assert selected is not None
-    assert "PHI" not in {selected.away.team_abbr, selected.home.team_abbr}
-    assert selected.game_date == "2026-07-12"
+    assert selected.game_id == 748295
+    assert selected.game_date == "2026-07-13"
 
 
 def test_postseason_off_day_reuses_previous_market_lead(tmp_path) -> None:
@@ -164,6 +166,43 @@ def test_postseason_off_day_reuses_previous_market_lead(tmp_path) -> None:
     assert baseball_headline_game(edition, MARKETS_BY_SLUG["philadelphia"]) is None
     assert localized.lead_story is not None
     assert localized.lead_story.headline == "Yesterday's playoff headline"
+
+
+def test_eliminated_team_without_previous_day_game_is_not_reused(tmp_path) -> None:
+    edition = build_full_slate_edition()
+    edition.edition.date = "2026-07-14"
+    for game in edition.games:
+        game.game_type = "F"
+        game.game_date = "2026-07-12"
+    phillies_game = next(game for game in edition.games if game.game_id == 748295)
+    yankees_game = next(game for game in edition.games if game.game_id == 748293)
+    edition.postseason = Postseason(
+        games=[phillies_game, yankees_game],
+        series=[
+            PostseasonSeries(
+                key="NL Wild Card:ATL:PHI",
+                round_name="NL Wild Card",
+                league="NL",
+                away_team="ATL",
+                home_team="PHI",
+                away_wins=2,
+                home_wins=1,
+                wins_required=2,
+                status="ATL won 2–1",
+            )
+        ],
+    )
+    previous = build_full_slate_edition()
+    previous.lead_story.teams = ["PHI", "ATL"]
+    previous_path = tmp_path / "philadelphia-edition.json"
+    previous_path.write_text(previous.model_dump_json(), encoding="utf-8")
+
+    prior_lead = previous_baseball_lead(previous_path, excluded_teams={"PHI"})
+    selected = baseball_headline_game(edition, MARKETS_BY_SLUG["philadelphia"])
+
+    assert prior_lead is None
+    assert selected is not None
+    assert "PHI" not in {selected.away.team_abbr, selected.home.team_abbr}
 
 
 def test_football_market_promotes_completed_local_game() -> None:

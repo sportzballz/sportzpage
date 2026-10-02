@@ -14,6 +14,7 @@ from src.football.ai_recap import FootballLeadStoryService
 from src.football.generator import render_football_page
 from src.market_editions import (
     baseball_headline_game,
+    eliminated_postseason_teams,
     football_headline_game,
     marketize_baseball,
     marketize_football,
@@ -55,10 +56,14 @@ async def generate(
 
     for market in MARKETS:
         baseball_game = baseball_headline_game(base, market)
+        eliminated_market_teams = eliminated_postseason_teams(base).intersection(
+            market.baseball_teams
+        )
         previous_lead = previous_baseball_lead(
             previous_baseball_dir / f"{market.slug}-edition.json"
             if previous_baseball_dir
-            else None
+            else None,
+            excluded_teams=eliminated_market_teams,
         )
         existing_recap = next(
             (
