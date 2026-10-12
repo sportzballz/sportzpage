@@ -187,6 +187,7 @@ def test_market_selector_lists_and_persists_local_editions():
     assert 'localStorage.setItem("tdsp-market", market)' in script
     assert '`/editions/${market}/${sportPath}`' in script
     assert 'window.location.pathname.includes("/ncaaf/")' in script
+    assert 'window.location.pathname.includes("/nba/")' in script
 
 
 def test_box_scores_follow_standings():

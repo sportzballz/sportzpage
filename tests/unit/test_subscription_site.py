@@ -231,6 +231,31 @@ def test_assembles_nhl_current_and_market_routes(tmp_path: Path) -> None:
     assert "https://thedailysportspage.com/nhl/" in (output / "sitemap.xml").read_text()
 
 
+def test_assembles_nba_current_and_market_routes(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    football = tmp_path / "football"
+    static = tmp_path / "static"
+    nba_markets = tmp_path / "nba-markets"
+    _write_edition(build, "2026-10-11")
+    _write_edition(football, "2026-10-11")
+    static.mkdir()
+    for market in ("philadelphia", "boston", "new-york", "los-angeles", "chicago", "dallas"):
+        _write_edition(nba_markets / market, "2026-10-11", f"nba-{market}")
+
+    output = tmp_path / "dist"
+    assemble(build, football, static, tmp_path / "previous", output, nba_market_dir=nba_markets)
+    assert "nba-philadelphia" in (output / "subscriber/current/nba/index.html").read_text()
+    assert "nba-philadelphia" in (output / "nba/index.html").read_text()
+    assert "nba-boston" in (output / "editions/boston/nba/index.html").read_text()
+    assert "https://thedailysportspage.com/nba/" in (output / "sitemap.xml").read_text()
+
+
+def test_cloudfront_function_routes_nba_to_current_edition() -> None:
+    code = Path("terraform/functions/directory-index.js").read_text()
+    assert "uri === '/nba'" in code
+    assert "location: { value: '/subscriber/current/nba/' }" in code
+
+
 def test_subscription_panels_span_the_newspaper_grid() -> None:
     css = Path("static/css/subscription.css").read_text(encoding="utf-8")
     panel_rule = css.split(".free-archive {", maxsplit=1)[1].split("}", maxsplit=1)[0]

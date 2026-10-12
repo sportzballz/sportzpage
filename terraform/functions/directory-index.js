@@ -35,6 +35,17 @@ function handler(event) {
     };
   }
 
+  if (uri === '/nba' || uri.startsWith('/nba/')) {
+    return {
+      statusCode: 302,
+      statusDescription: 'Preview Edition',
+      headers: {
+        location: { value: '/subscriber/current/nba/' },
+        'cache-control': { value: 'no-store' }
+      }
+    };
+  }
+
   if (uri === '/favicon.ico') {
     request.uri = '/static/icons/favicon.ico';
     return request;

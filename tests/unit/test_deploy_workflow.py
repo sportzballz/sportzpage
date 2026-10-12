@@ -26,3 +26,11 @@ def test_push_and_manual_runs_still_publish() -> None:
 
     assert 'if [[ "$EVENT_NAME" != "schedule" ]]' in workflow
     assert 'echo "should_publish=true" >> "$GITHUB_OUTPUT"' in workflow
+
+
+def test_deploy_generates_and_assembles_nba() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "python -m src.nba.generator" in workflow
+    assert "--nba-market-dir build/nba-markets" in workflow
+    assert "/subscriber/current/nba/edition.json" in workflow

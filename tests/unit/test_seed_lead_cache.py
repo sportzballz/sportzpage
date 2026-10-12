@@ -6,6 +6,7 @@ from scripts.seed_lead_cache import (
     seed_football,
     seed_football_news,
     seed_ncaaf,
+    seed_nba,
     seed_news,
     seed_short_recaps,
 )
@@ -185,6 +186,31 @@ def test_seeds_published_ncaaf_news_lead(tmp_path: Path) -> None:
     cached = seed_ncaaf(edition, tmp_path / "cache")
 
     assert cached == tmp_path / "cache" / "ncaaf-news-2026-09-10-12345.json"
+
+
+def test_seeds_published_nba_news_lead(tmp_path: Path) -> None:
+    edition = tmp_path / "nba-edition.json"
+    edition.write_text(
+        json.dumps(
+            {
+                "edition_date": "2026-10-11",
+                "lead": {
+                    "headline": "Cached NBA lead",
+                    "deck": "Cached deck",
+                    "paragraphs": ["One.", "Two.", "Three."],
+                    "ai_generated": True,
+                    "source_credit": "AP",
+                    "espn_news_id": "54321",
+                    "edition_date": "2026-10-11",
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    cached = seed_nba(edition, tmp_path / "cache")
+
+    assert cached == tmp_path / "cache" / "nba-news-2026-10-11-54321.json"
 
 
 def test_seeds_self_contained_baseball_and_football_news(tmp_path: Path) -> None:
