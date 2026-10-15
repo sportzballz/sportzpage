@@ -9,6 +9,7 @@ final class SubscriptionStore: ObservableObject {
 
     @Published private(set) var product: Product?
     @Published private(set) var hasAccess = false
+    @Published private(set) var signedTransaction: String?
     @Published private(set) var isLoading = true
     @Published private(set) var isPurchasing = false
     @Published var errorMessage: String?
@@ -111,6 +112,7 @@ final class SubscriptionStore: ObservableObject {
 
     func refreshEntitlement() async {
         var entitled = false
+        var currentSignedTransaction: String?
 
         for await result in Transaction.currentEntitlements {
             guard case .verified(let transaction) = result,
@@ -119,10 +121,12 @@ final class SubscriptionStore: ObservableObject {
                 continue
             }
             entitled = true
+            currentSignedTransaction = result.jwsRepresentation
             break
         }
 
         hasAccess = entitled
+        signedTransaction = currentSignedTransaction
     }
 
     private func observeTransactions() -> Task<Void, Never> {

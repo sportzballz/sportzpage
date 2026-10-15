@@ -13,9 +13,13 @@ struct RootView: View {
                     ProgressView("Checking subscription…")
                         .font(.system(.body, design: .serif))
                 }
-            } else if subscriptionStore.hasAccess {
+            } else if subscriptionStore.hasAccess,
+                      let signedTransaction = subscriptionStore.signedTransaction {
                 ZStack(alignment: .bottomTrailing) {
-                    DailySportsPageWebView(destination: routes.destination)
+                    DailySportsPageWebView(
+                        destination: routes.destination,
+                        signedTransaction: signedTransaction
+                    )
                         .ignoresSafeArea(.container, edges: .bottom)
 
                     Menu {
@@ -45,6 +49,11 @@ struct RootView: View {
 
 private struct DailySportsPageWebView: UIViewRepresentable {
     let destination: URL
+    let signedTransaction: String
+
+    private static let accessURL = URL(
+        string: "https://thedailysportspage.com/api/access/apple"
+    )!
 
     func makeCoordinator() -> Coordinator {
         Coordinator(homeURL: destination)
@@ -70,21 +79,40 @@ private struct DailySportsPageWebView: UIViewRepresentable {
         webView.scrollView.refreshControl = refreshControl
         context.coordinator.webView = webView
 
-        webView.load(URLRequest(url: destination, cachePolicy: .reloadRevalidatingCacheData))
+        context.coordinator.authorize(
+            webView,
+            signedTransaction: signedTransaction
+        )
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
+        context.coordinator.homeURL = destination
         guard webView.url?.absoluteString != destination.absoluteString else { return }
+        guard context.coordinator.isAuthorized else { return }
         webView.load(URLRequest(url: destination, cachePolicy: .reloadRevalidatingCacheData))
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         weak var webView: WKWebView?
-        private let homeURL: URL
+        var homeURL: URL
+        private(set) var isAuthorized = false
 
         init(homeURL: URL) {
             self.homeURL = homeURL
+        }
+
+        func authorize(_ webView: WKWebView, signedTransaction: String) {
+            var request = URLRequest(
+                url: DailySportsPageWebView.accessURL,
+                cachePolicy: .reloadIgnoringLocalCacheData
+            )
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONSerialization.data(
+                withJSONObject: ["signedTransaction": signedTransaction]
+            )
+            webView.load(request)
         }
 
         @objc func refresh(_ sender: UIRefreshControl) {
@@ -97,6 +125,25 @@ private struct DailySportsPageWebView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
             webView.scrollView.refreshControl?.endRefreshing()
+            if webView.url?.path == DailySportsPageWebView.accessURL.path {
+                isAuthorized = true
+                webView.load(
+                    URLRequest(url: homeURL, cachePolicy: .reloadIgnoringLocalCacheData)
+                )
+            }
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationResponse: WKNavigationResponse,
+            decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void
+        ) {
+            if navigationResponse.response.url?.path == DailySportsPageWebView.accessURL.path,
+               let response = navigationResponse.response as? HTTPURLResponse,
+               !(200...299).contains(response.statusCode) {
+                isAuthorized = false
+            }
+            decisionHandler(.allow)
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {

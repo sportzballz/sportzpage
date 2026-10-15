@@ -2,6 +2,22 @@ function handler(event) {
   var request = event.request;
   var uri = request.uri;
 
+  var archiveMatch = uri.match(/^\/archive\/(\d{4}-\d{2}-\d{2})(?:\/|$)/);
+  if (archiveMatch) {
+    var editionDate = Date.parse(archiveMatch[1] + 'T12:00:00Z');
+    var ageInDays = Math.floor((Date.now() - editionDate) / 86400000);
+    if (isNaN(editionDate) || ageInDays < 3 || ageInDays > 6) {
+      return {
+        statusCode: 302,
+        statusDescription: 'Public Sample Window',
+        headers: {
+          location: { value: '/' },
+          'cache-control': { value: 'no-store' }
+        }
+      };
+    }
+  }
+
   if (uri === '/football' || uri.startsWith('/football/')) {
     return {
       statusCode: 302,

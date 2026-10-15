@@ -36,3 +36,20 @@ output "feedback_table_name" {
   description = "DynamoDB table containing anonymous reader feedback."
   value       = aws_dynamodb_table.feedback.name
 }
+
+output "subscriber_auth_enforced" {
+  description = "Whether CloudFront currently requires verified subscriber cookies."
+  value       = var.enforce_subscriber_auth
+}
+
+output "subscriber_access_endpoint" {
+  value = {
+    apple  = "https://${var.domain_name}/api/access/apple"
+    google = "https://${var.domain_name}/api/access/google"
+  }
+}
+
+output "google_play_credentials_secret_arn" {
+  description = "Populate this secret with the Google Play Android Publisher service account JSON before enforcing subscriber auth."
+  value       = aws_secretsmanager_secret.google_play_credentials.arn
+}

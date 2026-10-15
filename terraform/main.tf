@@ -249,6 +249,34 @@ resource "aws_cloudfront_distribution" "site" {
     origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
   }
 
+  ordered_cache_behavior {
+    path_pattern             = "/api/access/*"
+    target_origin_id         = "feedback-api"
+    viewer_protocol_policy   = "https-only"
+    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods           = ["GET", "HEAD"]
+    compress                 = true
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/subscriber/*"
+    target_origin_id           = "private-s3-origin"
+    viewer_protocol_policy     = "https-only"
+    allowed_methods            = ["GET", "HEAD", "OPTIONS"]
+    cached_methods             = ["GET", "HEAD", "OPTIONS"]
+    compress                   = true
+    cache_policy_id            = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    trusted_key_groups         = var.enforce_subscriber_auth ? [aws_cloudfront_key_group.subscriber_cookie.id] : []
+
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.directory_index.arn
+    }
+  }
+
   default_cache_behavior {
     target_origin_id           = "private-s3-origin"
     viewer_protocol_policy     = "redirect-to-https"

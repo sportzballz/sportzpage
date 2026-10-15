@@ -39,10 +39,21 @@ the beacon only when that variable is populated.
 
 ## Publication layout
 
-The standalone domain publishes an honor-supported homepage at `/`, a rolling
-seven-edition archive under `/archive/`, and today’s complete edition under the
-legacy `/subscriber/current/` publication path. All reader-facing editions are open;
-support is optional through the Buy Me a Coffee link on the homepage.
+The standalone domain publishes a public homepage at `/`, public sample editions
+that are three through six days old under `/archive/`, and today’s complete edition
+under `/subscriber/current/`. Subscriber content is designed to require a short-lived
+CloudFront cookie issued only after the access Lambda validates a signed Apple
+StoreKit transaction or a Google Play purchase token.
+
+Subscriber enforcement is intentionally controlled by `enforce_subscriber_auth`.
+Leave it `false` while deploying and testing compatible mobile builds, then set it
+to `true` only after those builds are available to customers. When enabled, direct
+browser requests to `/subscriber/*` fail closed without the signed cookies.
+
+The cookie-signing private key and Google Play service-account JSON live in Secrets
+Manager and must never be committed or placed in Terraform state. Their secret names
+are `thedailysportspage/subscriber-cookie-private-key` and
+`thedailysportspage/google-play-service-account`.
 
 Each run also creates internal delivery artifacts under `/delivery/current/` for
 a concise HTML digest, full HTML, print-ready HTML, and the public edition URL.
