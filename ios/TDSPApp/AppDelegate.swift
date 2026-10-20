@@ -6,7 +6,7 @@ import Combine
 final class AppRouteStore: ObservableObject {
     static let shared = AppRouteStore()
 
-    @Published var destination = URL(string: "https://thedailysportspage.com/subscriber/current/")!
+    @Published var destination = URL(string: "https://thedailysportspage.com/subscriber/current/football/")!
 
     func open(_ shortcutType: String) {
         switch shortcutType {

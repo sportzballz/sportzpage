@@ -308,7 +308,7 @@ class MainActivity : AppCompatActivity(), PurchasesUpdatedListener {
 
     companion object {
         const val MONTHLY_PRODUCT_ID = "com.thedailysportspage.app.monthly"
-        const val EDITION_URL = "https://thedailysportspage.com/subscriber/current/"
+        const val EDITION_URL = "https://thedailysportspage.com/subscriber/current/football/"
         const val ACCESS_URL = "https://thedailysportspage.com/api/access/google"
         const val PRIVACY_URL = "https://thedailysportspage.com/privacy/"
     }
