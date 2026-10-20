@@ -109,9 +109,14 @@ private struct DailySportsPageWebView: UIViewRepresentable {
             )
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try? JSONSerialization.data(
-                withJSONObject: ["signedTransaction": signedTransaction]
-            )
+            var destination = homeURL.path
+            if let fragment = homeURL.fragment {
+                destination += "#\(fragment)"
+            }
+            request.httpBody = try? JSONSerialization.data(withJSONObject: [
+                "signedTransaction": signedTransaction,
+                "destination": destination
+            ])
             webView.load(request)
         }
 
@@ -182,6 +187,9 @@ private struct DailySportsPageWebView: UIViewRepresentable {
 
             if (url.scheme == "http" || url.scheme == "https"),
                url.host == "thedailysportspage.com" || url.host == "www.thedailysportspage.com" {
+                if url.path.hasPrefix("/subscriber/") {
+                    isAuthorized = true
+                }
                 decisionHandler(.allow)
             } else if url.scheme != "http" && url.scheme != "https" {
                 UIApplication.shared.open(url)

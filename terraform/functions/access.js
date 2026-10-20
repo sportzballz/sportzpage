@@ -195,6 +195,15 @@ async function issueCookies(transaction) {
   ];
 }
 
+function subscriberDestination(value) {
+  const fallback = "/subscriber/current/";
+  if (typeof value !== "string" || value.length > 500) return fallback;
+  if (!value.startsWith("/subscriber/") || value.includes("\r") || value.includes("\n")) {
+    return fallback;
+  }
+  return value;
+}
+
 exports.handler = async (event) => {
   if (event.requestContext?.http?.method !== "POST") {
     return json(405, { ok: false, error: "Method not allowed." });
@@ -214,8 +223,11 @@ exports.handler = async (event) => {
       : verifyAppleTransaction(body.signedTransaction);
     const cookies = await issueCookies(transaction);
     return {
-      statusCode: 204,
-      headers: { "cache-control": "no-store" },
+      statusCode: 302,
+      headers: {
+        "cache-control": "no-store",
+        location: subscriberDestination(body.destination),
+      },
       cookies,
     };
   } catch (error) {
