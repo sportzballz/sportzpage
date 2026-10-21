@@ -11,11 +11,16 @@ def test_deploy_retries_hourly_from_3am_eastern() -> None:
     assert 'timezone: "America/New_York"' in workflow
 
 
-def test_scheduled_retry_skips_after_todays_edition_is_live() -> None:
+def test_scheduled_retry_skips_only_after_all_editions_are_live() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
 
     assert "publication-check:" in workflow
-    assert "PUBLISHED_DATE" in workflow
+    assert "MISSING_EDITIONS" in workflow
+    assert "current/football/edition.json" in workflow
+    assert "current/ncaaf/edition.json" in workflow
+    assert "current/nhl/edition.json" in workflow
+    assert "current/nba/edition.json" in workflow
+    assert "GENERATED_DATE" in workflow
     assert 'echo "should_publish=false" >> "$GITHUB_OUTPUT"' in workflow
     assert "needs: publication-check" in workflow
     assert "needs.publication-check.outputs.should_publish == 'true'" in workflow

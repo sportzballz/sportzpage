@@ -34,16 +34,29 @@ jobs:
           fi
 
           TODAY="$(TZ=America/New_York date +%F)"
-          curl -fsS \
-            https://thedailysportspage.com/subscriber/current/edition.json \
-            -o /tmp/current-edition.json || true
-          PUBLISHED_DATE="$(jq -r '.edition.date // empty' /tmp/current-edition.json 2>/dev/null || true)"
+          MISSING_EDITIONS=()
+          for entry in \
+            "MLB|https://thedailysportspage.com/subscriber/current/edition.json" \
+            "NFL|https://thedailysportspage.com/subscriber/current/football/edition.json" \
+            "NCAAF|https://thedailysportspage.com/subscriber/current/ncaaf/edition.json" \
+            "NHL|https://thedailysportspage.com/subscriber/current/nhl/edition.json" \
+            "NBA|https://thedailysportspage.com/subscriber/current/nba/edition.json"; do
+            NAME="${entry%%|*}"
+            URL="${entry#*|}"
+            FILE="/tmp/current-${NAME,,}-edition.json"
+            curl -fsS "$URL" -o "$FILE" || true
+            GENERATED_AT="$(jq -r '.generated_at // .generationMetadata.generatedAt // empty' "$FILE" 2>/dev/null || true)"
+            GENERATED_DATE="${GENERATED_AT:0:10}"
+            if [[ "$GENERATED_DATE" != "$TODAY" ]]; then
+              MISSING_EDITIONS+=("$NAME")
+            fi
+          done
 
-          if [[ "$PUBLISHED_DATE" == "$TODAY" ]]; then
-            echo "Today's edition ($TODAY) is already live; no retry needed."
+          if [[ "${#MISSING_EDITIONS[@]}" -eq 0 ]]; then
+            echo "All editions were generated today ($TODAY); no retry needed."
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Today's edition is missing (live: ${PUBLISHED_DATE:-unavailable}); publishing now."
+            echo "Missing or stale editions: ${MISSING_EDITIONS[*]}; publishing all sports now."
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
