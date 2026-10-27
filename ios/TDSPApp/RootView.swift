@@ -20,7 +20,6 @@ struct RootView: View {
                         destination: routes.destination,
                         signedTransaction: signedTransaction
                     )
-                        .ignoresSafeArea(.container, edges: .bottom)
 
                     Menu {
                         Button("Manage Subscription") {

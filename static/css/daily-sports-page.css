@@ -1671,6 +1671,15 @@ body {
   padding: 0 0.6rem;
 }
 
+/* iPhone Duo and other edge-to-edge displays can expose asymmetric reserved
+   regions as the available window resizes. Keep the newspaper inside the
+   live safe area in every pose without device-name or orientation checks. */
+body {
+  padding-left: max(0.6rem, env(safe-area-inset-left));
+  padding-right: max(0.6rem, env(safe-area-inset-right));
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 h1,
 h2,
 h3,
@@ -1805,7 +1814,10 @@ caption,
 .site-footer { margin-top: 0.35rem; padding: 0.4rem; font-size: 0.62rem; }
 
 @media (min-width: 900px) {
-  body { padding: 0 0.9rem; }
+  body {
+    padding-left: max(0.9rem, env(safe-area-inset-left));
+    padding-right: max(0.9rem, env(safe-area-inset-right));
+  }
 
   main {
     display: grid;
@@ -1882,7 +1894,10 @@ caption,
 
 /* Tablet edition: retain newspaper pairings without forcing desktop widths. */
 @media (min-width: 600px) and (max-width: 899px) {
-  body { padding: 0 0.75rem; }
+  body {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
 
   main {
     display: grid;
@@ -1951,7 +1966,8 @@ caption,
 /* Phone edition: readable single-column order with compact, swipeable utilities. */
 @media (max-width: 599px) {
   body {
-    padding: 0 0.45rem;
+    padding-left: max(0.45rem, env(safe-area-inset-left));
+    padding-right: max(0.45rem, env(safe-area-inset-right));
     font-size: 15px;
     line-height: 1.28;
   }
@@ -2056,7 +2072,10 @@ caption,
 /* Tablet landscape and smaller desktop windows keep the broadsheet structure
    without letting wide tables force the viewport wider than the device. */
 @media (min-width: 900px) and (max-width: 1199px) {
-  body { padding-inline: .75rem; }
+  body {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
   .top-news-grid { grid-template-columns: minmax(0, 3fr) minmax(17rem, 2fr); }
   .lead-headline { font-size: clamp(2.35rem, 5vw, 3.75rem); }
   .games-list,
