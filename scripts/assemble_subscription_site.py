@@ -138,8 +138,8 @@ def _privacy_policy() -> str:
 
 
 def _landing(edition: dict, archive_dates: list[str]) -> str:
-    metadata = edition["edition"]
-    story = edition.get("lead_story") or {}
+    metadata = edition.get("edition") or {"date": edition["edition_date"]}
+    story = edition.get("lead_story") or edition.get("lead") or {}
     headline = story.get("headline") or "Today’s Daily Sports Page is ready"
     current_date = date.fromisoformat(metadata["date"])
     formatted_date = current_date.strftime("%B %-d, %Y")
@@ -164,7 +164,7 @@ def _landing(edition: dict, archive_dates: list[str]) -> str:
     <section class="subscription-benefits">
       <h2>Independent daily coverage, open to everyone.</h2>
       <ul>
-        <li>Full MLB, NFL, NCAAF, NHL, and NBA editions</li>
+        <li>Full NFL, NCAAF, NHL, and NBA editions, plus MLB in season</li>
         <li>Open web access from any device</li>
         <li>Support only when the coverage earns it</li>
         <li>Print-ready edition for reading offline</li>
@@ -343,6 +343,31 @@ def _remove_legacy_edition_support_link(directory: Path) -> None:
     index_path.write_text(document, encoding="utf-8")
 
 
+def _remove_mlb_tab(directory: Path) -> None:
+    index_path = directory / "index.html"
+    if not index_path.exists():
+        return
+    document = index_path.read_text(encoding="utf-8")
+    document = re.sub(
+        r"\s*<a\s+class=[\"']sport-tab[^>]*>MLB</a>",
+        "",
+        document,
+        count=1,
+        flags=re.I,
+    )
+    index_path.write_text(document, encoding="utf-8")
+
+
+def _redirect_page(destination: str) -> str:
+    escaped = html.escape(destination, quote=True)
+    return (
+        "<!doctype html><html><head><meta charset=\"utf-8\">"
+        f'<meta http-equiv="refresh" content="0;url={escaped}">'
+        f'<link rel="canonical" href="{escaped}"></head>'
+        f'<body><p><a href="{escaped}">Continue to today’s edition</a></p></body></html>'
+    )
+
+
 def _write_discovery_files(output: Path, archive_dates: list[str], current_date: str) -> None:
     paths = [("/", current_date), ("/archive/", current_date)]
     paths.extend(
@@ -408,13 +433,21 @@ def assemble(
     ncaaf_market_dir: Path | None = None,
     nhl_market_dir: Path | None = None,
     nba_market_dir: Path | None = None,
+    include_mlb: bool = True,
 ) -> None:
     if output.exists():
         shutil.rmtree(output)
     output.mkdir(parents=True)
 
-    edition = json.loads((build_dir / "edition.json").read_text(encoding="utf-8"))
-    current_date = edition["edition"]["date"]
+    football_edition = json.loads((football_dir / "edition.json").read_text(encoding="utf-8"))
+    edition = (
+        json.loads((build_dir / "edition.json").read_text(encoding="utf-8"))
+        if include_mlb
+        else football_edition
+    )
+    current_date = (
+        edition["edition"]["date"] if include_mlb else edition["edition_date"]
+    )
 
     archive_root = output / "archive"
     _copy_tree(previous / "archive", archive_root)
@@ -439,8 +472,13 @@ def assemble(
 
     current = output / "subscriber" / "current"
     current.mkdir(parents=True)
-    shutil.copy2(build_dir / "index.html", current / "index.html")
-    shutil.copy2(build_dir / "edition.json", current / "edition.json")
+    if include_mlb:
+        shutil.copy2(build_dir / "index.html", current / "index.html")
+        shutil.copy2(build_dir / "edition.json", current / "edition.json")
+    else:
+        (current / "index.html").write_text(
+            _redirect_page("/subscriber/current/football/"), encoding="utf-8"
+        )
     _copy_tree(football_dir, current / "football")
     if ncaaf_dir:
         _copy_tree(ncaaf_dir, current / "ncaaf")
@@ -454,14 +492,23 @@ def assemble(
 
     delivery = output / "delivery" / "current"
     delivery.mkdir(parents=True)
-    (delivery / "email.html").write_text(_email_digest(edition), encoding="utf-8")
-    shutil.copy2(build_dir / "index.html", delivery / "full.html")
-    shutil.copy2(build_dir / "index.html", delivery / "print.html")
+    if include_mlb:
+        (delivery / "email.html").write_text(_email_digest(edition), encoding="utf-8")
+        shutil.copy2(build_dir / "index.html", delivery / "full.html")
+        shutil.copy2(build_dir / "index.html", delivery / "print.html")
+    else:
+        shutil.copy2(football_dir / "index.html", delivery / "email.html")
+        shutil.copy2(football_dir / "index.html", delivery / "full.html")
+        shutil.copy2(football_dir / "index.html", delivery / "print.html")
     (delivery / "manifest.json").write_text(
         json.dumps(
             {
                 "edition_date": current_date,
-                "edition_url": "https://thedailysportspage.com/subscriber/current/",
+                "edition_url": (
+                    "https://thedailysportspage.com/subscriber/current/"
+                    if include_mlb
+                    else "https://thedailysportspage.com/subscriber/current/football/"
+                ),
                 "formats": {
                     "digest_html": "email.html",
                     "full_html": "full.html",
@@ -481,10 +528,16 @@ def assemble(
         football_source = (
             football_market_dir / market.slug if football_market_dir else football_dir
         )
-        if not (market_source / "index.html").exists():
+        if include_mlb and not (market_source / "index.html").exists():
             raise FileNotFoundError(f"missing generated market edition: {market_source}")
         market_route = editions_root / market.slug
-        _copy_tree(market_source, market_route)
+        if include_mlb:
+            _copy_tree(market_source, market_route)
+        else:
+            market_route.mkdir(parents=True, exist_ok=True)
+            (market_route / "index.html").write_text(
+                _redirect_page(f"/editions/{market.slug}/football/"), encoding="utf-8"
+            )
         _copy_tree(football_source, market_route / "football")
         if ncaaf_dir:
             ncaaf_source = (
@@ -496,8 +549,12 @@ def assemble(
         if nba_market_dir:
             _copy_tree(nba_market_dir / market.slug, market_route / "nba")
         _copy_tree(static_dir, market_route / "static")
+        if not include_mlb:
+            for sport in ("football", "ncaaf", "nhl", "nba"):
+                _remove_mlb_tab(market_route / sport)
         _remove_legacy_edition_support_link(market_route)
-        _apply_edition_seo(market_route, f"/editions/{market.slug}/")
+        if include_mlb:
+            _apply_edition_seo(market_route, f"/editions/{market.slug}/")
     (output / "index.html").write_text(_landing(edition, archive_dates), encoding="utf-8")
     privacy = output / "privacy"
     privacy.mkdir(parents=True, exist_ok=True)
@@ -508,7 +565,11 @@ def assemble(
         json.dumps({"editions": archive_dates}, indent=2) + "\n", encoding="utf-8"
     )
     _remove_legacy_edition_support_link(current)
-    _apply_edition_seo(current, "/subscriber/current/")
+    if include_mlb:
+        _apply_edition_seo(current, "/subscriber/current/")
+    else:
+        for sport in ("football", "ncaaf", "nhl", "nba"):
+            _remove_mlb_tab(current / sport)
     for day in archive_dates:
         _remove_legacy_edition_support_link(archive_root / day)
         _apply_edition_seo(archive_root / day, f"/archive/{day}/")
@@ -530,6 +591,7 @@ def main() -> None:
     parser.add_argument("--static-dir", type=Path, default=Path("static"))
     parser.add_argument("--previous-site", type=Path, default=Path("previous-site"))
     parser.add_argument("--output", type=Path, default=Path("dist"))
+    parser.add_argument("--exclude-mlb", action="store_true")
     args = parser.parse_args()
     assemble(
         args.build_dir,
@@ -543,6 +605,7 @@ def main() -> None:
         ncaaf_market_dir=args.ncaaf_market_dir,
         nhl_market_dir=args.nhl_market_dir,
         nba_market_dir=args.nba_market_dir,
+        include_mlb=not args.exclude_mlb,
     )
 
 

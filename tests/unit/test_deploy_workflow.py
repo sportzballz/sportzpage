@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 WORKFLOW = Path(".github/workflows/deploy.yml")
 
 
@@ -31,6 +30,17 @@ def test_push_and_manual_runs_still_publish() -> None:
 
     assert 'if [[ "$EVENT_NAME" != "schedule" ]]' in workflow
     assert 'echo "should_publish=true" >> "$GITHUB_OUTPUT"' in workflow
+
+
+def test_mlb_is_seasonal_and_does_not_block_offseason_publication() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert "include_mlb: ${{ steps.publication.outputs.include_mlb }}" in workflow
+    assert 'if [[ "$MONTH_DAY" > "02-29" && "$MONTH_DAY" < "10-30" ]]' in workflow
+    assert 'if [[ "$NAME" == "MLB" && "$INCLUDE_MLB" != "true" ]]' in workflow
+    assert "needs.publication-check.outputs.include_mlb" in workflow
+    assert "python scripts/generate_market_editions.py --skip-baseball" in workflow
+    assert "ASSEMBLE_ARGS+=(--exclude-mlb)" in workflow
 
 
 def test_deploy_generates_and_assembles_nba() -> None:

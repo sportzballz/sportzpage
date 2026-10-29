@@ -36,8 +36,13 @@ async def generate(
     baseball_service: ESPNLeadStoryService | None = None,
     football_service: FootballLeadStoryService | None = None,
     previous_baseball_dir: Path | None = None,
+    skip_baseball: bool = False,
 ) -> None:
-    base = Edition.model_validate_json(baseball_edition.read_text())
+    base = (
+        None
+        if skip_baseball
+        else Edition.model_validate_json(baseball_edition.read_text())
+    )
     football = json.loads(football_edition.read_text())
     football["edition_date"] = date.fromisoformat(football["edition_date"])
     football["generated_at"] = datetime.fromisoformat(football["generated_at"])
@@ -47,7 +52,7 @@ async def generate(
         ncaaf["generated_at"] = datetime.fromisoformat(ncaaf["generated_at"])
     renderer = HTMLRenderer.from_config()
 
-    if baseball_service is None and os.getenv("AI_PROVIDER") == "openai":
+    if not skip_baseball and baseball_service is None and os.getenv("AI_PROVIDER") == "openai":
         baseball_service = ESPNLeadStoryService(
             provider="openai", model=os.getenv("AI_MODEL") or "gpt-5-mini"
         )
@@ -55,45 +60,46 @@ async def generate(
         football_service = FootballLeadStoryService()
 
     for market in MARKETS:
-        baseball_game = baseball_headline_game(base, market)
-        eliminated_market_teams = eliminated_postseason_teams(base).intersection(
-            market.baseball_teams
-        )
-        previous_lead = previous_baseball_lead(
-            previous_baseball_dir / f"{market.slug}-edition.json"
-            if previous_baseball_dir
-            else None,
-            excluded_teams=eliminated_market_teams,
-        )
-        existing_recap = next(
-            (
-                recap
-                for recap in base.game_recaps
-                if baseball_game and recap.game_id == baseball_game.game_id
-            ),
-            None,
-        )
-        if baseball_game and existing_recap is None:
-            existing_recap = generate_fallback_recap(baseball_game)
-        baseball_lead = None
-        if baseball_service and baseball_game:
-            for _attempt in range(3):
-                baseball_lead = await baseball_service.generate(baseball_game)
-                if not baseball_lead and existing_recap:
-                    baseball_lead = await baseball_service.generate_from_existing_recap(
-                        baseball_game, existing_recap
-                    )
-                if baseball_lead:
-                    break
-        if baseball_service and baseball_game and not baseball_lead:
-            raise RuntimeError(
-                f"OpenAI baseball headline failed for {market.label} after 3 attempts"
+        if base is not None:
+            baseball_game = baseball_headline_game(base, market)
+            eliminated_market_teams = eliminated_postseason_teams(base).intersection(
+                market.baseball_teams
             )
-        localized = marketize_baseball(base, market, baseball_lead, previous_lead)
-        baseball_dir = baseball_output / market.slug
-        baseball_dir.mkdir(parents=True, exist_ok=True)
-        (baseball_dir / "edition.json").write_text(localized.model_dump_json(indent=2))
-        (baseball_dir / "index.html").write_text(renderer.render(localized))
+            previous_lead = previous_baseball_lead(
+                previous_baseball_dir / f"{market.slug}-edition.json"
+                if previous_baseball_dir
+                else None,
+                excluded_teams=eliminated_market_teams,
+            )
+            existing_recap = next(
+                (
+                    recap
+                    for recap in base.game_recaps
+                    if baseball_game and recap.game_id == baseball_game.game_id
+                ),
+                None,
+            )
+            if baseball_game and existing_recap is None:
+                existing_recap = generate_fallback_recap(baseball_game)
+            baseball_lead = None
+            if baseball_service and baseball_game:
+                for _attempt in range(3):
+                    baseball_lead = await baseball_service.generate(baseball_game)
+                    if not baseball_lead and existing_recap:
+                        baseball_lead = await baseball_service.generate_from_existing_recap(
+                            baseball_game, existing_recap
+                        )
+                    if baseball_lead:
+                        break
+            if baseball_service and baseball_game and not baseball_lead:
+                raise RuntimeError(
+                    f"OpenAI baseball headline failed for {market.label} after 3 attempts"
+                )
+            localized = marketize_baseball(base, market, baseball_lead, previous_lead)
+            baseball_dir = baseball_output / market.slug
+            baseball_dir.mkdir(parents=True, exist_ok=True)
+            (baseball_dir / "edition.json").write_text(localized.model_dump_json(indent=2))
+            (baseball_dir / "index.html").write_text(renderer.render(localized))
 
         football_game = football_headline_game(football, market)
         football_lead = (
@@ -136,6 +142,7 @@ def main() -> None:
     parser.add_argument("--ncaaf-edition", type=Path, default=Path("build/ncaaf/edition.json"))
     parser.add_argument("--ncaaf-output", type=Path, default=Path("build/ncaaf-markets"))
     parser.add_argument("--previous-baseball-dir", type=Path)
+    parser.add_argument("--skip-baseball", action="store_true")
     args = parser.parse_args()
     asyncio.run(
         generate(
@@ -146,6 +153,7 @@ def main() -> None:
             args.ncaaf_edition,
             args.ncaaf_output,
             previous_baseball_dir=args.previous_baseball_dir,
+            skip_baseball=args.skip_baseball,
         )
     )
 

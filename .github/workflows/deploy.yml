@@ -22,18 +22,26 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_publish: ${{ steps.publication.outputs.should_publish }}
+      include_mlb: ${{ steps.publication.outputs.include_mlb }}
     steps:
       - name: Check whether today's edition is already live
         id: publication
         env:
           EVENT_NAME: ${{ github.event_name }}
         run: |
+          TODAY="$(TZ=America/New_York date +%F)"
+          MONTH_DAY="${TODAY:5:5}"
+          INCLUDE_MLB=false
+          if [[ "$MONTH_DAY" > "02-29" && "$MONTH_DAY" < "10-30" ]]; then
+            INCLUDE_MLB=true
+          fi
+          echo "include_mlb=$INCLUDE_MLB" >> "$GITHUB_OUTPUT"
+
           if [[ "$EVENT_NAME" != "schedule" ]]; then
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          TODAY="$(TZ=America/New_York date +%F)"
           MISSING_EDITIONS=()
           for entry in \
             "MLB|https://thedailysportspage.com/subscriber/current/edition.json" \
@@ -43,6 +51,9 @@ jobs:
             "NBA|https://thedailysportspage.com/subscriber/current/nba/edition.json"; do
             NAME="${entry%%|*}"
             URL="${entry#*|}"
+            if [[ "$NAME" == "MLB" && "$INCLUDE_MLB" != "true" ]]; then
+              continue
+            fi
             FILE="/tmp/current-${NAME,,}-edition.json"
             curl -fsS "$URL" -o "$FILE" || true
             GENERATED_AT="$(jq -r '.generated_at // .generationMetadata.generatedAt // empty' "$FILE" 2>/dev/null || true)"
@@ -72,6 +83,7 @@ jobs:
       AI_MODEL: gpt-5-mini
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
+      INCLUDE_MLB: ${{ needs.publication-check.outputs.include_mlb }}
     steps:
       - uses: actions/checkout@v4
 
@@ -140,15 +152,21 @@ jobs:
       - name: Install generator
         run: python -m pip install .
 
-      - name: Generate MLB, NFL, NCAAF, NHL, and NBA editions
+      - name: Generate active sports editions
         run: |
           EDITION_DATE="${{ steps.edition.outputs.date }}"
-          daily-sports-page run --date "$EDITION_DATE" --build-dir build
+          if [[ "$INCLUDE_MLB" == "true" ]]; then
+            daily-sports-page run --date "$EDITION_DATE" --build-dir build
+          fi
           python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
           python -m src.ncaaf.generator --date "$EDITION_DATE" --build-dir build/ncaaf
           python -m src.nhl.generator --date "$EDITION_DATE" --build-dir build/nhl-markets
           python -m src.nba.generator --date "$EDITION_DATE" --build-dir build/nba-markets
-          python scripts/generate_market_editions.py --previous-baseball-dir /tmp
+          if [[ "$INCLUDE_MLB" == "true" ]]; then
+            python scripts/generate_market_editions.py --previous-baseball-dir /tmp
+          else
+            python scripts/generate_market_editions.py --skip-baseball
+          fi
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -163,7 +181,11 @@ jobs:
 
       - name: Assemble honor-supported site artifact
         run: |
-          python scripts/assemble_subscription_site.py \
+          ASSEMBLE_ARGS=()
+          if [[ "$INCLUDE_MLB" != "true" ]]; then
+            ASSEMBLE_ARGS+=(--exclude-mlb)
+          fi
+          python scripts/assemble_subscription_site.py "${ASSEMBLE_ARGS[@]}" \
             --previous-site previous-site \
             --market-build-dir build/markets \
             --football-market-dir build/football-markets \

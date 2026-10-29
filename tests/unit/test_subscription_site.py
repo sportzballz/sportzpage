@@ -26,6 +26,78 @@ def _write_edition(directory: Path, day: str, marker: str = "full-story-marker")
     )
 
 
+def _write_football_edition(
+    directory: Path, day: str, marker: str = "football-full-marker"
+) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "edition_date": day,
+        "generated_at": f"{day}T08:00:00-04:00",
+        "lead": {
+            "headline": f"NFL headline for {day}",
+            "deck": "Football is the offseason lead.",
+            "paragraphs": [marker],
+        },
+    }
+    (directory / "edition.json").write_text(json.dumps(payload), encoding="utf-8")
+    (directory / "index.html").write_text(
+        '<html><body><nav class="sport-tabs">'
+        '<a class="sport-tab" href="/subscriber/current/">MLB</a>'
+        '<a class="sport-tab is-active" href="/subscriber/current/football/">NFL</a>'
+        f"</nav>{marker}</body></html>",
+        encoding="utf-8",
+    )
+
+
+def test_offseason_excludes_mlb_and_uses_nfl_as_the_landing_edition(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    football = tmp_path / "football"
+    static = tmp_path / "static"
+    _write_football_edition(football, "2026-10-30")
+    static.mkdir()
+
+    previous = tmp_path / "previous"
+    _write_edition(previous / "archive/2026-10-29", "2026-10-29", "saved-mlb-archive")
+
+    output = tmp_path / "dist"
+    assemble(
+        build,
+        football,
+        static,
+        previous,
+        output,
+        include_mlb=False,
+    )
+
+    landing = (output / "index.html").read_text(encoding="utf-8")
+    current = (output / "subscriber/current/index.html").read_text(encoding="utf-8")
+    football_html = (output / "subscriber/current/football/index.html").read_text(
+        encoding="utf-8"
+    )
+    delivery = json.loads((output / "delivery/current/manifest.json").read_text())
+
+    assert "NFL headline for 2026-10-30" in landing
+    assert "plus MLB in season" in landing
+    assert "/subscriber/current/football/" in current
+    assert not (output / "subscriber/current/edition.json").exists()
+    assert "MLB</a>" not in football_html
+    assert "football-full-marker" in football_html
+    assert delivery["edition_url"].endswith("/subscriber/current/football/")
+    assert "saved-mlb-archive" in (output / "archive/2026-10-29/index.html").read_text()
+    for market in (
+        "philadelphia",
+        "boston",
+        "new-york",
+        "los-angeles",
+        "chicago",
+        "dallas",
+    ):
+        market_root = (output / "editions" / market / "index.html").read_text()
+        market_football = (output / "editions" / market / "football/index.html").read_text()
+        assert f"/editions/{market}/football/" in market_root
+        assert "MLB</a>" not in market_football
+
+
 def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path) -> None:
     build = tmp_path / "build"
     football = tmp_path / "football"
