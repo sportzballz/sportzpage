@@ -46,6 +46,9 @@ async def generate(
     football = json.loads(football_edition.read_text())
     football["edition_date"] = date.fromisoformat(football["edition_date"])
     football["generated_at"] = datetime.fromisoformat(football["generated_at"])
+    football_coverage_date = date.fromisoformat(
+        football.get("coverage_date") or football["edition_date"].isoformat()
+    )
     ncaaf = json.loads(ncaaf_edition.read_text()) if ncaaf_edition else None
     if ncaaf:
         ncaaf["edition_date"] = date.fromisoformat(ncaaf["edition_date"])
@@ -103,7 +106,7 @@ async def generate(
 
         football_game = football_headline_game(football, market)
         football_lead = (
-            await football_service.generate(football_game, football["edition_date"].isoformat())
+            await football_service.generate(football_game, football_coverage_date.isoformat())
             if football_service and football_game
             else None
         )

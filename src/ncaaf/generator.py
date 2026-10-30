@@ -139,6 +139,7 @@ class NCAAFEditionGenerator:
         return {
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.publication_date or self.edition_date,
+            "coverage_date": self.edition_date,
             "season_label": week["season_label"],
             "week_label": week["label"],
             "week_detail": week["detail"],

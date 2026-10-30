@@ -140,6 +140,7 @@ class FootballEditionGenerator:
         return {
             "generated_at": datetime.now(EASTERN),
             "edition_date": self.publication_date or self.edition_date,
+            "coverage_date": self.edition_date,
             "season_label": week["season_label"],
             "week_label": self._week_label(week, schedule_week_number),
             "week_detail": self._week_detail(week, schedule_week_number),

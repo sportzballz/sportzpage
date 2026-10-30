@@ -18,6 +18,7 @@ async def test_unavailable_football_rewrite_uses_deterministic_market_lead(
         json.dumps(
             {
                 "edition_date": "2026-10-30",
+                "coverage_date": "2026-10-29",
                 "generated_at": "2026-10-30T08:00:00-04:00",
                 "lead": {"headline": "National lead"},
                 "scoreboard": [
@@ -45,8 +46,11 @@ async def test_unavailable_football_rewrite_uses_deterministic_market_lead(
         encoding="utf-8",
     )
 
+    requested_dates: list[str] = []
+
     class UnavailableFootballService:
-        async def generate(self, _game: dict, _edition_date: str) -> None:
+        async def generate(self, _game: dict, edition_date: str) -> None:
+            requested_dates.append(edition_date)
             return None
 
     rendered: list[dict] = []
@@ -70,3 +74,4 @@ async def test_unavailable_football_rewrite_uses_deterministic_market_lead(
 
     assert rendered[0]["lead"] is not None
     assert "Eagles" in rendered[0]["lead"]["headline"]
+    assert requested_dates == ["2026-10-29"]
