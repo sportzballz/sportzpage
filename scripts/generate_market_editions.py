@@ -107,19 +107,13 @@ async def generate(
             if football_service and football_game
             else None
         )
-        if football_service and football_game and not football_lead:
-            deterministic = marketize_football(football, market)["lead"]
-            facts = "\n".join([deterministic.get("deck", ""), *deterministic.get("paragraphs", [])])
-            football_lead = await football_service.generate_from_game_facts(
-                football_game, football["edition_date"].isoformat(), facts
-            )
         football_dir = football_output / market.slug
         render_football_page(
             marketize_football(
                 football,
                 market,
                 football_lead,
-                allow_deterministic_lead=football_service is None,
+                allow_deterministic_lead=football_lead is None,
             ),
             football_dir,
         )
