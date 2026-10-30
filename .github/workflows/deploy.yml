@@ -94,7 +94,9 @@ jobs:
 
       - name: Resolve edition date
         id: edition
-        run: echo "date=$(TZ=America/New_York date -d 'yesterday' +%F)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "date=$(TZ=America/New_York date -d 'yesterday' +%F)" >> "$GITHUB_OUTPUT"
+          echo "publication_date=$(TZ=America/New_York date +%F)" >> "$GITHUB_OUTPUT"
 
       - name: Restore daily LLM enrichment
         uses: actions/cache@v4
@@ -155,13 +157,23 @@ jobs:
       - name: Generate active sports editions
         run: |
           EDITION_DATE="${{ steps.edition.outputs.date }}"
+          PUBLICATION_DATE="${{ steps.edition.outputs.publication_date }}"
           if [[ "$INCLUDE_MLB" == "true" ]]; then
-            daily-sports-page run --date "$EDITION_DATE" --build-dir build
+            daily-sports-page run \
+              --date "$EDITION_DATE" \
+              --edition-date "$PUBLICATION_DATE" \
+              --build-dir build
           fi
-          python -m src.football.generator --date "$EDITION_DATE" --build-dir build/football
-          python -m src.ncaaf.generator --date "$EDITION_DATE" --build-dir build/ncaaf
-          python -m src.nhl.generator --date "$EDITION_DATE" --build-dir build/nhl-markets
-          python -m src.nba.generator --date "$EDITION_DATE" --build-dir build/nba-markets
+          python -m src.football.generator \
+            --date "$EDITION_DATE" \
+            --publication-date "$PUBLICATION_DATE" \
+            --build-dir build/football
+          python -m src.ncaaf.generator \
+            --date "$EDITION_DATE" \
+            --publication-date "$PUBLICATION_DATE" \
+            --build-dir build/ncaaf
+          python -m src.nhl.generator --date "$PUBLICATION_DATE" --build-dir build/nhl-markets
+          python -m src.nba.generator --date "$PUBLICATION_DATE" --build-dir build/nba-markets
           if [[ "$INCLUDE_MLB" == "true" ]]; then
             python scripts/generate_market_editions.py --previous-baseball-dir /tmp
           else

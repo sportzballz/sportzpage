@@ -59,6 +59,7 @@ def render_ncaaf_page(data: dict[str, Any], output_dir: Path) -> Path:
 @dataclass
 class NCAAFEditionGenerator:
     edition_date: date
+    publication_date: date | None = None
     timeout: float = 20.0
     lead_story_service: NCAAFLeadStoryService | None = None
 
@@ -137,7 +138,7 @@ class NCAAFEditionGenerator:
             game["is_today"] = game["date"] == today
         return {
             "generated_at": datetime.now(EASTERN),
-            "edition_date": self.edition_date,
+            "edition_date": self.publication_date or self.edition_date,
             "season_label": week["season_label"],
             "week_label": week["label"],
             "week_detail": week["detail"],
@@ -402,9 +403,14 @@ class NCAAFEditionGenerator:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--date", type=date.fromisoformat, default=date.today() - timedelta(days=1))
+    parser.add_argument("--publication-date", type=date.fromisoformat)
     parser.add_argument("--build-dir", type=Path, default=Path("build/ncaaf"))
     args = parser.parse_args()
-    path = asyncio.run(NCAAFEditionGenerator(args.date).generate(args.build_dir))
+    path = asyncio.run(
+        NCAAFEditionGenerator(
+            args.date, publication_date=args.publication_date
+        ).generate(args.build_dir)
+    )
     print(f"NCAAF edition rendered to {path}")
 
 

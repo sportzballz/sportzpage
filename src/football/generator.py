@@ -74,6 +74,7 @@ def render_football_page(data: dict[str, Any], output_dir: Path) -> Path:
 @dataclass
 class FootballEditionGenerator:
     edition_date: date
+    publication_date: date | None = None
     timeout: float = 20.0
     lead_story_service: FootballLeadStoryService | None = None
 
@@ -138,7 +139,7 @@ class FootballEditionGenerator:
                     break
         return {
             "generated_at": datetime.now(EASTERN),
-            "edition_date": self.edition_date,
+            "edition_date": self.publication_date or self.edition_date,
             "season_label": week["season_label"],
             "week_label": self._week_label(week, schedule_week_number),
             "week_detail": self._week_detail(week, schedule_week_number),
@@ -472,9 +473,14 @@ class FootballEditionGenerator:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--date", type=date.fromisoformat, default=date.today() - timedelta(days=1))
+    parser.add_argument("--publication-date", type=date.fromisoformat)
     parser.add_argument("--build-dir", type=Path, default=Path("build/football"))
     args = parser.parse_args()
-    path = asyncio.run(FootballEditionGenerator(args.date).generate(args.build_dir))
+    path = asyncio.run(
+        FootballEditionGenerator(
+            args.date, publication_date=args.publication_date
+        ).generate(args.build_dir)
+    )
     print(f"Football edition rendered to {path}")
 
 

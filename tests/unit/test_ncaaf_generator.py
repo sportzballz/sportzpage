@@ -9,6 +9,15 @@ from src.ncaaf.ai_recap import NCAAFLeadStoryService
 from src.ncaaf.generator import NCAAFEditionGenerator
 
 
+def test_generator_accepts_separate_publication_date() -> None:
+    generator = NCAAFEditionGenerator(
+        date(2026, 10, 29), publication_date=date(2026, 10, 30)
+    )
+
+    assert generator.edition_date.isoformat() == "2026-10-29"
+    assert generator.publication_date.isoformat() == "2026-10-30"
+
+
 def _event(
     event_id: str,
     away: tuple[str, str, str, int],

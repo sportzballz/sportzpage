@@ -43,6 +43,17 @@ def test_mlb_is_seasonal_and_does_not_block_offseason_publication() -> None:
     assert "ASSEMBLE_ARGS+=(--exclude-mlb)" in workflow
 
 
+def test_publish_date_is_separate_from_coverage_date() -> None:
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'date -d \'yesterday\' +%F' in workflow
+    assert 'publication_date=$(TZ=America/New_York date +%F)' in workflow
+    assert '--edition-date "$PUBLICATION_DATE"' in workflow
+    assert workflow.count('--publication-date "$PUBLICATION_DATE"') == 2
+    assert 'src.nhl.generator --date "$PUBLICATION_DATE"' in workflow
+    assert 'src.nba.generator --date "$PUBLICATION_DATE"' in workflow
+
+
 def test_deploy_generates_and_assembles_nba() -> None:
     workflow = WORKFLOW.read_text(encoding="utf-8")
 

@@ -137,6 +137,15 @@ def test_generator_accepts_explicit_edition_date() -> None:
     assert generator.edition_date.isoformat() == "2026-08-20"
 
 
+def test_generator_accepts_separate_publication_date() -> None:
+    generator = FootballEditionGenerator(
+        date(2026, 10, 29), publication_date=date(2026, 10, 30)
+    )
+
+    assert generator.edition_date.isoformat() == "2026-10-29"
+    assert generator.publication_date.isoformat() == "2026-10-30"
+
+
 @pytest.mark.asyncio
 async def test_collect_requests_and_returns_complete_espn_week(
     monkeypatch: pytest.MonkeyPatch,
