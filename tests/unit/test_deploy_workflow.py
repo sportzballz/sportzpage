@@ -60,3 +60,10 @@ def test_deploy_generates_and_assembles_nba() -> None:
     assert "python -m src.nba.generator" in workflow
     assert "--nba-market-dir build/nba-markets" in workflow
     assert "/subscriber/current/nba/edition.json" in workflow
+
+
+def test_deploy_generates_and_assembles_mens_hoops() -> None:
+    workflow = Path(".github/workflows/deploy.yml").read_text()
+    assert "python -m src.mens_hoops.generator" in workflow
+    assert "--mens-hoops-market-dir build/mens-hoops-markets" in workflow
+    assert "/subscriber/current/mens-hoops/edition.json" in workflow

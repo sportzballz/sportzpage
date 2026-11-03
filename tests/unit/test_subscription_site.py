@@ -328,6 +328,38 @@ def test_cloudfront_function_routes_nba_to_current_edition() -> None:
     assert "location: { value: '/subscriber/current/nba/' }" in code
 
 
+def test_cloudfront_function_routes_mens_hoops_to_current_edition() -> None:
+    code = Path("terraform/functions/directory-index.js").read_text()
+    assert "uri === '/mens-hoops'" in code
+    assert "location: { value: '/subscriber/current/mens-hoops/' }" in code
+
+
+def test_assembles_mens_hoops_current_and_market_routes(tmp_path: Path) -> None:
+    build = tmp_path / "baseball"
+    football = tmp_path / "football"
+    static = tmp_path / "static"
+    hoops_markets = tmp_path / "mens-hoops-markets"
+    _write_edition(build, "2026-11-02", "baseball-marker")
+    _write_edition(football, "2026-11-02", "football-marker")
+    static.mkdir()
+    for market in ("philadelphia", "boston", "new-york", "los-angeles", "chicago", "dallas"):
+        _write_edition(hoops_markets / market, "2026-11-02", f"hoops-{market}")
+
+    output = tmp_path / "dist"
+    assemble(
+        build,
+        football,
+        static,
+        tmp_path / "previous",
+        output,
+        mens_hoops_market_dir=hoops_markets,
+    )
+    assert "hoops-philadelphia" in (output / "subscriber/current/mens-hoops/index.html").read_text()
+    assert "hoops-philadelphia" in (output / "mens-hoops/index.html").read_text()
+    assert "hoops-boston" in (output / "editions/boston/mens-hoops/index.html").read_text()
+    assert "https://thedailysportspage.com/mens-hoops/" in (output / "sitemap.xml").read_text()
+
+
 def test_subscription_panels_span_the_newspaper_grid() -> None:
     css = Path("static/css/subscription.css").read_text(encoding="utf-8")
     panel_rule = css.split(".free-archive {", maxsplit=1)[1].split("}", maxsplit=1)[0]

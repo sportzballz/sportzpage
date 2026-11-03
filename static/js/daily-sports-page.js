@@ -38,7 +38,9 @@
     ]);
     const selector = document.querySelector("[data-market-selector]");
     const currentMarket = document.body.dataset.market || "philadelphia";
-    const sportPath = window.location.pathname.includes("/nba/")
+    const sportPath = window.location.pathname.includes("/mens-hoops/")
+      ? "mens-hoops/"
+      : window.location.pathname.includes("/nba/")
       ? "nba/"
       : window.location.pathname.includes("/nhl/")
       ? "nhl/"
@@ -58,7 +60,7 @@
 
     const isLegacyCurrent = window.location.pathname.startsWith(
       "/subscriber/current/",
-    ) || window.location.pathname === "/nhl/" || window.location.pathname === "/nba/";
+    ) || window.location.pathname === "/nhl/" || window.location.pathname === "/nba/" || window.location.pathname === "/mens-hoops/";
     if (
       isLegacyCurrent &&
       savedMarket &&

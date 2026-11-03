@@ -7,6 +7,7 @@ TEMPLATES = (
     "ncaaf.html.j2",
     "nhl.html.j2",
     "nba.html.j2",
+    "mens_hoops.html.j2",
 )
 
 

@@ -139,6 +139,10 @@ def seed_nba(edition_path: Path, cache_dir: Path) -> Path | None:
     return seed_gridiron(edition_path, cache_dir, "nba")
 
 
+def seed_mens_hoops(edition_path: Path, cache_dir: Path) -> Path | None:
+    return seed_gridiron(edition_path, cache_dir, "mens-hoops")
+
+
 def seed_news(edition_path: Path, cache_dir: Path) -> list[Path]:
     """Restore self-contained AI league briefs without restoring outbound URLs."""
     if not edition_path.exists():
@@ -195,6 +199,7 @@ def main() -> None:
     parser.add_argument("--ncaaf-edition", type=Path)
     parser.add_argument("--nhl-edition", type=Path)
     parser.add_argument("--nba-edition", type=Path)
+    parser.add_argument("--mens-hoops-edition", type=Path)
     args = parser.parse_args()
     lead = seed(args.edition, args.game_date, args.cache_dir)
     recaps = seed_short_recaps(args.edition, args.game_date, args.cache_dir)
@@ -212,6 +217,11 @@ def main() -> None:
     ncaaf = seed_ncaaf(args.ncaaf_edition, args.cache_dir) if args.ncaaf_edition else None
     nhl = seed_nhl(args.nhl_edition, args.cache_dir) if args.nhl_edition else None
     nba = seed_nba(args.nba_edition, args.cache_dir) if args.nba_edition else None
+    mens_hoops = (
+        seed_mens_hoops(args.mens_hoops_edition, args.cache_dir)
+        if args.mens_hoops_edition
+        else None
+    )
     if lead:
         print(f"Seeded {lead}")
     for recap in recaps:
@@ -228,7 +238,9 @@ def main() -> None:
         print(f"Seeded {nhl}")
     if nba:
         print(f"Seeded {nba}")
-    if not any((lead, recaps, news, football, football_news, ncaaf, nhl, nba)):
+    if mens_hoops:
+        print(f"Seeded {mens_hoops}")
+    if not any((lead, recaps, news, football, football_news, ncaaf, nhl, nba, mens_hoops)):
         print("No reusable AI stories found")
 
 
