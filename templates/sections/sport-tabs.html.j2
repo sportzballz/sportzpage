@@ -4,5 +4,5 @@
   <a class="sport-tab{% if active_sport == 'ncaaf' %} is-active{% endif %}" href="{% if active_sport == 'baseball' %}ncaaf/{% elif active_sport == 'ncaaf' %}./{% else %}../ncaaf/{% endif %}"{% if active_sport == 'ncaaf' %} aria-current="page"{% endif %}>NCAAF</a>
   <a class="sport-tab{% if active_sport == 'nhl' %} is-active{% endif %}" href="{% if active_sport == 'baseball' %}nhl/{% elif active_sport == 'nhl' %}./{% else %}../nhl/{% endif %}"{% if active_sport == 'nhl' %} aria-current="page"{% endif %}>NHL</a>
   <a class="sport-tab{% if active_sport == 'nba' %} is-active{% endif %}" href="{% if active_sport == 'baseball' %}nba/{% elif active_sport == 'nba' %}./{% else %}../nba/{% endif %}"{% if active_sport == 'nba' %} aria-current="page"{% endif %}>NBA</a>
-  <a class="sport-tab{% if active_sport == 'mens_hoops' %} is-active{% endif %}" href="{% if active_sport == 'baseball' %}mens-hoops/{% elif active_sport == 'mens_hoops' %}./{% else %}../mens-hoops/{% endif %}"{% if active_sport == 'mens_hoops' %} aria-current="page"{% endif %}>Hoops</a>
+  <a class="sport-tab{% if active_sport == 'mens_hoops' %} is-active{% endif %}" href="/editions/{{ active_market_slug }}/mens-hoops/"{% if active_sport == 'mens_hoops' %} aria-current="page"{% endif %}>Hoops</a>
 </nav>

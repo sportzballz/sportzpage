@@ -67,4 +67,6 @@ async def test_mens_hoops_generates_every_market_without_ai(tmp_path: Path, monk
         assert page["lead"] is None
         assert "Major Conference Standings" in html
         assert ">Hoops</a>" in html
+        assert f'href="/editions/{market}/mens-hoops/"' in html
+        assert 'href="/static/css/daily-sports-page.css' in html
         assert 'href="https://www.espn.com' not in html
