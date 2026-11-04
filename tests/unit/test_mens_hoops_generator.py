@@ -66,5 +66,5 @@ async def test_mens_hoops_generates_every_market_without_ai(tmp_path: Path, monk
         html = (tmp_path / market / "index.html").read_text()
         assert page["lead"] is None
         assert "Major Conference Standings" in html
-        assert "NCAA Men’s Hoops" in html
+        assert ">Hoops</a>" in html
         assert 'href="https://www.espn.com' not in html
