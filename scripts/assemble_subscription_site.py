@@ -474,14 +474,23 @@ def assemble(
                 _redirect_page("football/"), encoding="utf-8"
             )
 
-    archive_dates = sorted(
+    all_archive_dates = sorted(
         (
             path.name
             for path in archive_root.iterdir()
             if path.is_dir() and _edition_date(path) and path.name < current_date
         ),
         reverse=True,
-    )[:ARCHIVE_LIMIT]
+    )
+    earliest_retained = (date.fromisoformat(current_date) - timedelta(days=ARCHIVE_LIMIT)).isoformat()
+    archive_dates = [day for day in all_archive_dates if day >= earliest_retained][
+        :ARCHIVE_LIMIT
+    ]
+    public_archive_dates = [
+        day
+        for day in archive_dates
+        if 3 <= (date.fromisoformat(current_date) - date.fromisoformat(day)).days <= 6
+    ]
     for path in list(archive_root.iterdir()):
         if path.is_dir() and path.name not in archive_dates:
             shutil.rmtree(path)
@@ -581,9 +590,12 @@ def assemble(
     privacy.mkdir(parents=True, exist_ok=True)
     (privacy / "index.html").write_text(_privacy_policy(), encoding="utf-8")
     archive_root.mkdir(exist_ok=True)
-    (archive_root / "index.html").write_text(_archive_index(archive_dates), encoding="utf-8")
+    (archive_root / "index.html").write_text(
+        _archive_index(public_archive_dates), encoding="utf-8"
+    )
     (archive_root / "manifest.json").write_text(
-        json.dumps({"editions": archive_dates}, indent=2) + "\n", encoding="utf-8"
+        json.dumps({"editions": public_archive_dates}, indent=2) + "\n",
+        encoding="utf-8",
     )
     _remove_legacy_edition_support_link(current)
     if include_mlb:
@@ -594,7 +606,7 @@ def assemble(
     for day in archive_dates:
         _remove_legacy_edition_support_link(archive_root / day)
         _apply_edition_seo(archive_root / day, f"/archive/{day}/")
-    _write_discovery_files(output, archive_dates, current_date)
+    _write_discovery_files(output, public_archive_dates, current_date)
 
 
 def main() -> None:

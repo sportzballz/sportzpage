@@ -5,7 +5,7 @@ import re
 from datetime import date, timedelta
 from pathlib import Path
 
-from scripts.assemble_subscription_site import ARCHIVE_LIMIT, assemble
+from scripts.assemble_subscription_site import assemble
 
 
 def _write_edition(directory: Path, day: str, marker: str = "full-story-marker") -> None:
@@ -122,8 +122,36 @@ def test_offseason_archives_the_previous_nfl_led_edition(tmp_path: Path) -> None
     archived = output / "archive/2026-11-05"
     assert "url=football/" in (archived / "index.html").read_text()
     assert "archived-football" in (archived / "football/index.html").read_text()
+    assert archived.exists()
     manifest = json.loads((output / "archive/manifest.json").read_text())
-    assert "2026-11-05" in manifest["editions"]
+    assert "2026-11-05" not in manifest["editions"]
+
+
+def test_archive_index_only_lists_the_public_sample_window(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    football = tmp_path / "football"
+    static = tmp_path / "static"
+    _write_football_edition(football, "2026-11-06")
+    static.mkdir()
+    previous = tmp_path / "previous"
+    for day in ("2026-11-05", "2026-11-04", "2026-11-03", "2026-11-02", "2026-11-01", "2026-10-31", "2026-10-28"):
+        _write_edition(previous / "archive" / day, day)
+
+    output = tmp_path / "dist"
+    assemble(build, football, static, previous, output, include_mlb=False)
+
+    archive_index = (output / "archive/index.html").read_text()
+    manifest = json.loads((output / "archive/manifest.json").read_text())
+    assert manifest["editions"] == [
+        "2026-11-03",
+        "2026-11-02",
+        "2026-11-01",
+        "2026-10-31",
+    ]
+    assert "/archive/2026-11-03/" in archive_index
+    assert "/archive/2026-11-05/" not in archive_index
+    assert "/archive/2026-10-28/" not in archive_index
+    assert not (output / "archive/2026-10-28").exists()
 
 
 def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path) -> None:
@@ -230,9 +258,12 @@ def test_promotes_previous_current_and_keeps_seven_editions(tmp_path: Path) -> N
     assemble(build, football, static, previous, output)
 
     manifest = json.loads((output / "archive/manifest.json").read_text())["editions"]
-    assert len(manifest) == ARCHIVE_LIMIT
-    assert manifest[0] == "2026-08-20"
-    assert manifest[-1] == "2026-08-14"
+    assert manifest == [
+        "2026-08-18",
+        "2026-08-17",
+        "2026-08-16",
+        "2026-08-15",
+    ]
     assert "yesterday-full" in (output / "archive/2026-08-20/index.html").read_text()
     assert not (output / "archive/2026-08-13").exists()
     assert not (output / "archive/2026-08-21").exists()
@@ -250,7 +281,8 @@ def test_promotes_previous_current_and_keeps_seven_editions(tmp_path: Path) -> N
     assert 'rel="canonical" href="https://thedailysportspage.com/archive/2026-08-20/"' in archived_html
     assert 'property="og:type" content="article"' in archived_html
     sitemap = (output / "sitemap.xml").read_text()
-    assert "https://thedailysportspage.com/archive/2026-08-20/" in sitemap
+    assert "https://thedailysportspage.com/archive/2026-08-20/" not in sitemap
+    assert "https://thedailysportspage.com/archive/2026-08-18/" in sitemap
     assert "https://thedailysportspage.com/support/" not in sitemap
     assert "https://thedailysportspage.com/subscribe/" not in sitemap
 
@@ -269,7 +301,7 @@ def test_accepts_legacy_dated_archive_without_edition_json(tmp_path: Path) -> No
     output = tmp_path / "dist"
     assemble(build, football, static, tmp_path / "previous", output)
 
-    assert json.loads((output / "archive/manifest.json").read_text())["editions"] == ["2026-08-20"]
+    assert json.loads((output / "archive/manifest.json").read_text())["editions"] == []
     assert (output / "archive/2026-08-20/index.html").read_text() == "legacy newspaper"
 
 
