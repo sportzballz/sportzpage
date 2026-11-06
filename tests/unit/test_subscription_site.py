@@ -154,6 +154,24 @@ def test_archive_index_only_lists_the_public_sample_window(tmp_path: Path) -> No
     assert not (output / "archive/2026-10-28").exists()
 
 
+def test_missing_public_sample_route_redirects_instead_of_access_denied(
+    tmp_path: Path,
+) -> None:
+    build = tmp_path / "build"
+    football = tmp_path / "football"
+    static = tmp_path / "static"
+    _write_football_edition(football, "2026-11-06")
+    static.mkdir()
+
+    output = tmp_path / "dist"
+    assemble(build, football, static, tmp_path / "previous", output, include_mlb=False)
+
+    for day in ("2026-11-03", "2026-11-02", "2026-11-01", "2026-10-31"):
+        fallback = (output / "archive" / day / "index.html").read_text()
+        assert 'content="0;url=/"' in fallback
+    assert json.loads((output / "archive/manifest.json").read_text())["editions"] == []
+
+
 def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path) -> None:
     build = tmp_path / "build"
     football = tmp_path / "football"
@@ -418,6 +436,10 @@ def test_assembles_mens_hoops_current_and_market_routes(tmp_path: Path) -> None:
     assert "hoops-philadelphia" in (output / "mens-hoops/index.html").read_text()
     assert "hoops-boston" in (output / "editions/boston/mens-hoops/index.html").read_text()
     assert "https://thedailysportspage.com/mens-hoops/" in (output / "sitemap.xml").read_text()
+    assert "/subscriber/current/mens-hoops/" in (
+        output / "subscriber/mens-hoops/index.html"
+    ).read_text()
+    assert "/mens-hoops/" in (output / "editions/mens-hoops/index.html").read_text()
 
 
 def test_subscription_panels_span_the_newspaper_grid() -> None:

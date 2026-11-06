@@ -494,6 +494,16 @@ def assemble(
     for path in list(archive_root.iterdir()):
         if path.is_dir() and path.name not in archive_dates:
             shutil.rmtree(path)
+    for offset in range(3, 7):
+        sample_date = (
+            date.fromisoformat(current_date) - timedelta(days=offset)
+        ).isoformat()
+        sample_route = archive_root / sample_date
+        if not sample_route.exists():
+            sample_route.mkdir(parents=True)
+            (sample_route / "index.html").write_text(
+                _redirect_page("/"), encoding="utf-8"
+            )
 
     current = output / "subscriber" / "current"
     current.mkdir(parents=True)
@@ -516,6 +526,16 @@ def assemble(
     if mens_hoops_market_dir:
         _copy_tree(mens_hoops_market_dir / "philadelphia", current / "mens-hoops")
         _copy_tree(mens_hoops_market_dir / "philadelphia", output / "mens-hoops")
+        legacy_subscriber_hoops = output / "subscriber" / "mens-hoops"
+        legacy_subscriber_hoops.mkdir(parents=True)
+        (legacy_subscriber_hoops / "index.html").write_text(
+            _redirect_page("/subscriber/current/mens-hoops/"), encoding="utf-8"
+        )
+        legacy_market_hoops = output / "editions" / "mens-hoops"
+        legacy_market_hoops.mkdir(parents=True)
+        (legacy_market_hoops / "index.html").write_text(
+            _redirect_page("/mens-hoops/"), encoding="utf-8"
+        )
     _copy_tree(static_dir, current / "static")
 
     delivery = output / "delivery" / "current"
