@@ -526,15 +526,16 @@ def assemble(
     if mens_hoops_market_dir:
         _copy_tree(mens_hoops_market_dir / "philadelphia", current / "mens-hoops")
         _copy_tree(mens_hoops_market_dir / "philadelphia", output / "mens-hoops")
-        legacy_subscriber_hoops = output / "subscriber" / "mens-hoops"
-        legacy_subscriber_hoops.mkdir(parents=True)
-        (legacy_subscriber_hoops / "index.html").write_text(
-            _redirect_page("/subscriber/current/mens-hoops/"), encoding="utf-8"
+    for sport in ("football", "ncaaf", "nhl", "nba", "mens-hoops"):
+        legacy_subscriber_route = output / "subscriber" / sport
+        legacy_subscriber_route.mkdir(parents=True, exist_ok=True)
+        (legacy_subscriber_route / "index.html").write_text(
+            _redirect_page(f"/subscriber/current/{sport}/"), encoding="utf-8"
         )
-        legacy_market_hoops = output / "editions" / "mens-hoops"
-        legacy_market_hoops.mkdir(parents=True)
-        (legacy_market_hoops / "index.html").write_text(
-            _redirect_page("/mens-hoops/"), encoding="utf-8"
+        legacy_market_route = output / "editions" / sport
+        legacy_market_route.mkdir(parents=True, exist_ok=True)
+        (legacy_market_route / "index.html").write_text(
+            _redirect_page(f"/{sport}/"), encoding="utf-8"
         )
     _copy_tree(static_dir, current / "static")
 

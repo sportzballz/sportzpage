@@ -442,6 +442,24 @@ def test_assembles_mens_hoops_current_and_market_routes(tmp_path: Path) -> None:
     assert "/mens-hoops/" in (output / "editions/mens-hoops/index.html").read_text()
 
 
+def test_legacy_slashless_app_routes_redirect_for_every_sport(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    football = tmp_path / "football"
+    static = tmp_path / "static"
+    _write_edition(build, "2026-11-06")
+    _write_football_edition(football, "2026-11-06")
+    static.mkdir()
+
+    output = tmp_path / "dist"
+    assemble(build, football, static, tmp_path / "previous", output)
+
+    for sport in ("football", "ncaaf", "nhl", "nba", "mens-hoops"):
+        subscriber_alias = (output / "subscriber" / sport / "index.html").read_text()
+        market_alias = (output / "editions" / sport / "index.html").read_text()
+        assert f"/subscriber/current/{sport}/" in subscriber_alias
+        assert f"/{sport}/" in market_alias
+
+
 def test_subscription_panels_span_the_newspaper_grid() -> None:
     css = Path("static/css/subscription.css").read_text(encoding="utf-8")
     panel_rule = css.split(".free-archive {", maxsplit=1)[1].split("}", maxsplit=1)[0]
