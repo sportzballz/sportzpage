@@ -98,6 +98,34 @@ def test_offseason_excludes_mlb_and_uses_nfl_as_the_landing_edition(tmp_path: Pa
         assert "MLB</a>" not in market_football
 
 
+def test_offseason_archives_the_previous_nfl_led_edition(tmp_path: Path) -> None:
+    build = tmp_path / "build"
+    football = tmp_path / "football"
+    static = tmp_path / "static"
+    _write_football_edition(football, "2026-11-06", "current-football")
+    static.mkdir()
+
+    previous = tmp_path / "previous"
+    previous_current = previous / "subscriber/current"
+    _write_football_edition(
+        previous_current / "football", "2026-11-05", "archived-football"
+    )
+    previous_current.mkdir(parents=True, exist_ok=True)
+    (previous_current / "index.html").write_text(
+        '<meta http-equiv="refresh" content="0;url=/subscriber/current/football/">',
+        encoding="utf-8",
+    )
+
+    output = tmp_path / "dist"
+    assemble(build, football, static, previous, output, include_mlb=False)
+
+    archived = output / "archive/2026-11-05"
+    assert "url=football/" in (archived / "index.html").read_text()
+    assert "archived-football" in (archived / "football/index.html").read_text()
+    manifest = json.loads((output / "archive/manifest.json").read_text())
+    assert "2026-11-05" in manifest["editions"]
+
+
 def test_assembles_honor_supported_homepage_current_and_delivery(tmp_path: Path) -> None:
     build = tmp_path / "build"
     football = tmp_path / "football"

@@ -25,9 +25,14 @@ def _copy_tree(source: Path, destination: Path) -> None:
 
 
 def _edition_date(directory: Path) -> str | None:
-    path = directory / "edition.json"
-    if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))["edition"]["date"]
+    for path in (directory / "edition.json", directory / "football" / "edition.json"):
+        if not path.exists():
+            continue
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        edition = payload.get("edition") or {}
+        edition_date = edition.get("date") or payload.get("edition_date")
+        if edition_date:
+            return str(edition_date)[:10]
     try:
         date.fromisoformat(directory.name)
     except ValueError:
@@ -459,7 +464,15 @@ def assemble(
     previous_current = previous / "subscriber" / "current"
     previous_date = _edition_date(previous_current)
     if previous_date and previous_date != current_date:
-        _copy_tree(previous_current, archive_root / previous_date)
+        archived_edition = archive_root / previous_date
+        _copy_tree(previous_current, archived_edition)
+        if (
+            not (archived_edition / "edition.json").exists()
+            and (archived_edition / "football" / "index.html").exists()
+        ):
+            (archived_edition / "index.html").write_text(
+                _redirect_page("football/"), encoding="utf-8"
+            )
 
     archive_dates = sorted(
         (
