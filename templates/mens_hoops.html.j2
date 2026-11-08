@@ -37,9 +37,20 @@
       {% endfor %}
     </section>
     <section id="standings" class="standings section"><h2 class="section-heading">Major Conference Standings</h2>
-      {% for conference in page.conferences %}<h3>{{ conference.name }}</h3><div class="standings-table-wrapper"><table class="standings-table" aria-label="{{ conference.name }} standings"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>Streak</th></tr></thead><tbody>
-      {% for row in conference.rows %}<tr><td>{{ row.team }}</td><td>{{ row.w }}</td><td>{{ row.l }}</td><td>{{ row.pct }}</td><td>{{ row.gb }}</td><td>{{ row.streak }}</td></tr>{% endfor %}
-      </tbody></table></div>{% else %}<p class="no-content">Standings are not available yet.</p>{% endfor %}
+      {% if page.conferences %}
+      <div class="leaders-tab-group">
+        <div class="leaders-tablist" role="tablist" aria-label="NCAA Men’s Hoops conferences" data-tablist-id="mens-hoops-conferences">
+          {% for conference in page.conferences %}<button class="leaders-tab{% if loop.first %} leaders-tab-active{% endif %}" type="button" role="tab" id="mens-hoops-conference-tab-{{ conference.id }}" aria-controls="mens-hoops-conference-panel-{{ conference.id }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-category="{{ conference.id }}">{{ conference.name }}</button>{% endfor %}
+        </div>
+        <div class="leaders-panels">
+          {% for conference in page.conferences %}<div class="leaders-panel" id="mens-hoops-conference-panel-{{ conference.id }}" role="tabpanel" aria-labelledby="mens-hoops-conference-tab-{{ conference.id }}"{% if not loop.first %} style="display:none"{% endif %}>
+            <div class="standings-table-wrapper"><table class="standings-table" aria-label="{{ conference.name }} standings"><thead><tr><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>GB</th><th>Streak</th></tr></thead><tbody>
+              {% for row in conference.rows %}<tr><td>{{ row.team }}</td><td>{{ row.w }}</td><td>{{ row.l }}</td><td>{{ row.pct }}</td><td>{{ row.gb }}</td><td>{{ row.streak }}</td></tr>{% endfor %}
+            </tbody></table></div>
+          </div>{% endfor %}
+        </div>
+      </div>
+      {% else %}<p class="no-content">Standings are not available yet.</p>{% endif %}
     </section>
   </main>
   <footer class="site-footer"><p>The Daily Sports Page — NCAA Men’s Hoops Edition — {{ page.edition_date }}</p></footer>

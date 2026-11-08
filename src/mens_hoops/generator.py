@@ -107,7 +107,11 @@ def _standings(payload: dict[str, Any]) -> list[dict[str, Any]]:
             for row in rows:
                 row.pop("seed", None)
             conferences.append(
-                {"name": conference.get("name") or "Conference", "rows": rows}
+                {
+                    "id": abbreviation,
+                    "name": conference.get("name") or "Conference",
+                    "rows": rows,
+                }
             )
     return conferences
 

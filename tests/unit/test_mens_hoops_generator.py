@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -50,6 +50,7 @@ def test_mens_hoops_parses_games_and_limits_standings_to_major_conferences() -> 
         }
     )
     assert [conference["name"] for conference in conferences] == ["Big Ten Conference"]
+    assert [conference["id"] for conference in conferences] == ["big10"]
 
 
 @pytest.mark.asyncio
@@ -66,7 +67,46 @@ async def test_mens_hoops_generates_every_market_without_ai(tmp_path: Path, monk
         html = (tmp_path / market / "index.html").read_text()
         assert page["lead"] is None
         assert "Major Conference Standings" in html
+        assert 'data-tablist-id="mens-hoops-conferences"' not in html
         assert ">Hoops</a>" in html
         assert f'href="/editions/{market}/mens-hoops/"' in html
         assert 'href="/static/css/daily-sports-page.css' in html
         assert 'href="https://www.espn.com' not in html
+
+
+def test_mens_hoops_standings_render_one_tab_per_conference() -> None:
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
+    from src.rendering.edition_meta import daypart_edition, format_eastern_time, volume_number
+
+    environment = Environment(
+        loader=FileSystemLoader("templates"),
+        autoescape=select_autoescape(["html", "xml"]),
+    )
+    environment.globals.update(
+        daypart_edition=daypart_edition,
+        format_eastern_time=format_eastern_time,
+        volume_number=volume_number,
+    )
+    page = {
+        "canonical_path": "/editions/philadelphia/mens-hoops/",
+        "market_slug": "philadelphia",
+        "market_label": "Philadelphia",
+        "edition_date": date(2026, 11, 8),
+        "generated_at": datetime(2026, 11, 8, 14, tzinfo=timezone.utc),
+        "lead": None,
+        "recent_games": [],
+        "games": [],
+        "upcoming_games": [],
+        "conferences": [
+            {"id": "acc", "name": "Atlantic Coast Conference", "rows": []},
+            {"id": "sec", "name": "Southeastern Conference", "rows": []},
+        ],
+    }
+
+    html = environment.get_template("mens_hoops.html.j2").render(page=page)
+
+    assert 'data-tablist-id="mens-hoops-conferences"' in html
+    assert 'id="mens-hoops-conference-tab-acc"' in html
+    assert 'aria-controls="mens-hoops-conference-panel-sec"' in html
+    assert html.count('role="tab"') == 2
+    assert html.count('role="tabpanel"') == 2
