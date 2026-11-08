@@ -20,6 +20,14 @@ EASTERN = ZoneInfo("America/New_York")
 BASE = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball"
 STANDINGS = "https://site.web.api.espn.com/apis/v2/sports/basketball/mens-college-basketball/standings"
 MAJOR_CONFERENCES = ("acc", "big10", "big12", "bige", "pac12", "sec")
+CONFERENCE_TAB_LABELS = {
+    "acc": "ACC",
+    "big10": "Big Ten",
+    "big12": "Big 12",
+    "bige": "Big East",
+    "pac12": "Pac-12",
+    "sec": "SEC",
+}
 COLLEGE_TEAMS = {
     "philadelphia": ("VILL", "TEM", "SJU", "LAS"),
     "boston": ("BC", "HARV", "PROV"),
@@ -110,6 +118,7 @@ def _standings(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 {
                     "id": abbreviation,
                     "name": conference.get("name") or "Conference",
+                    "tab_label": CONFERENCE_TAB_LABELS[abbreviation],
                     "rows": rows,
                 }
             )

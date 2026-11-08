@@ -51,6 +51,7 @@ def test_mens_hoops_parses_games_and_limits_standings_to_major_conferences() -> 
     )
     assert [conference["name"] for conference in conferences] == ["Big Ten Conference"]
     assert [conference["id"] for conference in conferences] == ["big10"]
+    assert [conference["tab_label"] for conference in conferences] == ["Big Ten"]
 
 
 @pytest.mark.asyncio
@@ -98,8 +99,8 @@ def test_mens_hoops_standings_render_one_tab_per_conference() -> None:
         "games": [],
         "upcoming_games": [],
         "conferences": [
-            {"id": "acc", "name": "Atlantic Coast Conference", "rows": []},
-            {"id": "sec", "name": "Southeastern Conference", "rows": []},
+            {"id": "acc", "name": "Atlantic Coast Conference", "tab_label": "ACC", "rows": []},
+            {"id": "sec", "name": "Southeastern Conference", "tab_label": "SEC", "rows": []},
         ],
     }
 
@@ -110,3 +111,6 @@ def test_mens_hoops_standings_render_one_tab_per_conference() -> None:
     assert 'aria-controls="mens-hoops-conference-panel-sec"' in html
     assert html.count('role="tab"') == 2
     assert html.count('role="tabpanel"') == 2
+    assert ">ACC</button>" in html
+    assert ">SEC</button>" in html
+    assert ">Atlantic Coast Conference</button>" not in html

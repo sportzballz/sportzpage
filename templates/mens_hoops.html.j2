@@ -40,7 +40,7 @@
       {% if page.conferences %}
       <div class="leaders-tab-group">
         <div class="leaders-tablist" role="tablist" aria-label="NCAA Men’s Hoops conferences" data-tablist-id="mens-hoops-conferences">
-          {% for conference in page.conferences %}<button class="leaders-tab{% if loop.first %} leaders-tab-active{% endif %}" type="button" role="tab" id="mens-hoops-conference-tab-{{ conference.id }}" aria-controls="mens-hoops-conference-panel-{{ conference.id }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-category="{{ conference.id }}">{{ conference.name }}</button>{% endfor %}
+          {% for conference in page.conferences %}<button class="leaders-tab{% if loop.first %} leaders-tab-active{% endif %}" type="button" role="tab" id="mens-hoops-conference-tab-{{ conference.id }}" aria-controls="mens-hoops-conference-panel-{{ conference.id }}" aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ '0' if loop.first else '-1' }}" data-category="{{ conference.id }}">{{ conference.tab_label }}</button>{% endfor %}
         </div>
         <div class="leaders-panels">
           {% for conference in page.conferences %}<div class="leaders-panel" id="mens-hoops-conference-panel-{{ conference.id }}" role="tabpanel" aria-labelledby="mens-hoops-conference-tab-{{ conference.id }}"{% if not loop.first %} style="display:none"{% endif %}>
